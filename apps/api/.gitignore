@@ -1,0 +1,36 @@
+# NestJS / Build outputs
+dist/
+build/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NestJS auto-generated metadata
+src/metadata.ts
+# Note: metadata.ts is regenerated on each build
+# but we still ignore build artifacts
+*.js.map
+*.d.ts.map

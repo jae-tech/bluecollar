@@ -1,0 +1,53 @@
+import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { LoggerModule } from 'nestjs-pino';
+import { DrizzleModule } from '@/infrastructure/database/drizzle.module';
+import { SlackModule } from '@/infrastructure/slack/slack.module';
+import { AuthModule } from '@/domains/auth/auth.module';
+import { PortfolioModule } from '@/domains/portfolio/portfolio.module';
+import { ProfileModule } from '@/domains/profile/profile.module';
+import { PublicModule } from '@/domains/public/public.module';
+import { UploadModule } from '@/domains/upload/upload.module';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+
+@Module({
+  imports: [
+    // 🔒 Rate Limiting 설정
+    // 기본: 60초에 10회 제한
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1분 = 60,000ms
+        limit: 10, // 기본 제한: 60초에 10회
+      },
+    ]),
+
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty' }
+            : undefined,
+      },
+    }),
+    DrizzleModule,
+    SlackModule,
+    AuthModule,
+    PortfolioModule,
+    ProfileModule,
+    PublicModule,
+    UploadModule,
+  ],
+  providers: [
+    // 🔒 전역 Rate Limiter Guard 등록
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
+})
+export class AppModule {}

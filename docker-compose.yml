@@ -1,0 +1,24 @@
+services:
+  # 1. PostgreSQL 데이터베이스
+  db:
+    image: postgres:17-alpine # 2026년 기준 최신 안정 버전
+    container_name: bluecollar-db
+    restart: always
+    environment:
+      POSTGRES_USER: bluecollar_user
+      POSTGRES_PASSWORD: bluecollar_password
+      POSTGRES_DB: bluecollar_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Redis (나중에 인증번호 제한이나 캐싱할 때 필요하니 미리 넣어두면 편합니다)
+  redis:
+    image: redis:7-alpine
+    container_name: bluecollar-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
