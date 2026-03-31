@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { DrizzleModule } from '@/infrastructure/database/drizzle.module';
@@ -13,6 +14,9 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @Module({
   imports: [
+    // 🕐 스케줄러 설정 (만료 코드 정리 Cron 등)
+    ScheduleModule.forRoot(),
+
     // 🔒 Rate Limiting 설정
     // 기본: 60초에 10회 제한
     ThrottlerModule.forRoot([

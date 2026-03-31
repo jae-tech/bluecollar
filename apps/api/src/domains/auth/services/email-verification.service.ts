@@ -4,6 +4,7 @@ import {
   Inject,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
 import { emailVerificationCodes } from '@repo/database';
 import { eq, and, lt } from 'drizzle-orm';
@@ -56,17 +57,18 @@ export class EmailVerificationService {
     email: string,
     type: 'SIGNUP' | 'PASSWORD_RESET' | 'EMAIL_CHANGE' = 'SIGNUP',
   ): Promise<{ code: string }> {
-    try {
-      this.logger.info({ email, type }, '이메일 인증 코드 생성 중...');
+    this.logger.info({ email, type }, '이메일 인증 코드 생성 중...');
 
-      // 🔐 1. 6자리 숫자 인증 코드 생성 (100000 ~ 999999)
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // 🔐 1. 6자리 숫자 인증 코드 생성 (100000 ~ 999999)
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-      // ⏰ 2. 24시간 후 만료 시각 계산
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    // ⏰ 2. 24시간 후 만료 시각 계산
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      // 💾 3. DB에 저장
-      await this.db.insert(emailVerificationCodes).values({
+    // 💾+📧 3. 트랜잭션: DB 저장 후 이메일 발송 실패 시 롤백
+    // 이메일 발송 실패 시 DB에 orphaned 레코드가 남지 않도록 트랜잭션으로 묶음
+    await this.db.transaction(async (tx) => {
+      await tx.insert(emailVerificationCodes).values({
         email: email.toLowerCase(),
         code,
         type,
@@ -78,33 +80,24 @@ export class EmailVerificationService {
         '이메일 인증 코드 저장 완료',
       );
 
-      // 📧 4. 이메일 발송 (EmailService 호출)
-      try {
-        await this.emailService.sendVerificationEmail(email, code, type);
-        this.logger.info({ email }, '이메일 인증 코드 발송 성공');
-      } catch (emailError) {
-        this.logger.error(
-          { email, error: (emailError as Error).message },
-          '이메일 발송 실패 (DB는 저장됨)',
-        );
-        // 이메일 발송 실패해도 계속 진행 (DB에는 저장됨)
-      }
+      // 이메일 발송 실패 시 예외를 그대로 throw → 트랜잭션 자동 롤백
+      await this.emailService.sendVerificationEmail(email, code, type);
+      this.logger.info({ email }, '이메일 인증 코드 발송 성공');
+    });
 
-      // 🔍 5. 개발 환경에서만 코드 반환 (테스트용)
-      if (process.env.NODE_ENV !== 'production') {
-        this.logger.debug({ code }, '[DEV] 인증 코드 반환');
-        return { code };
-      }
-
-      // 프로덕션에서는 빈 응답 반환 (보안)
-      return { code: '' };
-    } catch (error) {
-      this.logger.error(
-        { email, error: (error as Error).message },
-        '이메일 인증 코드 생성 실패',
+    // 🔍 4. EXPOSE_EMAIL_CODE=true 환경에서만 코드 반환 (개발/로컬 테스트용)
+    // NODE_ENV 대신 명시적 환경변수로 제어 → staging이 NODE_ENV=production이어도
+    // EXPOSE_EMAIL_CODE를 설정하지 않으면 코드가 노출되지 않음
+    if (process.env.EXPOSE_EMAIL_CODE === 'true') {
+      this.logger.debug(
+        { code },
+        '[DEV] 인증 코드 반환 (EXPOSE_EMAIL_CODE=true)',
       );
-      throw new BadRequestException('인증 코드 생성에 실패했습니다');
+      return { code };
     }
+
+    // 기본값: 빈 응답 반환 (보안)
+    return { code: '' };
   }
 
   /**
@@ -209,6 +202,7 @@ export class EmailVerificationService {
    *
    * @returns 삭제된 코드 개수
    */
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async cleanupExpiredCodes(): Promise<number> {
     try {
       this.logger.debug('만료된 이메일 인증 코드 정리 중...');
