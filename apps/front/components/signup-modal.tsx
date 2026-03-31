@@ -1,106 +1,113 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
-import { X, CheckCircle2, Eye, EyeOff } from "lucide-react"
-import { emailSignup, ApiError } from "@/lib/api"
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { X, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { emailSignup, ApiError } from "@/lib/api";
 
 interface SignupModalProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
 export function SignupModal({ open, onClose }: SignupModalProps) {
-  const overlayRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // 폼 상태
-  const [realName, setRealName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [passwordConfirm, setPasswordConfirm] = useState("")
-  const [agreeTerms, setAgreeTerms] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
+  const [realName, setRealName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   // 요청 상태
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // ESC 키로 닫기
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("keydown", handler)
-    document.body.style.overflow = "hidden"
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", handler)
-      document.body.style.overflow = ""
-    }
-  }, [open, onClose])
+      document.removeEventListener("keydown", handler);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
 
-  if (!open) return null
+  if (!open) return null;
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === overlayRef.current) onClose()
-  }
+    if (e.target === overlayRef.current) onClose();
+  };
 
   /** 클라이언트 유효성 검증 */
   const validate = (): boolean => {
-    const errors: Record<string, string> = {}
+    const errors: Record<string, string> = {};
 
-    if (!realName.trim()) errors.realName = "이름을 입력해주세요"
-    if (!email) errors.email = "이메일을 입력해주세요"
-    if (password.length < 8) errors.password = "비밀번호는 8자 이상이어야 합니다"
+    if (!realName.trim()) errors.realName = "이름을 입력해주세요";
+    if (!email) errors.email = "이메일을 입력해주세요";
+    if (password.length < 8)
+      errors.password = "비밀번호는 8자 이상이어야 합니다";
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors.password = "영문 대문자, 소문자, 숫자를 모두 포함해야 합니다"
+      errors.password = "영문 대문자, 소문자, 숫자를 모두 포함해야 합니다";
     }
-    if (password !== passwordConfirm) errors.passwordConfirm = "비밀번호가 일치하지 않습니다"
-    if (!agreeTerms) errors.agreeTerms = "이용약관에 동의해야 합니다"
+    if (password !== passwordConfirm)
+      errors.passwordConfirm = "비밀번호가 일치하지 않습니다";
+    if (!agreeTerms) errors.agreeTerms = "이용약관에 동의해야 합니다";
 
-    setFieldErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
-    if (!validate()) return
+    if (!validate()) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
       await emailSignup({
         realName: realName.trim(),
         email,
         password,
         agreeTerms: true,
-      })
+      });
       // 성공 → 이메일 인증 페이지로 이동
-      onClose()
-      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
+      onClose();
+      router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
-          setFieldErrors((prev) => ({ ...prev, email: "이미 가입된 이메일입니다" }))
+          setFieldErrors((prev) => ({
+            ...prev,
+            email: "이미 가입된 이메일입니다",
+          }));
         } else {
-          setError(err.message)
+          setError(err.message);
         }
       } else {
-        setError("알 수 없는 오류가 발생했습니다")
+        setError("알 수 없는 오류가 발생했습니다");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const inputClass = (hasError?: boolean) =>
     `w-full px-4 py-3 rounded-xl border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
-      hasError ? "border-red-500 focus:border-red-500" : "border-border focus:border-primary"
-    }`
+      hasError
+        ? "border-red-500 focus:border-red-500"
+        : "border-border focus:border-primary"
+    }`;
 
   return (
     <div
@@ -125,11 +132,18 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
         <div className="px-8 py-8">
           {/* 헤더 */}
           <div className="flex flex-col gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                className="text-brand"
+              >
                 <path
                   d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
-                  stroke="#FF6B00"
+                  stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -137,7 +151,9 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">워커로 가입하기</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                워커로 가입하기
+              </h2>
               <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
                 현장 전문가 계정을 만들고 나만의 포트폴리오를 완성하세요.
               </p>
@@ -152,7 +168,10 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
               "클라이언트와 직접 연결",
             ].map((perk) => (
               <li key={perk} className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-primary flex-shrink-0" />
+                <CheckCircle2
+                  size={14}
+                  className="text-primary flex-shrink-0"
+                />
                 <span className="text-sm text-foreground">{perk}</span>
               </li>
             ))}
@@ -169,7 +188,10 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             {/* 이름 */}
             <div>
-              <label htmlFor="modal-realname" className="block text-sm font-medium text-foreground mb-1.5">
+              <label
+                htmlFor="modal-realname"
+                className="block text-sm font-medium text-foreground mb-1.5"
+              >
                 이름
               </label>
               <input
@@ -182,13 +204,18 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 autoComplete="name"
               />
               {fieldErrors.realName && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.realName}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {fieldErrors.realName}
+                </p>
               )}
             </div>
 
             {/* 이메일 */}
             <div>
-              <label htmlFor="modal-email" className="block text-sm font-medium text-foreground mb-1.5">
+              <label
+                htmlFor="modal-email"
+                className="block text-sm font-medium text-foreground mb-1.5"
+              >
                 이메일
               </label>
               <input
@@ -207,7 +234,10 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
 
             {/* 비밀번호 */}
             <div>
-              <label htmlFor="modal-password" className="block text-sm font-medium text-foreground mb-1.5">
+              <label
+                htmlFor="modal-password"
+                className="block text-sm font-medium text-foreground mb-1.5"
+              >
                 비밀번호
               </label>
               <div className="relative">
@@ -230,13 +260,18 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 </button>
               </div>
               {fieldErrors.password && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {fieldErrors.password}
+                </p>
               )}
             </div>
 
             {/* 비밀번호 확인 */}
             <div>
-              <label htmlFor="modal-password-confirm" className="block text-sm font-medium text-foreground mb-1.5">
+              <label
+                htmlFor="modal-password-confirm"
+                className="block text-sm font-medium text-foreground mb-1.5"
+              >
                 비밀번호 확인
               </label>
               <div className="relative">
@@ -246,7 +281,9 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                   placeholder="비밀번호를 다시 입력하세요"
                   value={passwordConfirm}
                   onChange={(e) => setPasswordConfirm(e.target.value)}
-                  className={inputClass(!!fieldErrors.passwordConfirm) + " pr-10"}
+                  className={
+                    inputClass(!!fieldErrors.passwordConfirm) + " pr-10"
+                  }
                   autoComplete="new-password"
                 />
                 <button
@@ -255,11 +292,17 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
-                  {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPasswordConfirm ? (
+                    <EyeOff size={16} />
+                  ) : (
+                    <Eye size={16} />
+                  )}
                 </button>
               </div>
               {fieldErrors.passwordConfirm && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.passwordConfirm}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {fieldErrors.passwordConfirm}
+                </p>
               )}
             </div>
 
@@ -272,13 +315,21 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 onChange={(e) => setAgreeTerms(e.target.checked)}
                 className="mt-0.5 w-4 h-4 rounded border-border accent-primary cursor-pointer"
               />
-              <label htmlFor="modal-agree" className="text-sm text-muted-foreground cursor-pointer leading-relaxed">
+              <label
+                htmlFor="modal-agree"
+                className="text-sm text-muted-foreground cursor-pointer leading-relaxed"
+              >
                 <span className="text-primary font-semibold">이용약관</span>과{" "}
-                <span className="text-primary font-semibold">개인정보 처리방침</span>에 동의합니다
+                <span className="text-primary font-semibold">
+                  개인정보 처리방침
+                </span>
+                에 동의합니다
               </label>
             </div>
             {fieldErrors.agreeTerms && (
-              <p className="text-xs text-red-500 -mt-1">{fieldErrors.agreeTerms}</p>
+              <p className="text-xs text-red-500 -mt-1">
+                {fieldErrors.agreeTerms}
+              </p>
             )}
 
             {/* 제출 버튼 */}
@@ -295,7 +346,10 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
               이미 계정이 있으신가요?{" "}
               <button
                 type="button"
-                onClick={() => { onClose(); router.push("/login") }}
+                onClick={() => {
+                  onClose();
+                  router.push("/login");
+                }}
                 className="text-primary font-semibold hover:underline"
               >
                 로그인
@@ -305,5 +359,5 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 interface NavbarProps {
-  onSignupClick: () => void
+  onSignupClick: () => void;
 }
 
 export function Navbar({ onSignupClick }: NavbarProps) {
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2">
           <span className="text-xl font-bold tracking-tight text-foreground">
             Bluecollar <span className="text-primary">CV</span>
           </span>
@@ -22,13 +22,22 @@ export function Navbar({ onSignupClick }: NavbarProps) {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
-          <a href="/search?tab=workers" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <a
+            href="/search?tab=workers"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             워커 탐색
           </a>
-          <a href="/search?tab=projects" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <a
+            href="/search?tab=projects"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             프로젝트 의뢰
           </a>
-          <a href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <a
+            href="/"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
             서비스 소개
           </a>
         </nav>
@@ -62,11 +71,28 @@ export function Navbar({ onSignupClick }: NavbarProps) {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-background px-6 py-4 flex flex-col gap-4">
-          <a href="/search?tab=workers" className="text-sm font-medium text-foreground">워커 탐색</a>
-          <a href="/search?tab=projects" className="text-sm font-medium text-foreground">프로젝트 의뢰</a>
-          <a href="/" className="text-sm font-medium text-foreground">서비스 소개</a>
+          <a
+            href="/search?tab=workers"
+            className="text-sm font-medium text-foreground"
+          >
+            워커 탐색
+          </a>
+          <a
+            href="/search?tab=projects"
+            className="text-sm font-medium text-foreground"
+          >
+            프로젝트 의뢰
+          </a>
+          <a href="/" className="text-sm font-medium text-foreground">
+            서비스 소개
+          </a>
           <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <button onClick={onSignupClick} className="text-sm font-medium text-muted-foreground">로그인</button>
+            <button
+              onClick={onSignupClick}
+              className="text-sm font-medium text-muted-foreground"
+            >
+              로그인
+            </button>
             <button
               onClick={onSignupClick}
               className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-lg"
@@ -77,5 +103,5 @@ export function Navbar({ onSignupClick }: NavbarProps) {
         </div>
       )}
     </header>
-  )
+  );
 }
