@@ -60,7 +60,7 @@ export function Navbar({ onSignupClick }: NavbarProps) {
 
         {/* Mobile Toggle */}
         <button
-          className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground"
+          className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? "메뉴 닫기" : "메뉴 열기"}
         >

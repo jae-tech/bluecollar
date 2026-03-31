@@ -179,7 +179,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
 
           {/* 공통 에러 */}
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+            <div className="mb-4 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
               {error}
             </div>
           )}
@@ -204,7 +204,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 autoComplete="name"
               />
               {fieldErrors.realName && (
-                <p className="mt-1 text-xs text-red-500">
+                <p className="mt-1 text-xs text-destructive">
                   {fieldErrors.realName}
                 </p>
               )}
@@ -228,7 +228,9 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 autoComplete="email"
               />
               {fieldErrors.email && (
-                <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>
+                <p className="mt-1 text-xs text-destructive">
+                  {fieldErrors.email}
+                </p>
               )}
             </div>
 
@@ -260,7 +262,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 </button>
               </div>
               {fieldErrors.password && (
-                <p className="mt-1 text-xs text-red-500">
+                <p className="mt-1 text-xs text-destructive">
                   {fieldErrors.password}
                 </p>
               )}
@@ -300,7 +302,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 </button>
               </div>
               {fieldErrors.passwordConfirm && (
-                <p className="mt-1 text-xs text-red-500">
+                <p className="mt-1 text-xs text-destructive">
                   {fieldErrors.passwordConfirm}
                 </p>
               )}
@@ -327,7 +329,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
               </label>
             </div>
             {fieldErrors.agreeTerms && (
-              <p className="text-xs text-red-500 -mt-1">
+              <p className="text-xs text-destructive -mt-1">
                 {fieldErrors.agreeTerms}
               </p>
             )}
