@@ -1,61 +1,63 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Eye, EyeOff } from "lucide-react"
-import { login, getMyWorkerProfile, ApiError } from "@/lib/api"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { login, getMyWorkerProfile, ApiError } from "@/lib/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default function LoginPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
-      const res = await login({ email, password })
+      const res = await login({ email, password });
 
       if (res.requiresEmailVerification && res.email) {
         // 이메일 미인증 → 인증 페이지로
-        router.push(`/auth/verify-email?email=${encodeURIComponent(res.email)}`)
-        return
+        router.push(
+          `/auth/verify-email?email=${encodeURIComponent(res.email)}`,
+        );
+        return;
       }
 
       // 로그인 성공 → 워커 프로필 확인
-      const profile = await getMyWorkerProfile()
+      const profile = await getMyWorkerProfile();
       if (profile) {
-        router.push(`/worker/${profile.slug}`)
+        router.push(`/worker/${profile.slug}`);
       } else {
-        router.push("/onboarding")
+        router.push("/onboarding");
       }
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401) {
-          setError("이메일 또는 비밀번호가 올바르지 않습니다")
+          setError("이메일 또는 비밀번호가 올바르지 않습니다");
         } else {
-          setError(err.message)
+          setError(err.message);
         }
       } else {
-        setError("알 수 없는 오류가 발생했습니다")
+        setError("알 수 없는 오류가 발생했습니다");
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const inputClass = (hasError?: boolean) =>
     `w-full px-4 py-3 rounded-xl border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
       hasError ? "border-red-500" : "border-border focus:border-primary"
-    }`
+    }`;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -82,10 +84,15 @@ export default function LoginPage() {
           <div className="flex flex-col gap-3 mb-5">
             <a
               href={`${API_URL}/auth/login/google`}
-              className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl border border-border bg-background hover:bg-secondary text-sm font-medium text-foreground transition-colors"
+              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-xl border border-border bg-background hover:bg-secondary text-sm font-medium text-foreground transition-colors"
             >
               {/* Google 아이콘 */}
-              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                aria-hidden="true"
+              >
                 <path
                   fill="#4285F4"
                   d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"
@@ -107,10 +114,16 @@ export default function LoginPage() {
             </a>
             <a
               href={`${API_URL}/auth/login/kakao`}
-              className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl border border-border bg-[#FEE500] hover:bg-[#F0D900] text-sm font-medium text-[#3C1E1E] transition-colors"
+              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-xl border border-border bg-[#FEE500] hover:bg-[#F0D900] text-sm font-medium text-[#3C1E1E] transition-colors"
             >
               {/* 카카오 아이콘 */}
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                aria-hidden="true"
+              >
                 <path
                   fillRule="evenodd"
                   clipRule="evenodd"
@@ -128,13 +141,15 @@ export default function LoginPage() {
               <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-3 bg-card text-muted-foreground">또는 이메일로 로그인</span>
+              <span className="px-3 bg-card text-muted-foreground">
+                또는 이메일로 로그인
+              </span>
             </div>
           </div>
 
           {/* 에러 */}
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+            <div className="mb-4 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
               {error}
             </div>
           )}
@@ -142,7 +157,10 @@ export default function LoginPage() {
           {/* 이메일 폼 */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <div>
-              <label htmlFor="login-email" className="block text-sm font-medium text-foreground mb-1.5">
+              <label
+                htmlFor="login-email"
+                className="block text-sm font-medium text-foreground mb-1.5"
+              >
                 이메일
               </label>
               <input
@@ -158,7 +176,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-sm font-medium text-foreground mb-1.5">
+              <label
+                htmlFor="login-password"
+                className="block text-sm font-medium text-foreground mb-1.5"
+              >
                 비밀번호
               </label>
               <div className="relative">
@@ -206,5 +227,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

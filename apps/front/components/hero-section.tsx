@@ -192,7 +192,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                 <div className="px-4 pb-4">
                   <button
                     // onClick={onSignupClick}
-                    className="w-full bg-primary text-primary-foreground text-sm font-semibold py-3 rounded-xl hover:bg-primary/90 transition-colors"
+                    className="w-full bg-primary text-primary-foreground text-sm font-semibold py-3.5 rounded-xl hover:bg-primary/90 transition-colors"
                   >
                     워커에게 문의하기
                   </button>
