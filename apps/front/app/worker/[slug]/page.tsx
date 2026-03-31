@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
+import { useState } from "react";
+import Image from "next/image";
 import {
   BadgeCheck,
   Star,
@@ -10,45 +10,45 @@ import {
   Phone,
   MapPin,
   ChevronRight,
-} from "lucide-react"
-import { WORKER_CONFIG } from "@/lib/worker-config"
-import type { PortfolioProject } from "@/lib/worker-config"
-import { ProjectModal } from "@/components/worker/project-modal"
-import { InquiryForm } from "@/components/inquiry-form"
+} from "lucide-react";
+import { WORKER_CONFIG } from "@/lib/worker-config";
+import type { PortfolioProject } from "@/lib/worker-config";
+import { ProjectModal } from "@/components/worker/project-modal";
+import { InquiryForm } from "@/components/inquiry-form";
 
 // ---------------------------------------------------------------------------
 // In production, Claude Code replaces this with:
 //   const config = await fetchWorkerConfig(params.slug)
 // ---------------------------------------------------------------------------
-const config = WORKER_CONFIG
+const config = WORKER_CONFIG;
 
 export default function WorkerProfilePage() {
-  const [activeTag, setActiveTag] = useState("\uC804\uCCB4")
-  const [selectedProject, setSelectedProject] = useState<PortfolioProject | null>(null)
-  const [shareToast, setShareToast] = useState(false)
-  const [inquiryFormOpen, setInquiryFormOpen] = useState(false)
+  const [activeTag, setActiveTag] = useState("\uC804\uCCB4");
+  const [selectedProject, setSelectedProject] =
+    useState<PortfolioProject | null>(null);
+  const [shareToast, setShareToast] = useState(false);
+  const [inquiryFormOpen, setInquiryFormOpen] = useState(false);
 
-  const allTags = ["\uC804\uCCB4", ...config.specialties]
+  const allTags = ["\uC804\uCCB4", ...config.specialties];
 
   const filteredProjects =
     activeTag === "\uC804\uCCB4"
       ? config.portfolio
-      : config.portfolio.filter((p) => p.tags.includes(activeTag))
+      : config.portfolio.filter((p) => p.tags.includes(activeTag));
 
   const handleShare = async () => {
-    const url = window.location.href
+    const url = window.location.href;
     if (navigator.share) {
-      await navigator.share({ title: config.name, url })
+      await navigator.share({ title: config.name, url });
     } else {
-      await navigator.clipboard.writeText(url)
-      setShareToast(true)
-      setTimeout(() => setShareToast(false), 2000)
+      await navigator.clipboard.writeText(url);
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2000);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans">
-
       {/* ── Top Nav ────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-md border-b border-border">
         <div className="max-w-4xl mx-auto px-5 h-14 flex items-center justify-between">
@@ -63,7 +63,9 @@ export default function WorkerProfilePage() {
               aria-label="프로필 공유"
             >
               <Share2 size={14} />
-              <span className="hidden sm:inline">{"\uD504\uB85C\uD544 \uACF5\uC720"}</span>
+              <span className="hidden sm:inline">
+                {"\uD504\uB85C\uD544 \uACF5\uC720"}
+              </span>
             </button>
             <a
               href={`tel:${config.phone}`}
@@ -77,7 +79,6 @@ export default function WorkerProfilePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-5 pb-20">
-
         {/* ── Hero ────────────────────────────────────────────────────── */}
         <section className="pt-8 pb-10 border-b border-border">
           <div className="flex flex-col sm:flex-row gap-6 items-start">
@@ -103,7 +104,9 @@ export default function WorkerProfilePage() {
             {/* Identity */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{config.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  {config.name}
+                </h1>
                 {config.verified && (
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
                     <BadgeCheck size={11} />
@@ -119,16 +122,28 @@ export default function WorkerProfilePage() {
               <div className="flex items-center gap-4 flex-wrap mb-4">
                 <div className="flex items-center gap-1">
                   <Star size={14} className="text-primary fill-primary" />
-                  <span className="text-sm font-bold text-foreground">{config.rating}</span>
-                  <span className="text-sm text-muted-foreground">({config.reviews})</span>
+                  <span className="text-sm font-bold text-foreground">
+                    {config.rating}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    ({config.reviews})
+                  </span>
                 </div>
                 <div className="w-px h-3.5 bg-border" />
                 <span className="text-sm text-muted-foreground">
-                  {"\uACBD\uB825"} <strong className="text-foreground">{config.yearsOfExperience}{"\uB144"}</strong>
+                  {"\uACBD\uB825"}{" "}
+                  <strong className="text-foreground">
+                    {config.yearsOfExperience}
+                    {"\uB144"}
+                  </strong>
                 </span>
                 <div className="w-px h-3.5 bg-border" />
                 <span className="text-sm text-muted-foreground">
-                  {"\uc2dc\uacf5 \uc644\ub8cc"} <strong className="text-foreground">{config.totalProjects}{"\uAC74"}</strong>
+                  {"\uc2dc\uacf5 \uc644\ub8cc"}{" "}
+                  <strong className="text-foreground">
+                    {config.totalProjects}
+                    {"\uAC74"}
+                  </strong>
                 </span>
               </div>
 
@@ -179,8 +194,13 @@ export default function WorkerProfilePage() {
         {/* ── Portfolio Gallery ────────────────────────────────────────── */}
         <section className="pt-10 pb-10 border-b border-border">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-foreground">{"\uD3EC\uD2B8\uD3F4\uB9AC\uC624"}</h2>
-            <span className="text-sm text-muted-foreground">{config.portfolio.length}{"\uAC74"}</span>
+            <h2 className="text-lg font-bold text-foreground">
+              {"\uD3EC\uD2B8\uD3F4\uB9AC\uC624"}
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              {config.portfolio.length}
+              {"\uAC74"}
+            </span>
           </div>
 
           {/* Tag filter */}
@@ -232,7 +252,10 @@ export default function WorkerProfilePage() {
                     <span className="text-xs text-muted-foreground">
                       {project.location} · {project.year}
                     </span>
-                    <ChevronRight size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                    <ChevronRight
+                      size={13}
+                      className="text-muted-foreground group-hover:text-primary transition-colors"
+                    />
                   </div>
                 </div>
               </button>
@@ -242,7 +265,9 @@ export default function WorkerProfilePage() {
 
         {/* ── Experience Timeline ───────────────────────────────────────── */}
         <section className="pt-10 pb-10 border-b border-border">
-          <h2 className="text-lg font-bold text-foreground mb-6">{"\uACBD\uB825"}</h2>
+          <h2 className="text-lg font-bold text-foreground mb-6">
+            {"\uACBD\uB825"}
+          </h2>
           <div className="flex flex-col gap-0">
             {config.experience.map((item, i) => (
               <div key={i} className="flex gap-5">
@@ -255,10 +280,18 @@ export default function WorkerProfilePage() {
                 </div>
                 {/* Content */}
                 <div className="pb-8">
-                  <p className="text-xs text-muted-foreground font-medium mb-0.5">{item.period}</p>
-                  <p className="text-sm font-bold text-foreground">{item.company}</p>
-                  <p className="text-sm text-primary font-medium mb-1">{item.role}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                  <p className="text-xs text-muted-foreground font-medium mb-0.5">
+                    {item.period}
+                  </p>
+                  <p className="text-sm font-bold text-foreground">
+                    {item.company}
+                  </p>
+                  <p className="text-sm text-primary font-medium mb-1">
+                    {item.role}
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {item.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -268,12 +301,16 @@ export default function WorkerProfilePage() {
         {/* ── Contact CTA ──────────────────────────────────────────────── */}
         <section className="pt-10">
           <div className="bg-secondary rounded-2xl border border-border p-8 text-center">
-            <p className="text-sm text-muted-foreground mb-1">{"\uC2DC\uACF5 \uBB38\uC758"}</p>
+            <p className="text-sm text-muted-foreground mb-1">
+              {"\uC2DC\uACF5 \uBB38\uC758"}
+            </p>
             <h2 className="text-xl font-bold text-foreground mb-2 text-balance">
               {"\uD504\uB85C\uC81D\uD2B8 \uC5F0\uB77D\uC8FC\uC138\uC694"}
             </h2>
             <p className="text-sm text-muted-foreground mb-6 text-pretty">
-              {"\uCE74\uCE74\uC624\uD1A1 \uB610\uB294 \uC804\uD654\uB85C \uBB50\uC5B4\uB3C4 \uAD81\uAE08\uD55C \uC810 \uBB3C\uC5B4\uBCF4\uC138\uC694. \uBE60\uB978 \uAE30\uD55C \uC548\uC5D0 \uBC1D\uD600\uB4DC\uB9AC\uACA0\uC2B5\uB2C8\uB2E4."}
+              {
+                "\uCE74\uCE74\uC624\uD1A1 \uB610\uB294 \uC804\uD654\uB85C \uBB50\uC5B4\uB3C4 \uAD81\uAE08\uD55C \uC810 \uBB3C\uC5B4\uBCF4\uC138\uC694. \uBE60\uB978 \uAE30\uD55C \uC548\uC5D0 \uBC1D\uD600\uB4DC\uB9AC\uACA0\uC2B5\uB2C8\uB2E4."
+              }
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <a
@@ -316,16 +353,20 @@ export default function WorkerProfilePage() {
       {/* ── Project Detail Modal ──────────────────────────────────────── */}
       <ProjectModal
         project={selectedProject}
+        config={config}
         onClose={() => setSelectedProject(null)}
         onInquire={() => {
-          setSelectedProject(null)
-          setInquiryFormOpen(true)
+          setSelectedProject(null);
+          setInquiryFormOpen(true);
         }}
       />
 
       {/* ── Inquiry Form ────────────────────────────────────────────── */}
       {inquiryFormOpen && (
-        <InquiryForm workerName={config.name} onClose={() => setInquiryFormOpen(false)} />
+        <InquiryForm
+          workerName={config.name}
+          onClose={() => setInquiryFormOpen(false)}
+        />
       )}
 
       {/* ── Share toast ──────────────────────────────────────────────── */}
@@ -335,5 +376,5 @@ export default function WorkerProfilePage() {
         </div>
       )}
     </div>
-  )
+  );
 }
