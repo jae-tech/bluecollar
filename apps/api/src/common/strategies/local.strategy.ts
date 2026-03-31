@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { Inject } from '@nestjs/common';
@@ -20,13 +20,12 @@ import * as bcrypt from 'bcrypt';
  * 1. 요청 바디에서 email, password 추출
  * 2. 이메일로 사용자 검색
  * 3. 비밀번호 검증 (bcrypt.compare)
- * 4. 사용자 상태 확인 (INACTIVE 사용자 거부)
- * 5. 사용자 객체 반환 → request.user에 설정
+ * 4. 사용자 객체 반환 → request.user에 설정 (INACTIVE 포함)
  *
  * 🔒 보안:
  * - 비밀번호는 bcrypt로 해시되어 DB에 저장
- * - INACTIVE 상태 사용자는 403 Forbidden
- * - 이메일이나 비밀번호 불일치 시 401 Unauthorized
+ * - INACTIVE 계정은 컨트롤러에서 emailVerified: false 기반으로 분기 처리
+ * - 이메일이나 비밀번호 불일치 시 400 Bad Request
  *
  * 📧 이메일 기반:
  * - username 필드를 'email'로 설정하여 이메일 기반 인증
@@ -56,15 +55,11 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
    *
    * @param email 사용자 이메일
    * @param password 사용자 비밀번호 (평문)
-   * @returns 검증 성공 시 사용자 객체, 실패 시 예외 발생
+   * @returns 검증 성공 시 사용자 객체 (INACTIVE 포함), 실패 시 예외 발생
    * @throws BadRequestException 이메일 또는 비밀번호 불일치
-   * @throws ForbiddenException INACTIVE 사용자
    */
   async validate(email: string, password: string): Promise<any> {
-    this.logger.debug(
-      { email },
-      '🔐 로컬 인증 검증 중 (이메일 + 비밀번호)',
-    );
+    this.logger.debug({ email }, '🔐 로컬 인증 검증 중 (이메일 + 비밀번호)');
 
     try {
       // 📧 1️⃣ 이메일로 사용자 검색
@@ -85,11 +80,10 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
 
       // ❌ 사용자 없음
       if (user.length === 0) {
-        this.logger.warn(
-          { email },
-          '❌ 이메일을 찾을 수 없음',
+        this.logger.warn({ email }, '❌ 이메일을 찾을 수 없음');
+        throw new BadRequestException(
+          '이메일 또는 비밀번호가 일치하지 않습니다',
         );
-        throw new BadRequestException('이메일 또는 비밀번호가 일치하지 않습니다');
       }
 
       const userRecord = user[0];
@@ -101,34 +95,22 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
           { email, provider: userRecord.provider },
           '❌ 로컬 비밀번호가 없는 계정 (소셜 로그인만 지원)',
         );
-        throw new BadRequestException('이 계정은 소셜 로그인으로만 접근 가능합니다');
+        throw new BadRequestException(
+          '이 계정은 소셜 로그인으로만 접근 가능합니다',
+        );
       }
 
       const passwordMatch = await bcrypt.compare(password, userRecord.password);
       if (!passwordMatch) {
-        this.logger.warn(
-          { email },
-          '❌ 비밀번호 불일치',
-        );
-        throw new BadRequestException('이메일 또는 비밀번호가 일치하지 않습니다');
-      }
-
-      // 🚫 3️⃣ 상태 확인: INACTIVE 사용자 차단
-      if (userRecord.status === 'INACTIVE') {
-        this.logger.warn(
-          { email, status: 'INACTIVE' },
-          '🚫 INACTIVE 사용자 로그인 시도 거부',
-        );
-        throw new ForbiddenException(
-          '계정이 아직 활성화되지 않았습니다. 이메일과 휴대폰 인증을 완료해주세요.',
+        this.logger.warn({ email }, '❌ 비밀번호 불일치');
+        throw new BadRequestException(
+          '이메일 또는 비밀번호가 일치하지 않습니다',
         );
       }
 
-      // ✅ 4️⃣ 검증 성공 - 사용자 객체 반환
-      this.logger.info(
-        { email, userId: userRecord.id },
-        '✓ 로컬 인증 성공',
-      );
+      // ✅ 3️⃣ 검증 성공 - 사용자 객체 반환 (INACTIVE 포함)
+      // INACTIVE 계정은 컨트롤러에서 emailVerified: false 여부를 확인하여 분기 처리
+      this.logger.info({ email, userId: userRecord.id }, '✓ 로컬 인증 성공');
 
       return {
         id: userRecord.id,
@@ -141,10 +123,7 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
       };
     } catch (error) {
       // 이미 throw된 예외는 그대로 propagate
-      if (
-        error instanceof BadRequestException ||
-        error instanceof ForbiddenException
-      ) {
+      if (error instanceof BadRequestException) {
         throw error;
       }
 

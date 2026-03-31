@@ -31,8 +31,13 @@ import {
 } from '../dtos/send-verification-code.dto';
 import { VerifyCodeDto, VerifyCodeSchema } from '../dtos/verify-code.dto';
 import { LoginDto, LoginResponseDto, EmailLoginDto } from '../dtos/login.dto';
-import { EmailSignupDto } from '../dtos/email-signup.dto';
-import { EmailVerificationDto } from '../dtos/email-verification.dto';
+import { EmailSignupDto, EmailSignupSchema } from '../dtos/email-signup.dto';
+import {
+  EmailVerificationDto,
+  EmailVerificationSchema,
+  EmailVerificationResendDto,
+  EmailVerificationResendSchema,
+} from '../dtos/email-verification.dto';
 import {
   RefreshTokenDto,
   RefreshTokenSchema,
@@ -368,10 +373,22 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @UseGuards(ThrottlerGuard, AuthGuard('local'))
-  async login(@Req() req: FastifyRequest): Promise<LoginResponseDto> {
+  async login(@Req() req: FastifyRequest, @Res() res: any): Promise<void> {
     const user = req.user!;
 
     this.logger.info({ userId: user.id, email: user.email }, '✓ 로그인 성공');
+
+    // INACTIVE 계정 (이메일 미인증): 쿠키 미발급, 이메일 인증 필요 응답 반환
+    if (user.status === 'INACTIVE') {
+      this.logger.info(
+        { email: user.email },
+        '이메일 미인증 계정 로그인 시도 - 인증 페이지 안내',
+      );
+      return res.status(HttpStatus.OK).send({
+        requiresEmailVerification: true,
+        email: user.email,
+      });
+    }
 
     const tokens = await this.tokenService.generateTokens(
       user.id,
@@ -381,20 +398,166 @@ export class AuthController {
       user.workerProfileId,
     );
 
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: tokens.expiresIn,
-      tokenType: 'Bearer',
+    // httpOnly 쿠키로 토큰 발급 (SSO 콜백과 동일한 방식)
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.setCookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 900, // 15분
+      path: '/',
+    });
+    res.setCookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30일
+      path: '/',
+    });
+
+    return res.status(HttpStatus.OK).send({
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
         status: user.status,
         emailVerified: user.emailVerified,
-        phoneVerified: user.phoneVerified,
       },
-    };
+    });
+  }
+
+  /**
+   * 이메일 회원가입 엔드포인트
+   *
+   * 이메일 + 비밀번호로 INACTIVE 계정을 생성하고 이메일 인증 코드를 발송합니다.
+   * 인증 코드 입력 후 계정이 ACTIVE로 전환됩니다.
+   *
+   * 응답:
+   * - 201 Created: 회원가입 성공 (message, email, [개발환경: code])
+   * - 409 Conflict: 이미 사용 중인 이메일
+   * - 400 Bad Request: DTO 검증 실패
+   */
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('email-signup')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: '이메일 회원가입',
+    description:
+      '이메일 + 비밀번호로 계정을 생성하고 인증 이메일을 발송합니다.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '회원가입 성공',
+    schema: {
+      example: {
+        message: '인증 이메일을 발송했습니다.',
+        email: 'user@example.com',
+        code: '123456', // 개발 환경에서만
+      },
+    },
+  })
+  @ApiConflictResponse({ description: '이미 사용 중인 이메일' })
+  @ApiBadRequestResponse({ description: 'DTO 검증 실패' })
+  async emailSignup(
+    @Body(new ZodValidationPipe(EmailSignupSchema)) dto: EmailSignupDto,
+  ) {
+    this.logger.info({ email: dto.email }, '이메일 회원가입 요청 수신');
+    return await this.authService.emailSignup(dto);
+  }
+
+  /**
+   * 이메일 인증 코드 검증 엔드포인트
+   *
+   * 사용자가 입력한 6자리 인증 코드를 검증하고 계정을 ACTIVE로 전환합니다.
+   * 검증 성공 시 httpOnly 쿠키로 JWT 토큰을 발급합니다 (자동 로그인).
+   *
+   * 응답:
+   * - 200 OK: 인증 성공 + Set-Cookie
+   * - 401 Unauthorized: 잘못된 코드 또는 만료
+   */
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('verify-email-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '이메일 인증 코드 검증',
+    description:
+      '6자리 인증 코드를 검증하고 계정을 활성화합니다. 성공 시 자동 로그인.',
+  })
+  @ApiOkResponse({
+    description: '인증 성공',
+    schema: {
+      example: {
+        message: '이메일 인증이 완료되었습니다',
+        user: { id: 'uuid', email: 'user@example.com', role: 'WORKER' },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: '잘못된 코드 또는 만료' })
+  async verifyEmailCode(
+    @Body(new ZodValidationPipe(EmailVerificationSchema))
+    dto: EmailVerificationDto,
+    @Res() res: any,
+  ): Promise<void> {
+    this.logger.info({ email: dto.email }, '이메일 인증 코드 검증 요청 수신');
+
+    const result = await this.authService.verifyEmailAndActivate(dto);
+
+    // httpOnly 쿠키로 토큰 발급
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.setCookie('accessToken', result.tokens.accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 900, // 15분
+      path: '/',
+    });
+    res.setCookie('refreshToken', result.tokens.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30일
+      path: '/',
+    });
+
+    return res.status(HttpStatus.OK).send({
+      message: '이메일 인증이 완료되었습니다',
+      user: result.user,
+    });
+  }
+
+  /**
+   * 이메일 인증 코드 재발송 엔드포인트
+   *
+   * 인증 코드를 받지 못하거나 만료된 경우 재발송을 요청합니다.
+   * Rate Limit: 1분에 1회
+   *
+   * 응답:
+   * - 200 OK: 재발송 성공
+   * - 400 Bad Request: 이미 인증된 계정 또는 사용자 없음
+   */
+  @Public()
+  @Throttle({ default: { limit: 1, ttl: 60000 } })
+  @Post('resend-verification-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '이메일 인증 코드 재발송',
+    description: '인증 코드를 재발송합니다. 1분에 1회 제한.',
+  })
+  @ApiOkResponse({
+    description: '재발송 성공',
+    schema: {
+      example: { message: '인증 이메일을 재발송했습니다' },
+    },
+  })
+  @ApiBadRequestResponse({ description: '이미 인증된 계정 또는 사용자 없음' })
+  async resendVerificationEmail(
+    @Body(new ZodValidationPipe(EmailVerificationResendSchema))
+    dto: EmailVerificationResendDto,
+  ) {
+    this.logger.info({ email: dto.email }, '이메일 인증 코드 재발송 요청 수신');
+    return await this.authService.resendVerificationEmail(dto.email, dto.type);
   }
 
   /**

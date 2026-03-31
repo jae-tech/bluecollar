@@ -10,7 +10,6 @@ import { eq, and, lt } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
 import { PinoLogger } from 'nestjs-pino';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * 이메일 인증 서비스
@@ -23,8 +22,8 @@ import { v4 as uuidv4 } from 'uuid';
  * - PASSWORD_RESET: 비밀번호 재설정 인증
  * - EMAIL_CHANGE: 이메일 변경 인증
  *
- * 토큰 전략:
- * - 형식: UUID (보안 강화)
+ * 코드 전략:
+ * - 형식: 6자리 숫자 (100000~999999)
  * - 유효기한: 24시간
  * - 재사용 방지: isUsed 플래그
  */
@@ -44,7 +43,7 @@ export class EmailVerificationService {
    * 이메일 인증 코드 생성 및 발송
    *
    * 프로세스:
-   * 1. UUID 형식의 인증 코드 생성 (cryptographically secure)
+   * 1. 6자리 숫자 인증 코드 생성 (100000~999999)
    * 2. DB에 저장 (24시간 유효기한)
    * 3. 이메일로 발송
    * 4. 개발 환경에서만 코드 반환
@@ -60,8 +59,8 @@ export class EmailVerificationService {
     try {
       this.logger.info({ email, type }, '이메일 인증 코드 생성 중...');
 
-      // 🔐 1. UUID 형식의 보안 토큰 생성
-      const code = uuidv4();
+      // 🔐 1. 6자리 숫자 인증 코드 생성 (100000 ~ 999999)
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
 
       // ⏰ 2. 24시간 후 만료 시각 계산
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
