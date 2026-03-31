@@ -37,3 +37,7 @@ yarn-error.log*
 .DS_Store
 *.pem
 .gstack/
+
+# Claude Code local settings (gstack binaries, worktrees 등 — 커밋 불필요)
+.claude/skills/
+.claude/worktrees/
