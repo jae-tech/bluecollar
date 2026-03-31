@@ -1,33 +1,35 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Check, AlertCircle } from "lucide-react"
+import { useState, useEffect } from "react";
+import { Check, AlertCircle } from "lucide-react";
 
 interface Step5Props {
-  username: string | undefined
-  onUsernameChange: (username: string) => void
+  username: string | undefined;
+  onUsernameChange: (username: string) => void;
 }
 
 export function Step5Username({ username, onUsernameChange }: Step5Props) {
-  const [status, setStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle")
+  const [status, setStatus] = useState<
+    "idle" | "checking" | "available" | "taken" | "invalid"
+  >("idle");
 
   // Validate username format: only lowercase letters, numbers, and hyphens
-  const isValidFormat = (str: string) => /^[a-z0-9-]{3,}$/.test(str)
+  const isValidFormat = (str: string) => /^[a-z0-9-]{3,}$/.test(str);
 
   useEffect(() => {
     if (!username || username.length < 3) {
-      setStatus("idle")
-      return
+      setStatus("idle");
+      return;
     }
 
     // Check format validity
     if (!isValidFormat(username)) {
-      setStatus("invalid")
-      return
+      setStatus("invalid");
+      return;
     }
 
     // Simulate checking availability
-    setStatus("checking")
+    setStatus("checking");
     const timer = setTimeout(() => {
       // Mock: check if username is taken
       const takenUsernames = [
@@ -39,22 +41,28 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
         "api",
         "support",
         "contact",
-      ]
-      setStatus(takenUsernames.includes(username.toLowerCase()) ? "taken" : "available")
-    }, 600)
+      ];
+      setStatus(
+        takenUsernames.includes(username.toLowerCase()) ? "taken" : "available",
+      );
+    }, 600);
 
-    return () => clearTimeout(timer)
-  }, [username])
+    return () => clearTimeout(timer);
+  }, [username]);
 
   return (
     <div className="flex flex-col h-full">
       {/* Title & Subtitle */}
       <div className="px-6 pt-8 pb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          {"\uB098\uB9CC\uC758 \uAE30\uC220 \uBA85\uD568 \uC8FC\uC18C\uB97C \uC815\uD574\uC8FC\uC138\uC694."}
+          {
+            "\uB098\uB9CC\uC758 \uAE30\uC220 \uBA85\uD568 \uC8FC\uC18C\uB97C \uC815\uD574\uC8FC\uC138\uC694."
+          }
         </h1>
         <p className="text-base text-muted-foreground">
-          {"\uC8FC\uC18C\uB294 \uAC00\uC785 \uD6C4 \uBCC0\uACBD\uC774 \uBD88\uAC00\uB2A5\uD569\uB2C8\uB2E4."}
+          {
+            "\uC8FC\uC18C\uB294 \uAC00\uC785 \uD6C4 \uBCC0\uACBD\uC774 \uBD88\uAC00\uB2A5\uD569\uB2C8\uB2E4."
+          }
         </p>
       </div>
 
@@ -63,7 +71,9 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
         <div className="space-y-4">
           {/* URL Preview */}
           <div className="bg-secondary rounded-xl p-4 border border-border">
-            <p className="text-xs text-muted-foreground mb-2">{"\uAC1C\uC778 \uD504\uB85C\uD544 \uC8FC\uC18C"}</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              {"\uAC1C\uC778 \uD504\uB85C\uD544 \uC8FC\uC18C"}
+            </p>
             <p className="text-lg font-semibold text-foreground break-words">
               <span className="text-muted-foreground">worker.cv/ </span>
               <span className="text-primary">{username || "_"}</span>
@@ -72,22 +82,30 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
 
           {/* Input Field */}
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-2">
-              {"\uC601\uB254\uC18C\uBB38\uc790, \uc22b\uc790, \uc5f0\ub3cc(-)\uB9CC \uC0AC\uC6A9 \uAac0\uB2A5"}
+            <label
+              htmlFor="username-input"
+              className="block text-sm font-semibold text-foreground mb-2"
+            >
+              {
+                "\uC601\uB254\uC18C\uBB38\uc790, \uc22b\uc790, \uc5f0\ub3cc(-)\uB9CC \uC0AC\uC6A9 \uAac0\uB2A5"
+              }
             </label>
             <input
+              id="username-input"
               type="text"
               value={username || ""}
               onChange={(e) => {
-                const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")
-                onUsernameChange(value)
+                const value = e.target.value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9-]/g, "");
+                onUsernameChange(value);
               }}
               placeholder="yourname"
               className={`w-full px-4 py-3 rounded-xl border-2 transition-colors focus:outline-none text-lg bg-card text-foreground ${
                 status === "available"
-                  ? "border-green-300 focus:border-green-500"
+                  ? "border-primary/50 focus:border-primary"
                   : status === "taken"
-                    ? "border-red-300 focus:border-red-500"
+                    ? "border-destructive/50 focus:border-destructive"
                     : "border-border focus:border-primary"
               }`}
             />
@@ -107,38 +125,65 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
               {status === "checking" && (
                 <>
                   <div className="w-4 h-4 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-                  <p className="text-sm text-muted-foreground">{"\uD655\uC778 \uC911..."}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {"\uD655\uC778 \uC911..."}
+                  </p>
                 </>
               )}
               {status === "available" && (
                 <>
-                  <Check size={18} className="text-green-600 flex-shrink-0" />
-                  <p className="text-sm text-green-700">{"\uC0AC\uC6A9 \uAac0\uB2A5\uD55C \uC8FC\uC18C\uC785\uB2C8\uB2E4!"}</p>
+                  <Check size={18} className="text-primary flex-shrink-0" />
+                  <p className="text-sm text-primary">
+                    {
+                      "\uC0AC\uC6A9 \uAac0\uB2A5\uD55C \uC8FC\uC18C\uC785\uB2C8\uB2E4!"
+                    }
+                  </p>
                 </>
               )}
               {status === "taken" && (
                 <>
-                  <AlertCircle size={18} className="text-red-600 flex-shrink-0" />
-                  <p className="text-sm text-red-700">{"\uc774\ubbf8 \uc0ac\uc6a9\uc911\uc778 \uc8fc\uc18c\uc785\ub2c8\ub2e4."}</p>
+                  <AlertCircle
+                    size={18}
+                    className="text-destructive flex-shrink-0"
+                  />
+                  <p className="text-sm text-destructive">
+                    {
+                      "\uc774\ubbf8 \uc0ac\uc6a9\uc911\uc778 \uc8fc\uc18c\uc785\ub2c8\ub2e4."
+                    }
+                  </p>
                 </>
               )}
               {status === "invalid" && (
                 <>
-                  <AlertCircle size={18} className="text-orange-600 flex-shrink-0" />
-                  <p className="text-sm text-orange-700">{"\uc601\ub254\uc18c\ubb38\uc790, \uc22b\uc790, \uc5f0\ub3cc(-)\uB9CC \uC0AC\uC6A9 \uAac0\uB2A5\uD569\uB2C8\uB2E4."}</p>
+                  <AlertCircle
+                    size={18}
+                    className="text-orange-600 flex-shrink-0"
+                  />
+                  <p className="text-sm text-orange-700">
+                    {
+                      "\uc601\ub254\uc18c\ubb38\uc790, \uc22b\uc790, \uc5f0\ub3cc(-)\uB9CC \uC0AC\uC6A9 \uAac0\uB2A5\uD569\uB2C8\uB2E4."
+                    }
+                  </p>
                 </>
               )}
             </div>
           )}
 
           {/* Disclaimer */}
-          <div className="bg-secondary rounded-xl p-4 border border-border">
+          <div className="bg-secondary rounded-xl p-4 border border-border flex items-start gap-2.5">
+            <AlertCircle
+              size={14}
+              className="text-muted-foreground flex-shrink-0 mt-0.5"
+            />
             <p className="text-xs text-muted-foreground">
-              <strong>{"⚠️ \uC911\uc694:"}</strong> {"\uC8FC\uC18C\uB294 \uAC00\uC785 \uD6C4 \uBCC0\uACBD\uC774 \uBD88\uAC00\uB2A5\uD569\uB2C8\uB2E4. \uC2E0\uC911\uD558\uAC8C \uC120\uD0DD\uD574\uC8FC\uC138\uC694."}
+              <strong>{"\uC911\uc694:"}</strong>{" "}
+              {
+                "\uC8FC\uC18C\uB294 \uAC00\uC785 \uD6C4 \uBCC0\uACBD\uC774 \uBD88\uAC00\uB2A5\uD569\uB2C8\uB2E4. \uC2E0\uC911\uD558\uAC8C \uC120\uD0DD\uD574\uC8FC\uC138\uC694."
+              }
             </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
