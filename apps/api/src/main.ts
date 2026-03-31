@@ -7,6 +7,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { Logger } from 'nestjs-pino';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import { AllExceptionsFilter } from '@/common';
@@ -20,14 +21,17 @@ async function bootstrap(): Promise<void> {
     { bufferLogs: true },
   );
 
-  // 1-1. Multipart 플러그인 등록
+  // 1-1. 쿠키 플러그인 등록 (httpOnly 쿠키 읽기/쓰기)
+  await app.register(fastifyCookie as any);
+
+  // 1-2. Multipart 플러그인 등록
   await app.register(fastifyMultipart as any, {
     limits: {
       fileSize: 50 * 1024 * 1024, // 50MB
     },
   });
 
-  // 1-2. 정적 파일 서빙 (업로드된 미디어 파일)
+  // 1-3. 정적 파일 서빙 (업로드된 미디어 파일)
   await app.register(fastifyStatic as any, {
     root: path.join(process.cwd(), 'uploads'),
     prefix: '/media/',
