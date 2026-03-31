@@ -38,19 +38,18 @@ import {
   EmailVerificationResendDto,
   EmailVerificationResendSchema,
 } from '../dtos/email-verification.dto';
-import {
-  RefreshTokenDto,
-  RefreshTokenSchema,
-  RefreshTokenResponseDto,
-  LogoutDto,
-  LogoutSchema,
-} from '../dtos/refresh-token.dto';
+import { RefreshTokenResponseDto } from '../dtos/refresh-token.dto';
 import { PinoLogger } from 'nestjs-pino';
 import { Public } from '@/common/decorators/public.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import type { UserPayload } from '@/common/types/user.types';
 import { FastifyRequest } from 'fastify';
+
+// @fastify/cookie 플러그인이 런타임에 cookies를 추가하므로 타입 확장
+type FastifyRequestWithCookies = FastifyRequest & {
+  cookies: Record<string, string | undefined>;
+};
 
 /**
  * Auth Controller
@@ -278,23 +277,41 @@ export class AuthController {
     description: 'DTO 검증 실패',
   })
   async refreshToken(
-    @Body(new ZodValidationPipe(RefreshTokenSchema))
-    dto: RefreshTokenDto,
-  ): Promise<RefreshTokenResponseDto> {
+    @Req() req: FastifyRequest,
+    @Res() res: any,
+  ): Promise<void> {
+    // refreshToken은 httpOnly 쿠키에서 읽음
+    const refreshToken = (req as any).cookies?.refreshToken as string | undefined;
+
+    if (!refreshToken) {
+      return res
+        .status(HttpStatus.UNAUTHORIZED)
+        .send({ message: '리프레시 토큰이 없습니다' });
+    }
+
     this.logger.info(
-      { refreshToken: dto.refreshToken.substring(0, 8) },
+      { refreshToken: refreshToken.substring(0, 8) },
       '토큰 갱신 요청 수신',
     );
 
-    const accessToken = await this.tokenService.refreshAccessToken(
-      dto.refreshToken,
-    );
+    const accessToken =
+      await this.tokenService.refreshAccessToken(refreshToken);
 
-    return {
+    // 새 accessToken을 쿠키로 재발급
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.setCookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 900,
+      path: '/',
+    });
+
+    return res.status(HttpStatus.OK).send({
       accessToken,
       expiresIn: 900,
       tokenType: 'Bearer',
-    };
+    });
   }
 
   /**
@@ -326,18 +343,25 @@ export class AuthController {
     description: 'DTO 검증 실패',
   })
   async logout(
-    @Body(new ZodValidationPipe(LogoutSchema)) dto: LogoutDto,
-  ): Promise<{ message: string }> {
-    this.logger.info(
-      { refreshToken: dto.refreshToken.substring(0, 8) },
-      '로그아웃 요청 수신',
-    );
+    @Req() req: FastifyRequest,
+    @Res() res: any,
+  ): Promise<void> {
+    // refreshToken은 httpOnly 쿠키에서 읽음
+    const refreshToken = (req as any).cookies?.refreshToken as string | undefined;
 
-    await this.tokenService.revokeRefreshToken(dto.refreshToken);
+    if (refreshToken) {
+      this.logger.info(
+        { refreshToken: refreshToken.substring(0, 8) },
+        '로그아웃 요청 수신',
+      );
+      await this.tokenService.revokeRefreshToken(refreshToken);
+    }
 
-    return {
-      message: 'Logged out successfully',
-    };
+    // 쿠키 삭제
+    res.clearCookie('accessToken', { path: '/' });
+    res.clearCookie('refreshToken', { path: '/' });
+
+    return res.status(HttpStatus.OK).send({ message: 'Logged out successfully' });
   }
 
   // ═══════════════════════════════════════════════════════════════════
