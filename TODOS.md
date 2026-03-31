@@ -28,14 +28,11 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 
 ---
 
-### TODO-003: Hero floating badge 모바일 대응
+### ~~TODO-003: Hero floating badge 모바일 대응~~
 
-**What:** `hero-section.tsx`의 `-top-4 -right-4`, `-bottom-4 -left-4` floating badge들이 모바일에서 화면 밖으로 나갈 수 있음.
-**Why:** 375px 화면에서 `max-w-lg` 카드 + `-4` offset = 화면 넘침 가능성
-**Pros:** 모바일 UX 개선, 레이아웃 깨짐 방지
-**Cons:** 없음
-**Context:** `sm:block hidden`으로 모바일에서 숨기거나, 카드 내부 상단/하단에 인라인 배치로 변경
-**Depends on:** 없음
+**Fixed on main, 2026-03-31** (commit 614f2ad)
+
+- floating badge에 `hidden sm:block` / `hidden sm:flex` 추가 — 375px 이하 모바일에서 숨김
 
 ---
 
@@ -96,66 +93,48 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 
 ---
 
-### TODO-008: Navbar에서 '프로젝트 의뢰' 링크 제거
+### ~~TODO-008: Navbar에서 '프로젝트 의뢰' 링크 제거~~
 
-**What:** `components/navbar.tsx`에서 '프로젝트 의뢰' nav 항목 제거
-**Why:** v1은 워커 중심. 의뢰인 사이드는 v2. 데드 링크는 사용자 신뢰를 깎음.
-**Pros:** 단순한 네비게이션, 데드 링크 제거
-**Cons:** 없음
-**Context:** navbar 구조: `워커 탐색 | 서비스 소개 | 로그인/시작하기`
-**Depends on:** 없음 (즉시 가능)
+**Fixed on main, 2026-03-31** (commit 614f2ad)
+
+- navbar 데스크톱/모바일 메뉴에서 '프로젝트 의뢰' 링크 제거
 
 ---
 
-### TODO-009: ThemeProvider를 라이트모드 전용으로 고정
+### ~~TODO-009: ThemeProvider를 라이트모드 전용으로 고정~~
 
-**What:** `components/theme-provider.tsx`에 `forcedTheme="light"` 설정, 또는 ThemeProvider 제거
-**Why:** CSS dark 변수는 있지만 toggle UI 없고 오렌지 컬러가 다크모드에서 검증 안 됨. v1은 라이트모드만.
-**Pros:** 코드 단순화, 다크모드 스타일 버그 방지
-**Cons:** 다크모드 사용자가 시스템 설정 무시됨
-**Context:** `app/layout.tsx`의 `<ThemeProvider>` 수정
-**Depends on:** 없음 (즉시 가능)
+**확인 완료, 2026-03-31** — `app/layout.tsx`에 ThemeProvider가 없음. 이미 라이트모드 고정 상태.
 
 ---
 
 ## 🔐 인증 시스템
 
-### TODO-010: Next.js middleware 라우트 보호
+### ~~TODO-010: Next.js middleware 라우트 보호~~
 
-**What:** `apps/front/middleware.ts` 추가. `/onboarding`, `/dashboard` 등 인증 필요 페이지에서 쿠키 없으면 `/login` 리다이렉트. `/login` 페이지에서 쿠키 있으면 `/worker/{slug}` 또는 `/onboarding` 리다이렉트.
-**Why:** 로그인 안 한 유저가 온보딩을 완료해도 JWT가 없어 API 호출이 401로 실패함. 유저는 저장이 안 된 줄 모름.
-**Pros:** 잘못된 상태 진입 방지, 깔끔한 UX
-**Cons:** httpOnly 쿠키는 middleware에서 accessToken 유효성 검증 불가 (쿠키 존재 여부만 체크 가능)
-**Context:** 쿠키 존재 여부만으로 1차 가드. 실제 유효성은 API 호출 시 401로 확인. `/auth/verify-email`은 보호 불필요 (미인증 유저 전용).
-**Effort:** S
-**Priority:** P2
-**Depends on:** 인증 시스템 완료 (이번 사이클)
+**Fixed on main, 2026-03-31** (commit 614f2ad)
+
+- `apps/front/middleware.ts` 신규 추가
+- `/onboarding`, `/dashboard` → 미인증 시 `/login?redirect=...` 리다이렉트
+- `/login` → 인증 상태면 `/` 리다이렉트
+- `/auth/*` 경로는 matcher에서 제외 (이메일 인증 페이지 접근 허용)
 
 ---
 
-### TODO-011: staging 환경 인증 코드 노출 방지
+### ~~TODO-011: staging 환경 인증 코드 노출 방지~~
 
-**What:** `NODE_ENV !== 'production'` 조건 대신 별도 환경변수(`EXPOSE_EMAIL_CODE=true`)로 코드 응답 포함 여부를 제어. 이메일 발송 인프라 구축 후 완전 제거.
-**Why:** staging이 `NODE_ENV=production`으로 설정되지 않으면 인증 코드가 API 응답에 포함됨 — 보안 위협.
-**Pros:** staging 보안 강화, 이메일 발송 없는 로컬 개발도 명시적으로 허용
-**Cons:** 환경변수 추가 관리 필요
-**Context:** `auth.service.ts`, `email-verification.service.ts`의 `NODE_ENV` 체크 위치 수정.
-**Effort:** S
-**Priority:** P2
-**Depends on:** 없음
+**Fixed on main, 2026-03-31**
+- `email-verification.service.ts`: `NODE_ENV !== 'production'` → `EXPOSE_EMAIL_CODE === 'true'`
+- `auth.service.ts`: SMS 코드도 동일하게 `EXPOSE_SMS_CODE === 'true'` 조건으로 변경
+- 로컬 개발 시 `.env`에 `EXPOSE_EMAIL_CODE=true` 설정 필요, staging은 해당 변수 없이 운영
 
 ---
 
-### TODO-012: cleanupExpiredCodes() Cron 연결
+### ~~TODO-012: cleanupExpiredCodes() Cron 연결~~
 
-**What:** `EmailVerificationService.cleanupExpiredCodes()`를 `@nestjs/schedule`의 `@Cron(CronExpression.EVERY_DAY_AT_2AM)`으로 스케줄링.
-**Why:** 인증 완료된 코드와 만료된 코드가 `emailVerificationCodes` 테이블에 무한정 쌓임. 서비스 규모에 따라 성능 저하 가능.
-**Pros:** 테이블 크기 관리, 쿼리 성능 유지
-**Cons:** `@nestjs/schedule` 패키지 추가 필요
-**Context:** `EmailVerificationService`에 `@Cron` 데코레이터 추가 또는 별도 `CleanupService` 생성. 현재 메서드는 완성된 상태.
-**Effort:** S
-**Priority:** P3
-**Depends on:** 없음
+**Fixed on main, 2026-03-31**
+- `@nestjs/schedule` 패키지 설치
+- `app.module.ts`에 `ScheduleModule.forRoot()` 추가
+- `EmailVerificationService.cleanupExpiredCodes()`에 `@Cron(CronExpression.EVERY_DAY_AT_2AM)` 데코레이터 추가
 
 ---
 

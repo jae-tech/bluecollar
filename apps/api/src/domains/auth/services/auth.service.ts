@@ -250,8 +250,8 @@ export class AuthService {
 
       this.logger.info({ phoneNumber }, 'Verification code sent successfully');
 
-      // 개발/테스트 환경에서만 code 반환, 프로덕션에서는 제외
-      if (process.env.NODE_ENV !== 'production') {
+      // EXPOSE_SMS_CODE=true 환경에서만 code 반환 (개발/로컬 테스트용)
+      if (process.env.EXPOSE_SMS_CODE === 'true') {
         return { code, message: 'SMS sent successfully' };
       }
       return { message: 'SMS sent successfully' };
@@ -507,8 +507,8 @@ export class AuthService {
       'SIGNUP',
     );
 
-    // 개발 환경에서는 code를 응답에 포함
-    if (process.env.NODE_ENV !== 'production' && code) {
+    // EXPOSE_EMAIL_CODE=true 환경에서는 code를 응답에 포함 (개발/로컬 테스트용)
+    if (process.env.EXPOSE_EMAIL_CODE === 'true' && code) {
       return {
         message:
           '인증 이메일을 발송했습니다. 이메일을 확인하고 인증 코드를 입력하세요.',

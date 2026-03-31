@@ -281,7 +281,9 @@ export class AuthController {
     @Res() res: any,
   ): Promise<void> {
     // refreshToken은 httpOnly 쿠키에서 읽음
-    const refreshToken = (req as any).cookies?.refreshToken as string | undefined;
+    const refreshToken = (req as any).cookies?.refreshToken as
+      | string
+      | undefined;
 
     if (!refreshToken) {
       return res
@@ -342,12 +344,11 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: 'DTO 검증 실패',
   })
-  async logout(
-    @Req() req: FastifyRequest,
-    @Res() res: any,
-  ): Promise<void> {
+  async logout(@Req() req: FastifyRequest, @Res() res: any): Promise<void> {
     // refreshToken은 httpOnly 쿠키에서 읽음
-    const refreshToken = (req as any).cookies?.refreshToken as string | undefined;
+    const refreshToken = (req as any).cookies?.refreshToken as
+      | string
+      | undefined;
 
     if (refreshToken) {
       this.logger.info(
@@ -361,7 +362,9 @@ export class AuthController {
     res.clearCookie('accessToken', { path: '/' });
     res.clearCookie('refreshToken', { path: '/' });
 
-    return res.status(HttpStatus.OK).send({ message: 'Logged out successfully' });
+    return res
+      .status(HttpStatus.OK)
+      .send({ message: 'Logged out successfully' });
   }
 
   // ═══════════════════════════════════════════════════════════════════
