@@ -1,0 +1,11 @@
+name = "bluecollar-front"
+main = ".open-next/worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# 정적 자산 (Next.js 빌드 결과물)
+assets = { directory = ".open-next/assets", binding = "ASSETS" }
+
+# 환경변수는 Cloudflare Dashboard 또는 .dev.vars 에서 관리
+# [vars]
+# NEXT_PUBLIC_API_URL = "https://api.bluecollarcv.kr"

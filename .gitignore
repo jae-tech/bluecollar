@@ -27,6 +27,10 @@ out/
 build
 dist
 
+# OpenNext / Cloudflare Workers 빌드 아티팩트
+.open-next/
+.wrangler/
+
 
 # Debug
 npm-debug.log*
