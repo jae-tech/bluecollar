@@ -1,4 +1,10 @@
-import { Inject, Injectable, ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
 import {
@@ -9,11 +15,15 @@ import {
   authCodes,
 } from '@repo/database';
 import { CreateWorkerDto } from '../dtos/create-worker.dto';
+import { EmailSignupDto } from '../dtos/email-signup.dto';
+import { EmailVerificationDto } from '../dtos/email-verification.dto';
 import { eq, desc } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
 import type { ISmsService } from '@/infrastructure/sms/interfaces/sms-service.interface';
 import { TokenService } from './token.service';
+import { EmailVerificationService } from './email-verification.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +32,7 @@ export class AuthService {
     private readonly logger: PinoLogger,
     @Inject('SMS_SERVICE') private readonly smsService: ISmsService,
     private readonly tokenService: TokenService,
+    private readonly emailVerificationService: EmailVerificationService,
   ) {
     // Logger가 제대로 주입되었으면 context 설정
     // (Test 환경에서 logger가 없을 수도 있으므로 safe check)
@@ -200,7 +211,9 @@ export class AuthService {
    * @returns 발송된 인증번호 (개발/테스트 용도로만 반환)
    * @throws Error - SMS 발송 실패 시 에러 re-throw
    */
-  async sendVerificationCode(phoneNumber: string): Promise<{ code?: string; message: string }> {
+  async sendVerificationCode(
+    phoneNumber: string,
+  ): Promise<{ code?: string; message: string }> {
     this.logger.info(
       { phoneNumber },
       'Starting verification code sending process',
@@ -415,14 +428,14 @@ export class AuthService {
         workerProfileId,
       );
 
-      this.logger.info(
-        { userId, role: userRole },
-        '로그인 완료 - 토큰 발급',
-      );
+      this.logger.info({ userId, role: userRole }, '로그인 완료 - 토큰 발급');
 
       return tokens;
     } catch (error) {
-      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
 
@@ -434,6 +447,224 @@ export class AuthService {
       );
       throw new UnauthorizedException('로그인에 실패했습니다');
     }
+  }
+
+  /**
+   * 이메일 회원가입
+   *
+   * 이메일 + 비밀번호로 INACTIVE 계정을 생성하고 이메일 인증 코드를 발송합니다.
+   *
+   * 프로세스:
+   * 1. 이메일 중복 확인 (409 Conflict)
+   * 2. bcrypt로 비밀번호 해시
+   * 3. users 테이블에 INACTIVE 상태로 저장
+   * 4. 이메일 인증 코드 발송 (EmailVerificationService)
+   *
+   * @param dto 회원가입 DTO (email, password, realName, agreeTerms)
+   * @returns 회원가입 결과 (message, email, 개발 환경에서는 code 포함)
+   * @throws ConflictException 이미 사용 중인 이메일
+   */
+  async emailSignup(
+    dto: EmailSignupDto,
+  ): Promise<{ message: string; email: string; code?: string }> {
+    const { email, password, realName } = dto;
+
+    this.logger.info({ email }, '이메일 회원가입 시작');
+
+    // 이메일 중복 확인
+    const existingUser = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      this.logger.warn({ email }, '이미 가입된 이메일');
+      throw new ConflictException('이미 사용 중인 이메일 주소입니다');
+    }
+
+    // bcrypt로 비밀번호 해시 (saltRounds: 10)
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // users 테이블에 INACTIVE 상태로 저장
+    await this.db.insert(users).values({
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      realName: realName || undefined,
+      role: 'WORKER',
+      status: 'INACTIVE',
+      emailVerified: false,
+      phoneVerified: false,
+      provider: 'local',
+      isVerified: false,
+    });
+
+    this.logger.info({ email }, '이메일 회원가입 계정 생성 완료');
+
+    // 이메일 인증 코드 발송
+    const { code } = await this.emailVerificationService.sendVerificationCode(
+      email,
+      'SIGNUP',
+    );
+
+    // 개발 환경에서는 code를 응답에 포함
+    if (process.env.NODE_ENV !== 'production' && code) {
+      return {
+        message:
+          '인증 이메일을 발송했습니다. 이메일을 확인하고 인증 코드를 입력하세요.',
+        email,
+        code,
+      };
+    }
+
+    return {
+      message:
+        '인증 이메일을 발송했습니다. 이메일을 확인하고 인증 코드를 입력하세요.',
+      email,
+    };
+  }
+
+  /**
+   * 이메일 인증 완료 및 계정 활성화
+   *
+   * 이메일 인증 코드를 검증하고 계정을 ACTIVE로 전환한 후 JWT 토큰을 발급합니다.
+   *
+   * 프로세스:
+   * 1. EmailVerificationService로 코드 검증
+   * 2. users 테이블: emailVerified=true, status=ACTIVE 업데이트
+   * 3. TokenService로 JWT 토큰 발급 (자동 로그인)
+   *
+   * @param dto 이메일 인증 DTO (email, code, type)
+   * @returns 사용자 정보 및 JWT 토큰
+   * @throws UnauthorizedException 인증 코드 불일치 또는 만료
+   */
+  async verifyEmailAndActivate(dto: EmailVerificationDto): Promise<{
+    user: {
+      id: string;
+      email: string;
+      role: string;
+      status: string;
+      emailVerified: boolean;
+    };
+    tokens: { accessToken: string; refreshToken: string; expiresIn: number };
+  }> {
+    const { email, code, type } = dto;
+
+    this.logger.info(
+      { email, type },
+      '이메일 인증 코드 검증 및 계정 활성화 시작',
+    );
+
+    // 인증 코드 검증
+    await this.emailVerificationService.verifyEmailCode(email, code, type);
+
+    // 사용자 조회
+    const userRecords = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (userRecords.length === 0) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다');
+    }
+
+    const user = userRecords[0];
+
+    // emailVerified=true, status=ACTIVE로 업데이트
+    await this.db
+      .update(users)
+      .set({
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+        status: 'ACTIVE',
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id));
+
+    this.logger.info(
+      { email, userId: user.id },
+      '이메일 인증 완료 - 계정 활성화',
+    );
+
+    // 워커 프로필 ID 조회 (존재하는 경우)
+    let workerProfileId: string | undefined;
+    if (user.role === 'WORKER') {
+      const profile = await this.db
+        .select({ id: workerProfiles.id })
+        .from(workerProfiles)
+        .where(eq(workerProfiles.userId, user.id))
+        .limit(1);
+
+      if (profile.length > 0) {
+        workerProfileId = profile[0].id;
+      }
+    }
+
+    // JWT 토큰 발급 (자동 로그인)
+    const tokens = await this.tokenService.generateTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.provider || 'local',
+      workerProfileId,
+    );
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        status: 'ACTIVE',
+        emailVerified: true,
+      },
+      tokens,
+    };
+  }
+
+  /**
+   * 이메일 인증 코드 재발송
+   *
+   * 사용자가 인증 코드를 받지 못했거나 만료된 경우 재발송합니다.
+   *
+   * @param email 대상 이메일
+   * @param type 인증 타입 (SIGNUP | PASSWORD_RESET | EMAIL_CHANGE)
+   * @returns 재발송 결과 메시지
+   * @throws BadRequestException 이미 인증된 이메일 또는 사용자 없음
+   */
+  async resendVerificationEmail(
+    email: string,
+    type: string,
+  ): Promise<{ message: string }> {
+    this.logger.info({ email, type }, '이메일 인증 코드 재발송 요청');
+
+    // 사용자 확인
+    const userRecords = await this.db
+      .select({ id: users.id, emailVerified: users.emailVerified })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (userRecords.length === 0) {
+      throw new BadRequestException('등록되지 않은 이메일 주소입니다');
+    }
+
+    const user = userRecords[0];
+
+    // 이미 인증된 경우 재발송 거부
+    if (user.emailVerified) {
+      throw new BadRequestException('이미 이메일 인증이 완료된 계정입니다');
+    }
+
+    // 인증 코드 재발송
+    await this.emailVerificationService.sendVerificationCode(
+      email,
+      type as 'SIGNUP' | 'PASSWORD_RESET' | 'EMAIL_CHANGE',
+    );
+
+    this.logger.info({ email }, '이메일 인증 코드 재발송 완료');
+
+    return { message: '인증 이메일을 재발송했습니다' };
   }
 
   /**

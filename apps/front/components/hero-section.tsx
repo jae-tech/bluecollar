@@ -152,7 +152,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                 {/* CTA in card */}
                 <div className="px-4 pb-4">
                   <button
-                    onClick={onSignupClick}
+                    // onClick={onSignupClick}
                     className="w-full bg-primary text-primary-foreground text-sm font-semibold py-3 rounded-xl hover:bg-primary/90 transition-colors"
                   >
                     워커에게 문의하기
@@ -176,7 +176,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-foreground">나만의 링크</p>
-                  <p className="text-xs text-muted-foreground">bluecollarcv.kr/kimcs</p>
+                  <p className="text-xs text-muted-foreground">my.bluecollarcv.kr</p>
                 </div>
               </div>
             </div>

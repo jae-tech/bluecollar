@@ -1,6 +1,7 @@
 # BlueCollar CV — Design TODOs
 
 Generated from `/plan-design-review` on 2026-03-30.
+Updated from `/plan-eng-review` on 2026-03-31.
 
 ---
 
@@ -109,3 +110,65 @@ Generated from `/plan-design-review` on 2026-03-30.
 **Cons:** 다크모드 사용자가 시스템 설정 무시됨
 **Context:** `app/layout.tsx`의 `<ThemeProvider>` 수정
 **Depends on:** 없음 (즉시 가능)
+
+---
+
+## 🔐 인증 시스템
+
+### TODO-010: Next.js middleware 라우트 보호
+**What:** `apps/front/middleware.ts` 추가. `/onboarding`, `/dashboard` 등 인증 필요 페이지에서 쿠키 없으면 `/login` 리다이렉트. `/login` 페이지에서 쿠키 있으면 `/worker/{slug}` 또는 `/onboarding` 리다이렉트.
+**Why:** 로그인 안 한 유저가 온보딩을 완료해도 JWT가 없어 API 호출이 401로 실패함. 유저는 저장이 안 된 줄 모름.
+**Pros:** 잘못된 상태 진입 방지, 깔끔한 UX
+**Cons:** httpOnly 쿠키는 middleware에서 accessToken 유효성 검증 불가 (쿠키 존재 여부만 체크 가능)
+**Context:** 쿠키 존재 여부만으로 1차 가드. 실제 유효성은 API 호출 시 401로 확인. `/auth/verify-email`은 보호 불필요 (미인증 유저 전용).
+**Effort:** S
+**Priority:** P2
+**Depends on:** 인증 시스템 완료 (이번 사이클)
+
+---
+
+### TODO-011: staging 환경 인증 코드 노출 방지
+**What:** `NODE_ENV !== 'production'` 조건 대신 별도 환경변수(`EXPOSE_EMAIL_CODE=true`)로 코드 응답 포함 여부를 제어. 이메일 발송 인프라 구축 후 완전 제거.
+**Why:** staging이 `NODE_ENV=production`으로 설정되지 않으면 인증 코드가 API 응답에 포함됨 — 보안 위협.
+**Pros:** staging 보안 강화, 이메일 발송 없는 로컬 개발도 명시적으로 허용
+**Cons:** 환경변수 추가 관리 필요
+**Context:** `auth.service.ts`, `email-verification.service.ts`의 `NODE_ENV` 체크 위치 수정.
+**Effort:** S
+**Priority:** P2
+**Depends on:** 없음
+
+---
+
+### TODO-012: cleanupExpiredCodes() Cron 연결
+**What:** `EmailVerificationService.cleanupExpiredCodes()`를 `@nestjs/schedule`의 `@Cron(CronExpression.EVERY_DAY_AT_2AM)`으로 스케줄링.
+**Why:** 인증 완료된 코드와 만료된 코드가 `emailVerificationCodes` 테이블에 무한정 쌓임. 서비스 규모에 따라 성능 저하 가능.
+**Pros:** 테이블 크기 관리, 쿼리 성능 유지
+**Cons:** `@nestjs/schedule` 패키지 추가 필요
+**Context:** `EmailVerificationService`에 `@Cron` 데코레이터 추가 또는 별도 `CleanupService` 생성. 현재 메서드는 완성된 상태.
+**Effort:** S
+**Priority:** P3
+**Depends on:** 없음
+
+---
+
+## 🔌 API 연동 준비 (워커 프로필 페이지)
+
+### TODO-013: InquiryForm mock submit → 실제 API 연동
+**What:** `apps/front/components/inquiry-form.tsx`의 `handleSubmit`이 현재 setTimeout mock 처리.
+**Why:** 사용자가 문의 폼을 제출해도 실제로 아무 데이터도 저장되지 않음. API 연동 PR 때 반드시 처리.
+**Pros:** 실제 문의 데이터 수신 가능, 워커에게 알림 발송 가능
+**Cons:** 백엔드 `/inquiries` 엔드포인트 설계 필요
+**Context:** `handleSubmit` 함수 내 `// TODO: POST /inquiries API 연동 필요 — 현재 mock 처리` 코멘트 참조. 성공 시 토스트 메시지는 이미 구현됨.
+**Effort:** M
+**Priority:** P1
+**Depends on:** API 연동 PR (20260330 디자인 문서)
+
+### TODO-014: /worker/[slug] 동적 라우트에 notFound() 처리 추가
+**What:** `apps/front/app/worker/[slug]/page.tsx`에 slug 기반 DB 조회 후 없으면 `notFound()` 호출.
+**Why:** 현재 어떤 slug든 WORKER_CONFIG를 반환함. API 연동 후 존재하지 않는 워커 URL은 404여야 함.
+**Pros:** 올바른 SEO, 사용자에게 명확한 오류 페이지
+**Cons:** 없음
+**Context:** API 연동 시 `fetchWorkerConfig(slug)` 함수가 null 반환할 경우 `import { notFound } from 'next/navigation'` 후 `notFound()` 호출.
+**Effort:** S
+**Priority:** P1
+**Depends on:** API 연동 PR (20260330 디자인 문서)

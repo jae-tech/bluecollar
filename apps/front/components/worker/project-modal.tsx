@@ -3,18 +3,17 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { X, ChevronLeft, ChevronRight, MapPin, Clock, Calendar, Layers, BadgeCheck, Star, Phone, MessageCircle } from "lucide-react"
-import type { PortfolioProject } from "@/lib/worker-config"
-import { WORKER_CONFIG } from "@/lib/worker-config"
+import type { PortfolioProject, WorkerConfig } from "@/lib/worker-config"
 
 interface ProjectModalProps {
   project: PortfolioProject | null
+  config: WorkerConfig
   onClose: () => void
   onInquire?: () => void
 }
 
-export function ProjectModal({ project, onClose, onInquire }: ProjectModalProps) {
+export function ProjectModal({ project, config, onClose, onInquire }: ProjectModalProps) {
   const [imgIndex, setImgIndex] = useState(0)
-  const config = WORKER_CONFIG
 
   useEffect(() => {
     setImgIndex(0)

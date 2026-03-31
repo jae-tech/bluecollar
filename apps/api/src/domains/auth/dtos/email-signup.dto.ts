@@ -48,12 +48,9 @@ export const EmailSignupSchema = z.object({
     .describe('실명'),
 
   agreeTerms: z
-    .boolean()
-    .refine((val) => val === true, {
-      message: '이용약관과 개인정보 처리방침에 동의해야 합니다',
+    .literal(true, {
+      error: '이용약관과 개인정보 처리방침에 동의해야 합니다',
     })
-    .optional()
-    .default(false)
     .describe('이용약관 동의'),
 });
 

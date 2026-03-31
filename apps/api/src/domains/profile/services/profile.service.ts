@@ -2,6 +2,7 @@ import {
   Inject,
   Injectable,
   BadRequestException,
+  ConflictException,
   NotFoundException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
@@ -11,6 +12,7 @@ import {
   UpdateWorkerProfileBodyDto,
   UpdateWorkerProfileInfoDto,
 } from '../dtos/update-profile.dto';
+import { CompleteOnboardingDto } from '../dtos/complete-onboarding.dto';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
@@ -271,6 +273,194 @@ export class ProfileService {
     this.logger.info({ workerProfileId }, '워커 프로필 핵심 정보 수정 완료');
 
     return updated;
+  }
+
+  /**
+   * 현재 사용자의 워커 프로필 조회
+   *
+   * JWT 토큰에서 추출된 userId로 워커 프로필을 조회합니다.
+   * 온보딩 완료 여부 확인에 사용됩니다.
+   *
+   * @param userId 사용자 ID (JWT에서 추출)
+   * @returns 워커 프로필 (fields, areas 포함) 또는 null
+   */
+  async getMyWorkerProfile(userId: string) {
+    this.logger.debug({ userId }, '내 워커 프로필 조회 중');
+
+    const profiles = await this.db
+      .select()
+      .from(workerProfiles)
+      .where(eq(workerProfiles.userId, userId))
+      .limit(1);
+
+    if (!profiles || profiles.length === 0) {
+      this.logger.debug({ userId }, '워커 프로필 없음');
+      return null;
+    }
+
+    const profile = profiles[0];
+    const fields = await this.getWorkerFields(profile.id);
+    const areas = await this.getWorkerAreas(profile.id);
+
+    return {
+      ...profile,
+      fields,
+      areas,
+    };
+  }
+
+  /**
+   * 워커 온보딩 완료
+   *
+   * 워커 프로필 생성 또는 업데이트, 전문 분야 및 서비스 지역을 저장합니다.
+   * 모든 DB 작업은 Drizzle 트랜잭션으로 처리됩니다.
+   *
+   * 프로세스:
+   * 1. slug 중복 확인 (동일 사용자 slug는 허용)
+   * 2. workerProfiles upsert (없으면 생성, 있으면 업데이트)
+   * 3. workerFields 삭제 후 재삽입
+   * 4. areaCodes 제공 시 workerAreas 삭제 후 재삽입
+   *
+   * @param userId 사용자 ID
+   * @param dto 온보딩 완료 DTO
+   * @returns 업데이트된 워커 프로필 정보
+   * @throws ConflictException slug가 이미 다른 사용자에 의해 사용 중
+   */
+  async completeOnboarding(userId: string, dto: CompleteOnboardingDto) {
+    const {
+      slug,
+      businessName,
+      fieldCodes,
+      yearsOfExperience,
+      careerSummary,
+      areaCodes,
+    } = dto;
+
+    this.logger.info({ userId, slug }, '온보딩 완료 프로세스 시작');
+
+    return await this.db.transaction(async (tx) => {
+      try {
+        // slug 중복 확인 (동일 사용자의 기존 slug는 허용)
+        const slugConflict = await tx
+          .select({ id: workerProfiles.id, userId: workerProfiles.userId })
+          .from(workerProfiles)
+          .where(eq(workerProfiles.slug, slug))
+          .limit(1);
+
+        if (slugConflict.length > 0 && slugConflict[0].userId !== userId) {
+          this.logger.warn({ slug }, 'slug 중복 충돌');
+          throw new ConflictException('이미 사용 중인 slug입니다');
+        }
+
+        // 기존 프로필 조회 (upsert 처리)
+        const existingProfile = await tx
+          .select({ id: workerProfiles.id })
+          .from(workerProfiles)
+          .where(eq(workerProfiles.userId, userId))
+          .limit(1);
+
+        let workerProfileId: string;
+
+        if (existingProfile.length > 0) {
+          // 기존 프로필 업데이트
+          workerProfileId = existingProfile[0].id;
+          this.logger.debug({ workerProfileId }, '기존 워커 프로필 업데이트');
+
+          await tx
+            .update(workerProfiles)
+            .set({
+              slug,
+              businessName,
+              yearsOfExperience: yearsOfExperience ?? undefined,
+              careerSummary: careerSummary ?? undefined,
+              updatedAt: new Date(),
+            })
+            .where(eq(workerProfiles.id, workerProfileId));
+        } else {
+          // 신규 프로필 생성
+          this.logger.debug({ userId }, '신규 워커 프로필 생성');
+
+          const [newProfile] = await tx
+            .insert(workerProfiles)
+            .values({
+              userId,
+              slug,
+              businessName,
+              yearsOfExperience: yearsOfExperience ?? undefined,
+              careerSummary: careerSummary ?? undefined,
+            })
+            .returning();
+
+          workerProfileId = newProfile.id;
+        }
+
+        // 전문 분야 업데이트: 기존 삭제 후 재삽입
+        await tx
+          .delete(workerFields)
+          .where(eq(workerFields.workerProfileId, workerProfileId));
+
+        await tx.insert(workerFields).values(
+          fieldCodes.map((fieldCode) => ({
+            workerProfileId,
+            fieldCode,
+          })),
+        );
+
+        this.logger.debug(
+          { workerProfileId, count: fieldCodes.length },
+          '전문 분야 업데이트 완료',
+        );
+
+        // 서비스 지역 업데이트: areaCodes가 제공된 경우만 처리
+        if (areaCodes && areaCodes.length > 0) {
+          await tx
+            .delete(workerAreas)
+            .where(eq(workerAreas.workerProfileId, workerProfileId));
+
+          await tx.insert(workerAreas).values(
+            areaCodes.map((areaCode) => ({
+              workerProfileId,
+              areaCode,
+            })),
+          );
+
+          this.logger.debug(
+            { workerProfileId, count: areaCodes.length },
+            '서비스 지역 업데이트 완료',
+          );
+        }
+
+        // 업데이트된 프로필 조회 및 반환
+        const updatedProfile = await tx
+          .select()
+          .from(workerProfiles)
+          .where(eq(workerProfiles.id, workerProfileId))
+          .limit(1);
+
+        const updatedFields = await tx
+          .select()
+          .from(workerFields)
+          .where(eq(workerFields.workerProfileId, workerProfileId));
+
+        const updatedAreas = await tx
+          .select()
+          .from(workerAreas)
+          .where(eq(workerAreas.workerProfileId, workerProfileId));
+
+        this.logger.info({ userId, workerProfileId }, '온보딩 완료');
+
+        return {
+          ...updatedProfile[0],
+          fields: updatedFields.map((f) => ({ fieldCode: f.fieldCode })),
+          areas: updatedAreas.map((a) => ({ areaCode: a.areaCode })),
+        };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error({ error: errorMessage }, '온보딩 완료 처리 실패');
+        throw error;
+      }
+    });
   }
 
   /**
