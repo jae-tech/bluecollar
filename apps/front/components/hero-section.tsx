@@ -200,7 +200,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
               </div>
 
               {/* Floating stat badge */}
-              <div className="absolute -top-4 -right-4 bg-card border border-border rounded-2xl px-4 py-3 shadow-lg">
+              <div className="hidden sm:block absolute -top-4 -right-4 bg-card border border-border rounded-2xl px-4 py-3 shadow-lg">
                 <p className="text-xs text-muted-foreground font-medium">
                   이번 달 완료
                 </p>
@@ -213,7 +213,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
               </div>
 
               {/* Floating profile link */}
-              <div className="absolute -bottom-4 -left-4 bg-card border border-border rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
+              <div className="hidden sm:flex absolute -bottom-4 -left-4 bg-card border border-border rounded-2xl px-4 py-3 shadow-lg items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">
                   <svg
                     width="14"

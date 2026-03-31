@@ -29,12 +29,6 @@ export function Navbar({ onSignupClick }: NavbarProps) {
             워커 탐색
           </a>
           <a
-            href="/search?tab=projects"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            프로젝트 의뢰
-          </a>
-          <a
             href="/"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -76,12 +70,6 @@ export function Navbar({ onSignupClick }: NavbarProps) {
             className="text-sm font-medium text-foreground"
           >
             워커 탐색
-          </a>
-          <a
-            href="/search?tab=projects"
-            className="text-sm font-medium text-foreground"
-          >
-            프로젝트 의뢰
           </a>
           <a href="/" className="text-sm font-medium text-foreground">
             서비스 소개
