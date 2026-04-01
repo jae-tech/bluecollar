@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
@@ -11,9 +12,18 @@ import { ProfileModule } from '@/domains/profile/profile.module';
 import { PublicModule } from '@/domains/public/public.module';
 import { UploadModule } from '@/domains/upload/upload.module';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { envSchema } from '@/common/config/env.schema';
 
 @Module({
   imports: [
+    // 환경 변수 로드 및 Zod 검증
+    // validate()가 실패하면 앱 시작 시 즉시 crash — 런타임 오류 방지
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV ?? 'development'}`,
+      validate: (config) => envSchema.parse(config),
+    }),
+
     // 🕐 스케줄러 설정 (만료 코드 정리 Cron 등)
     ScheduleModule.forRoot(),
 
@@ -26,14 +36,18 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
       },
     ]),
 
-    LoggerModule.forRoot({
-      pinoHttp: {
-        transport:
-          process.env.NODE_ENV !== 'production'
-            ? { target: 'pino-pretty' }
-            : undefined,
-      },
+    LoggerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        pinoHttp: {
+          transport:
+            config.get('NODE_ENV') !== 'production'
+              ? { target: 'pino-pretty' }
+              : undefined,
+        },
+      }),
     }),
+
     DrizzleModule,
     SlackModule,
     AuthModule,
