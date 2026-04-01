@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProfileService } from './profile.service';
 
 /**
@@ -273,6 +277,206 @@ describe('ProfileService', () => {
       const result = await profileService.getWorkerProfileInfo(workerProfileId);
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('completeOnboarding', () => {
+    const userId = 'user-uuid-123';
+    const workerProfileId = 'profile-uuid-456';
+    const mockProfile = { id: workerProfileId, slug: 'existing-slug' };
+
+    // 트랜잭션 tx mock 헬퍼 — completeOnboarding의 체인 패턴 지원
+    const makeInsertChain = (result?: any[]) => {
+      const chain: any = {};
+      chain.values = vi.fn().mockReturnThis();
+      chain.returning = vi
+        .fn()
+        .mockResolvedValue(result ?? [{ id: workerProfileId }]);
+      // .values()만 있을 때 바로 resolve
+      chain.values.mockImplementation(() => ({
+        returning: vi.fn().mockResolvedValue(result ?? [{ id: workerProfileId }]),
+        then: (resolve: any, reject: any) =>
+          Promise.resolve(undefined).then(resolve, reject),
+      }));
+      return chain;
+    };
+
+    const makeUpdateChain = () => ({
+      set: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue(undefined),
+    });
+
+    const makeDeleteChain = () => ({
+      where: vi.fn().mockResolvedValue(undefined),
+    });
+
+    it('신규 프로필 생성 — slug와 함께 온보딩 완료해야 함', async () => {
+      const dto = {
+        slug: 'new-slug',
+        businessName: '홍길동 도배',
+        fieldCodes: ['FLD_TILE'],
+        areaCodes: ['AREA_SEOUL_GN'],
+      };
+
+      mockDb.transaction.mockImplementation(async (fn: any) => {
+        const tx = {
+          select: vi
+            .fn()
+            .mockReturnValueOnce(makeSelectChain([])) // slug 충돌 없음
+            .mockReturnValueOnce(makeSelectChain([])) // 기존 프로필 없음
+            .mockReturnValueOnce(makeSelectChain([{ ...mockProfile, slug: dto.slug }])) // 업데이트 후 프로필
+            .mockReturnValueOnce(makeSelectChain([{ workerProfileId, fieldCode: 'FLD_TILE' }])) // fields
+            .mockReturnValueOnce(makeSelectChain([{ workerProfileId, areaCode: 'AREA_SEOUL_GN' }])), // areas
+          insert: vi.fn().mockImplementation(() => ({
+            values: vi.fn().mockImplementation((val) => {
+              // returning()이 있으면 newProfile 반환, 없으면 void
+              if (Array.isArray(val)) {
+                return { then: (r: any) => Promise.resolve(undefined).then(r) };
+              }
+              return {
+                returning: vi
+                  .fn()
+                  .mockResolvedValue([{ id: workerProfileId, slug: dto.slug }]),
+              };
+            }),
+          })),
+          delete: vi.fn().mockReturnValue(makeDeleteChain()),
+          update: vi.fn().mockReturnValue(makeUpdateChain()),
+        };
+        return fn(tx);
+      });
+
+      const result = await profileService.completeOnboarding(userId, dto);
+
+      expect(result.slug).toBe(dto.slug);
+      expect(mockDb.transaction).toHaveBeenCalled();
+    });
+
+    it('신규 프로필에 slug 없으면 BadRequestException을 throw해야 함', async () => {
+      const dto = {
+        businessName: '홍길동 도배',
+        fieldCodes: [],
+      };
+
+      mockDb.transaction.mockImplementation(async (fn: any) => {
+        const tx = {
+          select: vi
+            .fn()
+            .mockReturnValueOnce(makeSelectChain([])) // 기존 프로필 없음
+            .mockReturnValueOnce(makeSelectChain([])), // slug 중복 없음 (slug 미제공이므로 호출 안 됨)
+        };
+        return fn(tx);
+      });
+
+      await expect(
+        profileService.completeOnboarding(userId, dto as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('다른 사용자가 이미 사용 중인 slug이면 ConflictException을 throw해야 함', async () => {
+      const dto = {
+        slug: 'taken-slug',
+        businessName: '홍길동 도배',
+        fieldCodes: [],
+      };
+
+      mockDb.transaction.mockImplementation(async (fn: any) => {
+        const tx = {
+          select: vi
+            .fn()
+            // slug 충돌: 다른 userId가 해당 slug 사용 중
+            .mockReturnValueOnce(
+              makeSelectChain([{ id: 'other-profile', userId: 'other-user' }]),
+            ),
+        };
+        return fn(tx);
+      });
+
+      await expect(
+        profileService.completeOnboarding(userId, dto),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('기존 프로필 업데이트 — slug 미제공 시 기존 slug 유지해야 함', async () => {
+      const dto = {
+        businessName: '홍길동 도배 업데이트',
+        fieldCodes: ['FLD_PAINTING'],
+      };
+
+      let capturedUpdateSet: any;
+
+      mockDb.transaction.mockImplementation(async (fn: any) => {
+        const tx = {
+          select: vi
+            .fn()
+            .mockReturnValueOnce(makeSelectChain([mockProfile])) // 기존 프로필 존재
+            .mockReturnValueOnce(makeSelectChain([mockProfile])) // 업데이트 후 프로필
+            .mockReturnValueOnce(makeSelectChain([{ workerProfileId, fieldCode: 'FLD_PAINTING' }]))
+            .mockReturnValueOnce(makeSelectChain([])), // areas 없음
+          update: vi.fn().mockReturnValue({
+            set: vi.fn().mockImplementation((vals) => {
+              capturedUpdateSet = vals;
+              return { where: vi.fn().mockResolvedValue(undefined) };
+            }),
+          }),
+          delete: vi.fn().mockReturnValue(makeDeleteChain()),
+          insert: vi.fn().mockReturnValue({
+            values: vi.fn().mockReturnValue({
+              then: (r: any) => Promise.resolve(undefined).then(r),
+            }),
+          }),
+        };
+        return fn(tx);
+      });
+
+      await profileService.completeOnboarding(userId, dto as any);
+
+      // slug가 updateValues에 포함되지 않아야 함 (undefined 전달 시 기존 slug 유지)
+      expect(capturedUpdateSet).not.toHaveProperty('slug');
+      expect(capturedUpdateSet.businessName).toBe(dto.businessName);
+    });
+
+    it('fieldCodes가 빈 배열이면 전문 분야를 전체 삭제해야 함', async () => {
+      const dto = {
+        slug: 'my-slug',
+        businessName: '홍길동 도배',
+        fieldCodes: [],
+      };
+
+      let deleteCalledCount = 0;
+      let insertCalledAfterDelete = false;
+
+      mockDb.transaction.mockImplementation(async (fn: any) => {
+        const tx = {
+          select: vi
+            .fn()
+            .mockReturnValueOnce(makeSelectChain([])) // slug 충돌 없음
+            .mockReturnValueOnce(makeSelectChain([mockProfile])) // 기존 프로필 존재
+            .mockReturnValueOnce(makeSelectChain([mockProfile]))
+            .mockReturnValueOnce(makeSelectChain([]))
+            .mockReturnValueOnce(makeSelectChain([])),
+          update: vi.fn().mockReturnValue(makeUpdateChain()),
+          delete: vi.fn().mockImplementation(() => {
+            deleteCalledCount++;
+            return makeDeleteChain();
+          }),
+          insert: vi.fn().mockImplementation(() => {
+            insertCalledAfterDelete = true;
+            return {
+              values: vi.fn().mockReturnValue({
+                then: (r: any) => Promise.resolve(undefined).then(r),
+              }),
+            };
+          }),
+        };
+        return fn(tx);
+      });
+
+      await profileService.completeOnboarding(userId, dto);
+
+      // delete는 호출됐어야 하고, fieldCodes가 비었으므로 insert(fields)는 호출 안 됨
+      expect(deleteCalledCount).toBeGreaterThanOrEqual(1);
+      expect(insertCalledAfterDelete).toBe(false);
     });
   });
 });
