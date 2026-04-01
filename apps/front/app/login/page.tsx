@@ -33,10 +33,15 @@ export default function LoginPage() {
       }
 
       // 로그인 성공 → 워커 프로필 확인
-      const profile = await getMyWorkerProfile();
-      if (profile) {
-        router.push(`/worker/${profile.slug}`);
-      } else {
+      try {
+        const profile = await getMyWorkerProfile();
+        if (profile) {
+          router.push(`/worker/${profile.slug}`);
+        } else {
+          router.push("/onboarding");
+        }
+      } catch {
+        // 프로필 조회 실패 시에도 온보딩으로 이동 (로그인은 성공했으므로)
         router.push("/onboarding");
       }
     } catch (err) {
