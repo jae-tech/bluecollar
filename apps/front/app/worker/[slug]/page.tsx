@@ -12,7 +12,7 @@ import {
   ChevronRight,
   AlertTriangle,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { WORKER_CONFIG } from "@/lib/worker-config";
 import type { PortfolioProject } from "@/lib/worker-config";
 import { ProjectModal } from "@/components/worker/project-modal";
@@ -27,17 +27,24 @@ const config = WORKER_CONFIG;
 
 export default function WorkerProfilePage() {
   const router = useRouter();
+  const params = useParams();
+  const urlSlug = params?.slug as string | undefined;
   const [activeTag, setActiveTag] = useState("\uC804\uCCB4");
-  // 본인 프로필 여부 (API 연동 전: slug 비교로 판단)
+  // 본인 프로필 여부 (URL slug와 내 프로필 slug 비교)
   const [isOwner, setIsOwner] = useState(false);
+  // 실제 프로필의 fields (배너 표시 여부 판단용)
+  const [myProfileFields, setMyProfileFields] = useState<string[]>([]);
 
   useEffect(() => {
     getMyWorkerProfile().then((profile) => {
-      if (profile && profile.slug === config.slug) {
+      if (profile && profile.slug === urlSlug) {
         setIsOwner(true);
+        setMyProfileFields(
+          profile.fields?.map((f: { fieldCode: string }) => f.fieldCode) ?? [],
+        );
       }
     });
-  }, []);
+  }, [urlSlug]);
   const [selectedProject, setSelectedProject] =
     useState<PortfolioProject | null>(null);
   const [shareToast, setShareToast] = useState(false);
@@ -94,7 +101,7 @@ export default function WorkerProfilePage() {
 
       <main className="max-w-4xl mx-auto px-5 pb-20">
         {/* ── 미완성 프로필 배너 ──────────────────────────────────────── */}
-        {isOwner && config.specialties.length === 0 && (
+        {isOwner && myProfileFields.length === 0 && (
           <div className="mt-4 mb-2 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
             <p className="flex-1 text-sm font-medium text-amber-800">
