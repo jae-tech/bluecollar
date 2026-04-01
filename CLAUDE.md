@@ -58,3 +58,23 @@ If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to bu
 /review, /ship, /land-and-deploy, /canary, /benchmark, /browse, /qa, /qa-only, /design-review,
 /setup-browser-cookies, /setup-deploy, /retro, /investigate, /document-release, /codex, /cso,
 /autoplan, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade
+
+## Deploy Configuration (configured by /setup-deploy)
+- Platform: Cloudflare Workers (frontend) / 미배포 (backend)
+- Production URL: https://bluecollarcv.kr
+- Deploy workflow: .github/workflows/deploy-front.yml (auto-deploy on push to main, paths: apps/front/**)
+- Deploy status command: GitHub Actions workflow status
+- Merge method: merge
+- Project type: web app (Next.js 14 via OpenNext on Cloudflare Workers)
+- Post-deploy health check: https://bluecollarcv.kr
+
+### Custom deploy hooks
+- Pre-merge: pnpm build
+- Deploy trigger: automatic on push to main (frontend only, via wrangler-action)
+- Deploy status: poll https://bluecollarcv.kr
+- Health check: https://bluecollarcv.kr
+
+### Notes
+- Backend (NestJS/Fastify) not yet deployed — runs locally on port 4000
+- wrangler.toml: apps/front/wrangler.toml, worker name: bluecollar-front
+- NEXT_PUBLIC_API_URL injected at build time via GitHub Actions secret

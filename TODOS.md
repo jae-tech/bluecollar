@@ -275,3 +275,33 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 **Effort:** S
 **Priority:** P1
 **Depends on:** TODO-019
+
+---
+
+## 🐛 QA 발견 버그 (2026-04-02)
+
+### TODO-021: "나중에" 버튼 — slug 미설정 상태로 /onboarding 진입 시 400 에러
+
+**What:** `/onboarding/slug`의 "나중에" 버튼이 slug를 설정하지 않고 `/onboarding`으로 이동. 이후 4단계 완료 시 `completeOnboarding` 호출에서 `slug: ""` (빈 문자열)가 전달돼 백엔드 400 에러 발생.
+**Why:** 플랜 원안의 "나중에"는 "4단계를 나중에"지 "slug 설정을 나중에"가 아님. 현재 구현이 플랜과 다름.
+**Repro:**
+1. 회원가입 → 이메일 인증 → `/onboarding/slug`
+2. "나중에" 버튼 클릭 → `/onboarding` 진입
+3. 4단계 모두 완료 후 "완료" 클릭 → 400 Bad Request
+**Fix 방향 (둘 중 선택):**
+- A) "나중에" = slug 확정 후 `/worker/:slug` 바로 이동 (4단계 스킵) — 플랜 원안
+- B) "나중에" 버튼 제거 — slug 확정은 필수 CTA만
+**Effort:** S
+**Priority:** P1
+**Found by:** /qa on main, 2026-04-02
+
+---
+
+### TODO-022: LCP 이미지 loading="eager" 누락
+
+**What:** `/worker/[slug]` 페이지의 포트폴리오 첫 번째 이미지(`/images/portfolio-3.jpg`)가 LCP 요소인데 `loading="eager"` 속성 없음.
+**Why:** Next.js가 경고 발생. 페이지 로딩 성능(LCP) 저하 가능성.
+**Context:** `apps/front/app/worker/[slug]/page.tsx` 또는 `ProjectCard` 컴포넌트 내 첫 번째 이미지에 `priority` prop 추가 (Next.js Image는 `priority`가 `loading="eager"` 역할).
+**Effort:** S
+**Priority:** P2
+**Found by:** /qa on main, 2026-04-02
