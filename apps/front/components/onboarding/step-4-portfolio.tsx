@@ -49,7 +49,7 @@ export function Step4Portfolio({ images, onImagesSelect, onSkip }: Step4Props) {
           </div>
           <div className="text-center">
             <p className="font-semibold text-foreground">{"\uC0AC\uC9C4 \uCD94\uAC00"}</p>
-            <p className="text-sm text-muted-foreground">{"\uC729 \uB060\uB978 \uC811\uC774\uB098 \uCEEC\uB9C1 \uC911 \uACE0\uB978 \uC0AC\uC9C4\uB97C \uCD94\uCC9C\uD569\uB2C8\uB2E4."}</p>
+            <p className="text-sm text-muted-foreground">잘 찍힌 사진이나 완성도 높은 작업 사진을 추천합니다.</p>
           </div>
         </div>
 

@@ -15,7 +15,7 @@ export function Step2Experience({ selected, onSelect }: Step2Props) {
           {"\uD604\uC7A5 \uACBD\uB825\uC740 \uC5BC\uB9C8\uB098 \uB418\uC2E0\uAC00\uC694?"}
         </h1>
         <p className="text-base text-muted-foreground">
-          {"\uB2F9\uC2E0\uC758 \uC2E4\uC81C \uC9D1\uCC13 \uACBD\uB825\uC744 \uC120\uD0DD\uD574\uC8FC\uC138\uC694."}
+          당신의 실제 현장 경력을 선택해주세요.
         </p>
       </div>
 

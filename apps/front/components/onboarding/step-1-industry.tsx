@@ -20,7 +20,7 @@ export function Step1Industry({ selected, onSelect }: Step1Props) {
       {/* Title & Subtitle */}
       <div className="px-6 pt-8 pb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          {"\uC5B4\uB5A4 \uBD84\uC57C\uC758 \uBCA0\uD14C\uB798\uB791\uC774\uC2E0\uAC00\uC694?"}
+          어떤 분야의 베테랑이신가요?
         </h1>
         <p className="text-base text-muted-foreground">
           {"\uAC00\uC7A5 \uC8FC\uB825\uC73C\uB85C \uD558\uC2DC\uB294 \uC77C \uD558\uB098\uB9CC \uC120\uD0DD\uD574 \uC8FC\uC138\uC694."}

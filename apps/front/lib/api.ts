@@ -234,12 +234,32 @@ export async function getMyWorkerProfile(): Promise<WorkerProfile | null> {
   }
 }
 
-/** 온보딩 완료 후 워커 프로필 저장 */
+/** 온보딩 완료 후 워커 프로필 저장 (완료 후 /auth/refresh 자동 호출) */
 export async function completeOnboarding(
   payload: CompleteOnboardingPayload,
 ): Promise<WorkerProfile> {
-  return apiFetch("/workers/onboarding", {
+  const profile = await apiFetch<WorkerProfile>("/workers/onboarding", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  // 프로필 생성 후 액세스 토큰 갱신 (워커 role 반영)
+  await tryRefresh();
+  return profile;
+}
+
+/**
+ * slug 사용 가능 여부 확인
+ * - 404: 사용 가능
+ * - 200: 이미 사용 중
+ * @returns true = 사용 가능, false = 중복
+ */
+export async function checkSlugAvailability(slug: string): Promise<boolean> {
+  try {
+    await apiFetch(`/public/profiles/${encodeURIComponent(slug)}`, {}, true);
+    // 200 응답 → 이미 존재하는 slug
+    return false;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return true;
+    throw err;
+  }
 }

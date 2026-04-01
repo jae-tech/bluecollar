@@ -23,10 +23,10 @@ export function Step3Skills({ industry, selected, onSelect }: Step3Props) {
       {/* Title & Subtitle */}
       <div className="px-6 pt-8 pb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          {"\uBCF4\uC720\uD558\uC2E0 \uD5EC\uC2EC \uAE30\uC220\uC744 \uC120\uD0DD\uD574\uC8FC\uC138\uC694."}
+          보유하신 핵심 기술을 선택해주세요.
         </h1>
         <p className="text-base text-muted-foreground">
-          {"\uC5EC\uB7EC \uAC1C \uC120\uD0DD \uAac0\uB2A5\uD569\uB2C8\uB2E4."}
+          여러 개 선택 가능합니다.
         </p>
       </div>
 
