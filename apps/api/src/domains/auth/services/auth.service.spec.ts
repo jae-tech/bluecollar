@@ -234,6 +234,9 @@ describe('AuthService', () => {
       mockDb.insert = vi.fn().mockReturnThis();
       mockDb.values = vi.fn().mockResolvedValue(undefined);
 
+      // EXPOSE_SMS_CODE=true 설정 (테스트 환경에서 code 반환 활성화)
+      process.env.EXPOSE_SMS_CODE = 'true';
+
       // Math.random 고정값 설정 (테스트 결과 일관성)
       const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.123456);
 
@@ -253,6 +256,7 @@ describe('AuthService', () => {
       );
 
       randomSpy.mockRestore();
+      delete process.env.EXPOSE_SMS_CODE;
     });
 
     it('should set expiration time to 10 minutes from now', async () => {
@@ -291,6 +295,9 @@ describe('AuthService', () => {
       mockDb.insert = vi.fn().mockReturnThis();
       mockDb.values = vi.fn().mockResolvedValue(undefined);
 
+      // EXPOSE_SMS_CODE=true 설정 (테스트 환경에서 code 반환 활성화)
+      process.env.EXPOSE_SMS_CODE = 'true';
+
       // Act
       const result = await authService.sendVerificationCode(phoneNumber);
 
@@ -299,6 +306,8 @@ describe('AuthService', () => {
         phoneNumber,
         result.code,
       );
+
+      delete process.env.EXPOSE_SMS_CODE;
     });
 
     it('should throw error when database insert fails', async () => {
