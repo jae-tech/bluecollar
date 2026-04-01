@@ -693,10 +693,11 @@ export class AuthController {
       path: '/',
     });
 
-    // 클라이언트로 리다이렉트 (토큰 없이)
-    const redirectUrl = user.phoneVerified
-      ? `${process.env.APP_URL || 'http://localhost:3000'}/auth/success`
-      : `${process.env.APP_URL || 'http://localhost:3000'}/auth/verify-phone`;
+    // 기존 워커(프로필 있음) → 대시보드, 신규 워커 → slug 설정 페이지
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+    const redirectUrl = user.workerProfileId
+      ? `${APP_URL}/dashboard`
+      : `${APP_URL}/onboarding/slug`;
 
     res.redirect(redirectUrl);
   }
@@ -766,10 +767,11 @@ export class AuthController {
       path: '/',
     });
 
-    // 클라이언트로 리다이렉트 (토큰 없이)
-    const redirectUrl = user.phoneVerified
-      ? `${process.env.APP_URL || 'http://localhost:3000'}/auth/success`
-      : `${process.env.APP_URL || 'http://localhost:3000'}/auth/verify-phone`;
+    // 기존 워커(프로필 있음) → 대시보드, 신규 워커 → slug 설정 페이지
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+    const redirectUrl = user.workerProfileId
+      ? `${APP_URL}/dashboard`
+      : `${APP_URL}/onboarding/slug`;
 
     res.redirect(redirectUrl);
   }
