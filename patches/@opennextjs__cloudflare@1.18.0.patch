@@ -1,0 +1,13 @@
+diff --git a/dist/cli/build/bundle-server.js b/dist/cli/build/bundle-server.js
+index 1234567..abcdefg 100644
+--- a/dist/cli/build/bundle-server.js
++++ b/dist/cli/build/bundle-server.js
+@@ -119,6 +119,8 @@
+             // `@next/env` is used by Next to load environment variables from files.
+             // OpenNext inlines the values at build time so this is not needed.
+             "@next/env": path.join(buildOpts.outputDir, "cloudflare-templates/shims/env.js"),
++            "next/dist/server/node-environment": path.join(buildOpts.outputDir, "cloudflare-templates/shims/empty.js"),
++            "next/dist/server/node-polyfill-crypto": path.join(buildOpts.outputDir, "cloudflare-templates/shims/empty.js"),
+         },
+         define: {
+             // config file used by Next.js, see: https://github.com/vercel/next.js/blob/68a7128/packages/next/src/build/utils.ts#L2137-L2139
