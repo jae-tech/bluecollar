@@ -8,6 +8,7 @@ import {
   portfolios,
   portfolioMedia,
   users,
+  isSlugReserved,
 } from '@repo/database';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
@@ -185,6 +186,37 @@ export class PublicService {
         })),
       })),
     };
+  }
+
+  /**
+   * Slug 사용 가능 여부 확인
+   *
+   * 예약어 체크 + DB 중복 체크를 수행합니다.
+   * 조회수 증가 없음 — 중복 확인 전용 엔드포인트입니다.
+   *
+   * @param slug 확인할 slug
+   * @returns { available: boolean, reason?: string }
+   */
+  async checkSlugAvailability(
+    slug: string,
+  ): Promise<{ available: boolean; reason?: string }> {
+    // 예약어 체크
+    if (isSlugReserved(slug)) {
+      return { available: false, reason: 'reserved' };
+    }
+
+    // DB 중복 체크
+    const existing = await this.db
+      .select({ id: workerProfiles.id })
+      .from(workerProfiles)
+      .where(eq(workerProfiles.slug, slug))
+      .limit(1);
+
+    if (existing.length > 0) {
+      return { available: false, reason: 'taken' };
+    }
+
+    return { available: true };
   }
 
   /**

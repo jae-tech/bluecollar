@@ -1,4 +1,4 @@
-import { isSlugReserved } from '../constants/reserved-slugs';
+import { isSlugReserved } from '@repo/database';
 
 /**
  * Slug 유효성 검사 함수

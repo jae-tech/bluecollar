@@ -75,8 +75,8 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
               {"\uAC1C\uC778 \uD504\uB85C\uD544 \uC8FC\uC18C"}
             </p>
             <p className="text-lg font-semibold text-foreground break-words">
-              <span className="text-muted-foreground">worker.cv/ </span>
               <span className="text-primary">{username || "_"}</span>
+              <span className="text-muted-foreground">.worker.cv</span>
             </p>
           </div>
 

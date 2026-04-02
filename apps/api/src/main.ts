@@ -73,7 +73,12 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  await app.listen(4000, '0.0.0.0'); // Fastify는 0.0.0.0 지정이 권장됨
+  // 6. 헬스체크 엔드포인트 (LB health check용)
+  const fastifyInstance = app.getHttpAdapter().getInstance();
+  fastifyInstance.get('/health', async () => ({ status: 'ok' }));
+
+  const port = parseInt(process.env.PORT ?? '4000', 10);
+  await app.listen(port, '0.0.0.0'); // Fastify는 0.0.0.0 지정이 권장됨
   console.log(`🚀 Application is running on: ${await app.getUrl()}`);
 }
 
