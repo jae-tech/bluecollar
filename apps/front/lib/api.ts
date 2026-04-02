@@ -321,21 +321,57 @@ export async function getPublicProfile(
   }
 }
 
+// ─── Codes ───────────────────────────────────────────────────────────────────
+
+export interface MasterCode {
+  code: string;
+  group: string;
+  name: string;
+  sortOrder: number;
+}
+
+export interface OnboardingCodes {
+  fields: MasterCode[];
+  expLevels: MasterCode[];
+  bizTypes: MasterCode[];
+}
+
+/** 그룹별 마스터 코드 목록 조회 (토큰 불필요) */
+export async function getCodes(group: string): Promise<MasterCode[]> {
+  return apiFetch<MasterCode[]>(
+    `/codes?group=${encodeURIComponent(group)}`,
+    {},
+    true,
+  );
+}
+
+/** 업종별 스킬 태그 조회 (토큰 불필요) */
+export async function getSkillTags(fieldCode: string): Promise<MasterCode[]> {
+  return apiFetch<MasterCode[]>(
+    `/codes/skill-tags?fieldCode=${encodeURIComponent(fieldCode)}`,
+    {},
+    true,
+  );
+}
+
+/** 온보딩용 코드 일괄 조회 (FIELD + EXP + BIZ, 토큰 불필요) */
+export async function getOnboardingCodes(): Promise<OnboardingCodes> {
+  return apiFetch<OnboardingCodes>("/codes/onboarding", {}, true);
+}
+
 // ─── Slug ─────────────────────────────────────────────────────────────────────
 
 /**
  * slug 사용 가능 여부 확인
- * - 404: 사용 가능
- * - 200: 이미 사용 중
- * @returns true = 사용 가능, false = 중복
+ * - 예약어 + DB 중복 체크
+ * - 조회수 증가 없음 (전용 엔드포인트)
+ * @returns true = 사용 가능, false = 사용 불가 (예약어 또는 중복)
  */
 export async function checkSlugAvailability(slug: string): Promise<boolean> {
-  try {
-    await apiFetch(`/public/profiles/${encodeURIComponent(slug)}`, {}, true);
-    // 200 응답 → 이미 존재하는 slug
-    return false;
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) return true;
-    throw err;
-  }
+  const result = await apiFetch<{ available: boolean; reason?: string }>(
+    `/public/profiles/slug-check?slug=${encodeURIComponent(slug)}`,
+    {},
+    true,
+  );
+  return result.available;
 }

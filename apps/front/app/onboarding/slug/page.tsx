@@ -10,9 +10,88 @@ import {
   ApiError,
 } from "@/lib/api";
 
+// @repo/database와 동기화 유지 — packages/database/src/constants/reserved-slugs.ts
+const RESERVED_SLUGS = new Set([
+  "admin",
+  "api",
+  "auth",
+  "login",
+  "register",
+  "logout",
+  "me",
+  "account",
+  "public",
+  "static",
+  "assets",
+  "media",
+  "uploads",
+  "files",
+  "images",
+  "videos",
+  "docs",
+  "swagger",
+  "api-docs",
+  "documentation",
+  "help",
+  "support",
+  "contact",
+  "feedback",
+  "about",
+  "terms",
+  "privacy",
+  "cookie",
+  "legal",
+  "health",
+  "status",
+  "metrics",
+  "debug",
+  "test",
+  "www",
+  "mail",
+  "email",
+  "mailer",
+  "smtp",
+  "workers",
+  "portfolios",
+  "profiles",
+  "search",
+  "explore",
+  "featured",
+  "trending",
+  "categories",
+  "tags",
+  "codes",
+  "user",
+  "users",
+  "member",
+  "members",
+  "client",
+  "clients",
+  "filter",
+  "filters",
+  "sort",
+  "results",
+  "home",
+  "index",
+  "page",
+  "pages",
+  "404",
+  "500",
+  "wp-admin",
+  "xmlrpc.php",
+  "robots.txt",
+  "sitemap.xml",
+  "favicon.ico",
+]);
+
 /** slug 입력값 유효성 검사 (영문 소문자, 숫자, 하이픈, 3자 이상) */
 function isValidFormat(str: string): boolean {
   return /^[a-z0-9-]{3,}$/.test(str);
+}
+
+/** 예약어 체크 */
+function isReserved(str: string): boolean {
+  return RESERVED_SLUGS.has(str.toLowerCase());
 }
 
 export default function OnboardingSlugPage() {
@@ -20,7 +99,7 @@ export default function OnboardingSlugPage() {
 
   const [slug, setSlug] = useState("");
   const [status, setStatus] = useState<
-    "idle" | "checking" | "available" | "taken" | "invalid"
+    "idle" | "checking" | "available" | "taken" | "invalid" | "reserved"
   >("idle");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -45,6 +124,11 @@ export default function OnboardingSlugPage() {
     }
     if (!isValidFormat(slug)) {
       setStatus("invalid");
+      return;
+    }
+
+    if (isReserved(slug)) {
+      setStatus("reserved");
       return;
     }
 
@@ -121,8 +205,8 @@ export default function OnboardingSlugPage() {
               개인 프로필 주소
             </p>
             <p className="text-lg font-semibold text-foreground break-words">
-              <span className="text-muted-foreground">worker.cv/ </span>
               <span className="text-primary">{slug || "_"}</span>
+              <span className="text-muted-foreground">.worker.cv</span>
             </p>
           </div>
 
@@ -144,7 +228,7 @@ export default function OnboardingSlugPage() {
                   .replace(/[^a-z0-9-]/g, "");
                 setSlug(value);
               }}
-              placeholder="yourname"
+              placeholder="닉네임"
               autoFocus
               className={`w-full px-4 py-3 rounded-xl border-2 transition-colors focus:outline-none text-lg bg-card text-foreground ${
                 status === "available"
@@ -162,7 +246,9 @@ export default function OnboardingSlugPage() {
               className={`flex items-center gap-2 p-3 rounded-xl ${
                 status === "available"
                   ? "bg-green-50 border border-green-300"
-                  : status === "taken" || status === "invalid"
+                  : status === "taken" ||
+                      status === "invalid" ||
+                      status === "reserved"
                     ? "bg-red-50 border border-red-300"
                     : "bg-secondary border border-border"
               }`}
@@ -200,6 +286,17 @@ export default function OnboardingSlugPage() {
                   />
                   <p className="text-sm text-orange-700">
                     영문 소문자, 숫자, 하이픈(-)만 사용 가능합니다.
+                  </p>
+                </>
+              )}
+              {status === "reserved" && (
+                <>
+                  <AlertCircle
+                    size={18}
+                    className="text-destructive flex-shrink-0"
+                  />
+                  <p className="text-sm text-destructive">
+                    사용할 수 없는 주소입니다.
                   </p>
                 </>
               )}

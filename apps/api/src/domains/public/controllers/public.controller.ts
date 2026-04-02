@@ -1,4 +1,11 @@
-import { Controller, Get, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PinoLogger } from 'nestjs-pino';
 import { PublicService } from '../services/public.service';
@@ -36,6 +43,31 @@ export class PublicController {
    * @param slug 워커의 프로필 슬러그 (예: kim-tile-expert)
    * @returns 워커 프로필, 전문 분야, 활동 지역, 포트폴리오 정보
    */
+  /**
+   * Slug 사용 가능 여부 확인
+   *
+   * 예약어 + DB 중복을 체크합니다. 조회수 증가 없음.
+   */
+  @Get('slug-check')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Slug 사용 가능 여부 확인',
+    description:
+      '예약어 체크 + DB 중복 체크를 수행합니다. 조회수 증가 없음. 온보딩 slug 입력 시 실시간 체크용.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Slug 체크 결과',
+    schema: {
+      example: { available: true },
+    },
+  })
+  async checkSlug(@Query('slug') slug: string) {
+    this.logger.info({ slug }, 'Slug 사용 가능 여부 확인 요청');
+    return this.publicService.checkSlugAvailability(slug ?? '');
+  }
+
   @Get(':slug')
   @Public()
   @HttpCode(HttpStatus.OK)

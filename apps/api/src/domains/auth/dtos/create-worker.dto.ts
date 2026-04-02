@@ -1,6 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { isSlugReserved } from '@/common/constants/reserved-slugs';
+import { isSlugReserved } from '@repo/database';
 
 export const CreateWorkerSchema = z.object({
   phoneNumber: z

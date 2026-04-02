@@ -11,6 +11,7 @@ import { PortfolioModule } from '@/domains/portfolio/portfolio.module';
 import { ProfileModule } from '@/domains/profile/profile.module';
 import { PublicModule } from '@/domains/public/public.module';
 import { UploadModule } from '@/domains/upload/upload.module';
+import { CodesModule } from '@/domains/codes/codes.module';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { envSchema } from '@/common/config/env.schema';
 
@@ -55,6 +56,7 @@ import { envSchema } from '@/common/config/env.schema';
     ProfileModule,
     PublicModule,
     UploadModule,
+    CodesModule,
   ],
   providers: [
     // 🔒 전역 Rate Limiter Guard 등록

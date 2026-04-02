@@ -1,22 +1,37 @@
-import { SKILL_TAGS } from "@/lib/onboarding-data"
-import { Check } from "lucide-react"
+"use client";
+
+import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
+import { getSkillTags, type MasterCode } from "@/lib/api";
 
 interface Step3Props {
-  industry: string | undefined
-  selected: string[]
-  onSelect: (skills: string[]) => void
+  industry: string | undefined;
+  selected: string[];
+  onSelect: (skills: string[]) => void;
 }
 
 export function Step3Skills({ industry, selected, onSelect }: Step3Props) {
-  const skillsForIndustry = industry ? SKILL_TAGS[industry] || [] : []
+  const [skillTags, setSkillTags] = useState<MasterCode[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const toggleSkill = (skill: string) => {
-    if (selected.includes(skill)) {
-      onSelect(selected.filter((s) => s !== skill))
-    } else {
-      onSelect([...selected, skill])
+  useEffect(() => {
+    if (!industry) {
+      setSkillTags([]);
+      return;
     }
-  }
+    setLoading(true);
+    getSkillTags(industry)
+      .then(setSkillTags)
+      .finally(() => setLoading(false));
+  }, [industry]);
+
+  const toggleSkill = (code: string) => {
+    if (selected.includes(code)) {
+      onSelect(selected.filter((s) => s !== code));
+    } else {
+      onSelect([...selected, code]);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -32,27 +47,33 @@ export function Step3Skills({ industry, selected, onSelect }: Step3Props) {
 
       {/* Skill Tags Cloud */}
       <div className="flex-1 overflow-y-auto px-6 pb-6">
-        <div className="flex flex-wrap gap-2">
-          {skillsForIndustry.map((skill) => {
-            const isSelected = selected.includes(skill)
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+            불러오는 중...
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {skillTags.map((tag) => {
+              const isSelected = selected.includes(tag.code);
 
-            return (
-              <button
-                key={skill}
-                onClick={() => toggleSkill(skill)}
-                className={`px-4 py-2.5 rounded-full border-2 font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${
-                  isSelected
-                    ? "border-primary bg-foreground text-background"
-                    : "border-border bg-card text-foreground hover:border-muted-foreground/40"
-                }`}
-              >
-                {skill}
-                {isSelected && <Check size={16} strokeWidth={3} />}
-              </button>
-            )
-          })}
-        </div>
+              return (
+                <button
+                  key={tag.code}
+                  onClick={() => toggleSkill(tag.code)}
+                  className={`px-4 py-2.5 rounded-full border-2 font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${
+                    isSelected
+                      ? "border-primary bg-foreground text-background"
+                      : "border-border bg-card text-foreground hover:border-muted-foreground/40"
+                  }`}
+                >
+                  {tag.name}
+                  {isSelected && <Check size={16} strokeWidth={3} />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }

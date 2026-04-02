@@ -13,12 +13,12 @@ import { completeOnboarding, getMyWorkerProfile, ApiError } from "@/lib/api";
 
 const TOTAL_STEPS = 4;
 
-// 경험 레벨 ID → yearsOfExperience 매핑
+// EXP 코드 → yearsOfExperience 매핑
 const EXPERIENCE_TO_YEARS: Record<string, number> = {
-  beginner: 0,
-  junior: 2,
-  intermediate: 5,
-  expert: 10,
+  EXP_1TO3: 2,
+  EXP_3TO5: 4,
+  EXP_5TO10: 7,
+  EXP_10PLUS: 10,
 };
 
 export default function OnboardingPage() {
@@ -40,24 +40,14 @@ export default function OnboardingPage() {
       setSubmitLoading(true);
       setSubmitError(null);
       try {
-        // 프론트 industry ID → DB field code 변환 (추후 API에서 코드 목록을 가져올 예정)
-        const fieldCodeMap: Record<string, string> = {
-          welding: "FLD_WELDING",
-          electrical: "FLD_ELECTRIC",
-          plumbing: "FLD_PLUMBING",
-          carpentry: "FLD_CARPENTRY",
-          machining: "FLD_MACHINING",
-        };
         // 이미 /onboarding/slug에서 생성된 프로필의 slug 조회
         const existing = await getMyWorkerProfile();
         const profile = await completeOnboarding({
           slug: existing?.slug ?? "",
           businessName: existing?.slug ?? "",
-          fieldCodes: data.industry
-            ? [fieldCodeMap[data.industry] ?? data.industry]
-            : [],
+          fieldCodes: data.industry ? [data.industry] : [],
           yearsOfExperience:
-            EXPERIENCE_TO_YEARS[data.experienceLevel ?? "beginner"] ?? 0,
+            EXPERIENCE_TO_YEARS[data.experienceLevel ?? "EXP_1TO3"] ?? 2,
           areaCodes: [],
         });
         router.push(`/onboarding/complete`);
