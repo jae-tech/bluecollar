@@ -12,6 +12,11 @@ const nextConfig = {
     // Cloudflare Workers는 자체 Image Optimization API가 없으므로 unoptimized 유지
     unoptimized: true,
   },
+  experimental: {
+    turbo: {
+      root: "../..",
+    },
+  },
 };
 
 export default nextConfig;
