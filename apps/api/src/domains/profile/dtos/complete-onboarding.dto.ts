@@ -8,11 +8,11 @@ import { createZodDto } from 'nestjs-zod';
  * workerProfiles, workerFields, workerAreas 테이블을 업데이트합니다.
  *
  * 필수:
- * - slug: 프로필 URL (중복 불가, 소문자+숫자+하이픈)
  * - businessName: 사업명 또는 이름
- * - fieldCodes: 전문 분야 코드 (최소 1개)
  *
  * 선택:
+ * - slug: 프로필 URL — /onboarding/slug 단계에서 먼저 설정, 이후 4단계 온보딩에서는 생략 가능
+ * - fieldCodes: 전문 분야 코드 (빈 배열 허용 — slug 선행 설정 시)
  * - yearsOfExperience: 경력 연수
  * - careerSummary: 경력 요약
  * - areaCodes: 서비스 지역 코드
@@ -23,7 +23,8 @@ export const CompleteOnboardingSchema = z.object({
     .min(3, 'slug는 최소 3자 이상이어야 합니다')
     .max(50, 'slug는 최대 50자입니다')
     .regex(/^[a-z0-9-]+$/, 'slug는 소문자, 숫자, 하이픈(-)만 사용 가능합니다')
-    .describe('프로필 URL slug (예: hong-gildong)'),
+    .describe('프로필 URL slug (예: hong-gildong)')
+    .optional(),
 
   businessName: z
     .string()
@@ -33,9 +34,9 @@ export const CompleteOnboardingSchema = z.object({
 
   fieldCodes: z
     .array(z.string())
-    .min(1, '전문 분야는 최소 1개 이상 선택해야 합니다')
+    .min(0)
     .max(5, '전문 분야는 최대 5개까지 선택 가능합니다')
-    .describe('전문 분야 코드 배열 (예: FLD_TILE)'),
+    .describe('전문 분야 코드 배열 (예: FLD_TILE) — 빈 배열 허용'),
 
   yearsOfExperience: z
     .number()

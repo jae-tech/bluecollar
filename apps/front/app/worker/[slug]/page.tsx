@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   BadgeCheck,
@@ -10,11 +10,14 @@ import {
   Phone,
   MapPin,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 import { WORKER_CONFIG } from "@/lib/worker-config";
 import type { PortfolioProject } from "@/lib/worker-config";
 import { ProjectModal } from "@/components/worker/project-modal";
 import { InquiryForm } from "@/components/inquiry-form";
+import { getMyWorkerProfile } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
 // In production, Claude Code replaces this with:
@@ -23,7 +26,25 @@ import { InquiryForm } from "@/components/inquiry-form";
 const config = WORKER_CONFIG;
 
 export default function WorkerProfilePage() {
+  const router = useRouter();
+  const params = useParams();
+  const urlSlug = params?.slug as string | undefined;
   const [activeTag, setActiveTag] = useState("\uC804\uCCB4");
+  // 본인 프로필 여부 (URL slug와 내 프로필 slug 비교)
+  const [isOwner, setIsOwner] = useState(false);
+  // 실제 프로필의 fields (배너 표시 여부 판단용)
+  const [myProfileFields, setMyProfileFields] = useState<string[]>([]);
+
+  useEffect(() => {
+    getMyWorkerProfile().then((profile) => {
+      if (profile && profile.slug === urlSlug) {
+        setIsOwner(true);
+        setMyProfileFields(
+          profile.fields?.map((f: { fieldCode: string }) => f.fieldCode) ?? [],
+        );
+      }
+    });
+  }, [urlSlug]);
   const [selectedProject, setSelectedProject] =
     useState<PortfolioProject | null>(null);
   const [shareToast, setShareToast] = useState(false);
@@ -79,6 +100,24 @@ export default function WorkerProfilePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-5 pb-20">
+        {/* ── 미완성 프로필 배너 ──────────────────────────────────────── */}
+        {isOwner && myProfileFields.length === 0 && (
+          <div className="mt-4 mb-2 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
+            <p className="flex-1 text-sm font-medium text-amber-800">
+              프로필이 아직 완성되지 않았어요. 정보를 추가하면 더 많은 고객을
+              만날 수 있어요.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/onboarding")}
+              className="flex-shrink-0 text-sm font-bold text-amber-700 hover:text-amber-900 transition-colors whitespace-nowrap"
+            >
+              지금 완성하기
+            </button>
+          </div>
+        )}
+
         {/* ── Hero ────────────────────────────────────────────────────── */}
         <section className="pt-8 pb-10 border-b border-border">
           <div className="flex flex-col sm:flex-row gap-6 items-start">

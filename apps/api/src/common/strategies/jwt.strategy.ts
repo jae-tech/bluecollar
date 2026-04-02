@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, ExtractJwt } from 'passport-jwt';
+import { Strategy } from 'passport-jwt';
 import { Inject } from '@nestjs/common';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
 import { users } from '@repo/database';
@@ -13,8 +13,9 @@ import type { UserPayload } from '../types/user.types';
 /**
  * JWT 전략 (Passport Strategy)
  *
- * 요청의 Authorization 헤더에서 JWT 토큰을 추출하여 검증합니다.
- * Bearer <token> 형식에서 토큰을 읽고, JWT_SECRET으로 서명을 검증합니다.
+ * httpOnly 쿠키(accessToken)에서 JWT 토큰을 추출하여 검증합니다.
+ * 로그인/소셜 로그인/이메일 인증 등 모든 토큰 발급이 쿠키 방식이므로
+ * 쿠키 전용으로 통일합니다.
  *
  * JWT 페이로드 구조:
  * {
@@ -34,7 +35,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly logger: PinoLogger,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // httpOnly 쿠키에서 accessToken 추출
+      jwtFromRequest: (req: any) => req?.cookies?.accessToken ?? null,
       ignoreExpiration: false, // 만료된 토큰 거부
       secretOrKey: process.env.JWT_SECRET || 'dev-secret-change-in-prod',
     });

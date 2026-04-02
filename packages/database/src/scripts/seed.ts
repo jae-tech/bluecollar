@@ -69,6 +69,18 @@ async function seed() {
         name: "유리 공사",
         sortOrder: 8,
       },
+      {
+        code: "FLD_WELDING",
+        group: "FIELD",
+        name: "용접",
+        sortOrder: 9,
+      },
+      {
+        code: "FLD_MACHINING",
+        group: "FIELD",
+        name: "기계가공",
+        sortOrder: 10,
+      },
 
       // --- AREA (지역) ---
       {

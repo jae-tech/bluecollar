@@ -367,6 +367,44 @@ export class AuthController {
       .send({ message: 'Logged out successfully' });
   }
 
+  /**
+   * 현재 로그인한 사용자 정보 조회
+   *
+   * accessToken 쿠키로 인증된 사용자의 기본 정보를 반환합니다.
+   * 프론트엔드에서 로그인 상태 확인 및 사용자 정보 표시에 사용합니다.
+   *
+   * Response:
+   * - 200 OK: 사용자 정보 반환
+   * - 401 Unauthorized: 미인증
+   */
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: '내 정보 조회',
+    description: '현재 로그인한 사용자 정보를 반환합니다.',
+  })
+  @ApiOkResponse({
+    description: '사용자 정보',
+    schema: {
+      example: {
+        id: 'uuid',
+        email: 'user@example.com',
+        role: 'WORKER',
+        status: 'ACTIVE',
+        emailVerified: true,
+      },
+    },
+  })
+  getMe(@CurrentUser() user: UserPayload) {
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      emailVerified: user.emailVerified,
+    };
+  }
+
   // ═══════════════════════════════════════════════════════════════════
   // 📧 EMAIL-BASED AUTHENTICATION ENDPOINTS (NEW)
   // ═══════════════════════════════════════════════════════════════════
@@ -655,10 +693,11 @@ export class AuthController {
       path: '/',
     });
 
-    // 클라이언트로 리다이렉트 (토큰 없이)
-    const redirectUrl = user.phoneVerified
-      ? `${process.env.APP_URL || 'http://localhost:3000'}/auth/success`
-      : `${process.env.APP_URL || 'http://localhost:3000'}/auth/verify-phone`;
+    // 기존 워커(프로필 있음) → 대시보드, 신규 워커 → slug 설정 페이지
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+    const redirectUrl = user.workerProfileId
+      ? `${APP_URL}/dashboard`
+      : `${APP_URL}/onboarding/slug`;
 
     res.redirect(redirectUrl);
   }
@@ -728,10 +767,11 @@ export class AuthController {
       path: '/',
     });
 
-    // 클라이언트로 리다이렉트 (토큰 없이)
-    const redirectUrl = user.phoneVerified
-      ? `${process.env.APP_URL || 'http://localhost:3000'}/auth/success`
-      : `${process.env.APP_URL || 'http://localhost:3000'}/auth/verify-phone`;
+    // 기존 워커(프로필 있음) → 대시보드, 신규 워커 → slug 설정 페이지
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+    const redirectUrl = user.workerProfileId
+      ? `${APP_URL}/dashboard`
+      : `${APP_URL}/onboarding/slug`;
 
     res.redirect(redirectUrl);
   }
