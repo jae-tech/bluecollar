@@ -4,12 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OTPInput, SlotProps } from "input-otp";
 import { CheckCircle2, RefreshCw, Mail } from "lucide-react";
-import {
-  verifyEmailCode,
-  resendVerificationEmail,
-  getMyWorkerProfile,
-  ApiError,
-} from "@/lib/api";
+import { verifyEmailCode, resendVerificationEmail, ApiError } from "@/lib/api";
 
 function OTPSlot({ char, hasFakeCaret, isActive }: SlotProps) {
   return (
@@ -78,13 +73,8 @@ function VerifyEmailContent() {
     setLoading(true);
     try {
       await verifyEmailCode({ email, code: value, type: "SIGNUP" });
-      // 인증 성공 → 워커 프로필 존재 여부 확인
-      const profile = await getMyWorkerProfile();
-      if (profile) {
-        router.push(`/worker/${profile.slug}`);
-      } else {
-        router.push("/onboarding");
-      }
+      // 인증 성공 → slug 설정 페이지로 이동 (slug 페이지에서 재방문자 가드 처리)
+      router.push("/onboarding/slug");
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 400 || err.status === 401) {

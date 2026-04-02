@@ -53,6 +53,10 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 
 ---
 
+### ~~TODO-005: 온보딩 완료 화면 (`/onboarding/complete`)~~
+
+**Superseded by TODO-017 on main, 2026-04-01**
+
 ### TODO-005: 온보딩 완료 화면 (`/onboarding/complete`)
 
 **What:** 5단계 완료 후 축하 화면 추가. 현재는 바로 프로필 페이지로 이동.
@@ -161,3 +165,143 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 **Effort:** S
 **Priority:** P1
 **Depends on:** API 연동 PR (20260330 디자인 문서)
+
+---
+
+## 🧭 온보딩 플로우 개선 (2026-04-01)
+
+### ~~TODO-015: getRedirectPath 유틸 추출~~
+
+**Fixed on main, 2026-04-01** — `apps/front/lib/redirect.ts` 신규 생성.
+
+### TODO-015: getRedirectPath 유틸 추출
+
+**What:** `workerProfile` 유무에 따라 리다이렉트 경로를 결정하는 로직을 공통 유틸로 추출.
+**Why:** `verify-email/page.tsx`, `onboarding/slug/page.tsx` 등 여러 곳에 동일 분기 로직이 중복됨.
+**Pros:** 중복 제거, 리다이렉트 정책 한 곳에서 관리
+**Cons:** 없음
+**Context:** `apps/front/lib/redirect.ts` 파일 신규 생성. `getRedirectPath(workerProfile: WorkerProfile | null): string` 형태. 프로필 있으면 `/worker/:slug`, 없으면 `/onboarding/slug`.
+**Effort:** S
+**Priority:** P2
+**Depends on:** 온보딩 플로우 개선 PR (2026-04-01)
+
+---
+
+### ~~TODO-016: /onboarding/slug 신규 페이지~~
+
+**Fixed on main, 2026-04-01** — `apps/front/app/onboarding/slug/page.tsx` 신규 생성. 실제 API slug 중복 확인, completeOnboarding 호출, 재방문자 가드.
+
+### TODO-016: /onboarding/slug 신규 페이지
+
+**What:** 이메일 인증 직후 slug만 설정하는 단독 페이지 (`apps/front/app/onboarding/slug/page.tsx`).
+**Why:** 5단계 온보딩에서 slug가 마지막 → 이탈 전에 URL 확정 불가. slug 먼저 = 공유 동기 즉시 생성.
+**Pros:** 이탈률 감소, URL 조기 확정
+**Cons:** 없음
+**Context:**
+- 마운트 시 workerProfileId 있으면 `/worker/:slug` 리다이렉트 (재접근 가드)
+- `GET /public/:slug` 재활용해 slug 중복 확인 (404=사용가능, 200=중복)
+- 제출 시 `completeOnboarding(slug, slug, [])` → `/auth/refresh` → `/onboarding` 또는 `/worker/:slug`
+- "나중에" 버튼: slug 설정 없이 `/worker/:slug`로 이동
+- 409 응답 시 인라인 에러 표시
+- `Step5Username` 컴포넌트 재활용, mock 중복 확인 → 실제 API로 교체
+**Effort:** M
+**Priority:** P1
+**Depends on:** 백엔드 `complete-onboarding.dto.ts` slug optional 변경
+
+---
+
+### ~~TODO-017: /onboarding/complete 축하 화면~~
+
+**Fixed on main, 2026-04-01** — `apps/front/app/onboarding/complete/page.tsx` 신규 생성. 프로필 URL 복사 + "내 프로필 보기" CTA.
+
+### TODO-017: /onboarding/complete 축하 화면
+
+**What:** 4단계 온보딩 완료 후 축하 화면 (`apps/front/app/onboarding/complete/page.tsx`). TODO-005 대체.
+**Why:** 온보딩 완료 모멘텀 포착, 공유 유도.
+**Pros:** 활성화율 향상
+**Cons:** 없음
+**Context:** 프로필 URL 표시 + 복사 버튼 + "내 프로필 보기" CTA. KakaoTalk 공유는 별도 PR.
+**Effort:** S
+**Priority:** P1
+**Depends on:** TODO-016
+
+---
+
+### ~~TODO-018: verify-email 인증 성공 → /onboarding/slug 리다이렉트~~
+
+**Fixed on main, 2026-04-01** — `verify-email/page.tsx` 인증 성공 시 무조건 `/onboarding/slug`로 이동.
+
+### TODO-018: verify-email 인증 성공 → /onboarding/slug 리다이렉트
+
+**What:** `apps/front/app/auth/verify-email/page.tsx` 인증 성공 후 무조건 `/onboarding/slug`로 이동.
+**Why:** 현재 `getMyWorkerProfile()` 분기 후 프로필 없으면 `/onboarding`으로 이동 → slug 페이지를 거치지 않음.
+**Pros:** 신규 가입자 플로우 일관성
+**Cons:** 없음
+**Context:** slug 페이지에서 workerProfileId 있으면 `/worker/:slug` 리다이렉트하므로 재방문자도 안전.
+**Effort:** S
+**Priority:** P1
+**Depends on:** TODO-016
+
+---
+
+### ~~TODO-019: onboarding/page.tsx slug 단계 제거 → 4단계~~
+
+**Fixed on main, 2026-04-01** — Step5(slug) 제거, `TOTAL_STEPS` 5→4, `onboarding-data.ts` `OnboardingStep` 타입 축소, 완료 후 `/onboarding/complete`로 이동.
+
+### TODO-019: onboarding/page.tsx slug 단계 제거 → 4단계
+
+**What:** `apps/front/app/onboarding/page.tsx`에서 Step5(slug) 제거, `TOTAL_STEPS` 5→4.
+**Why:** slug는 `/onboarding/slug`에서 이미 설정됨. 중복 노출 불필요.
+**Pros:** 온보딩 단계 단축
+**Cons:** 없음
+**Context:** `completeOnboarding` 호출 시 slug 필드 제거. `businessName`은 slug 값 그대로 유지(백엔드가 기존 slug 보존).
+**Effort:** S
+**Priority:** P1
+**Depends on:** TODO-016, 백엔드 slug optional 변경
+
+---
+
+### ~~TODO-020: worker/[slug]/page.tsx 미완성 프로필 배너~~
+
+**Fixed on main, 2026-04-01** — `isOwner && specialties.length === 0` 조건으로 amber 배너 표시. "지금 완성하기" → `/onboarding`.
+
+### TODO-020: worker/[slug]/page.tsx 미완성 프로필 배너
+
+**What:** `fieldCodes`가 비어있을 때 "프로필을 완성하세요" 배너 표시.
+**Why:** slug만 설정하고 4단계를 건너뛴 워커에게 완성 유도 필요.
+**Pros:** 온보딩 완료율 향상
+**Cons:** 없음
+**Context:** 본인 프로필 조회 시에만 노출. "지금 완성하기" → `/onboarding` 이동.
+**Effort:** S
+**Priority:** P1
+**Depends on:** TODO-019
+
+---
+
+## 🐛 QA 발견 버그 (2026-04-02)
+
+### TODO-021: "나중에" 버튼 — slug 미설정 상태로 /onboarding 진입 시 400 에러
+
+**What:** `/onboarding/slug`의 "나중에" 버튼이 slug를 설정하지 않고 `/onboarding`으로 이동. 이후 4단계 완료 시 `completeOnboarding` 호출에서 `slug: ""` (빈 문자열)가 전달돼 백엔드 400 에러 발생.
+**Why:** 플랜 원안의 "나중에"는 "4단계를 나중에"지 "slug 설정을 나중에"가 아님. 현재 구현이 플랜과 다름.
+**Repro:**
+1. 회원가입 → 이메일 인증 → `/onboarding/slug`
+2. "나중에" 버튼 클릭 → `/onboarding` 진입
+3. 4단계 모두 완료 후 "완료" 클릭 → 400 Bad Request
+**Fix 방향 (둘 중 선택):**
+- A) "나중에" = slug 확정 후 `/worker/:slug` 바로 이동 (4단계 스킵) — 플랜 원안
+- B) "나중에" 버튼 제거 — slug 확정은 필수 CTA만
+**Effort:** S
+**Priority:** P1
+**Found by:** /qa on main, 2026-04-02
+
+---
+
+### TODO-022: LCP 이미지 loading="eager" 누락
+
+**What:** `/worker/[slug]` 페이지의 포트폴리오 첫 번째 이미지(`/images/portfolio-3.jpg`)가 LCP 요소인데 `loading="eager"` 속성 없음.
+**Why:** Next.js가 경고 발생. 페이지 로딩 성능(LCP) 저하 가능성.
+**Context:** `apps/front/app/worker/[slug]/page.tsx` 또는 `ProjectCard` 컴포넌트 내 첫 번째 이미지에 `priority` prop 추가 (Next.js Image는 `priority`가 `loading="eager"` 역할).
+**Effort:** S
+**Priority:** P2
+**Found by:** /qa on main, 2026-04-02

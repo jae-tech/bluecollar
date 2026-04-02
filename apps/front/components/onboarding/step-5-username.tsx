@@ -86,9 +86,7 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
               htmlFor="username-input"
               className="block text-sm font-semibold text-foreground mb-2"
             >
-              {
-                "\uC601\uB254\uC18C\uBB38\uc790, \uc22b\uc790, \uc5f0\ub3cc(-)\uB9CC \uC0AC\uC6A9 \uAac0\uB2A5"
-              }
+              영문 소문자, 숫자, 하이픈(-)만 사용 가능
             </label>
             <input
               id="username-input"
@@ -134,9 +132,7 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
                 <>
                   <Check size={18} className="text-primary flex-shrink-0" />
                   <p className="text-sm text-primary">
-                    {
-                      "\uC0AC\uC6A9 \uAac0\uB2A5\uD55C \uC8FC\uC18C\uC785\uB2C8\uB2E4!"
-                    }
+                    사용 가능한 주소입니다!
                   </p>
                 </>
               )}
@@ -160,9 +156,7 @@ export function Step5Username({ username, onUsernameChange }: Step5Props) {
                     className="text-orange-600 flex-shrink-0"
                   />
                   <p className="text-sm text-orange-700">
-                    {
-                      "\uc601\ub254\uc18c\ubb38\uc790, \uc22b\uc790, \uc5f0\ub3cc(-)\uB9CC \uC0AC\uC6A9 \uAac0\uB2A5\uD569\uB2C8\uB2E4."
-                    }
+                    영문 소문자, 숫자, 하이픈(-)만 사용 가능합니다.
                   </p>
                 </>
               )}

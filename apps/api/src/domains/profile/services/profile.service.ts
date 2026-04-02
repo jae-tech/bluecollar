@@ -340,21 +340,23 @@ export class ProfileService {
 
     return await this.db.transaction(async (tx) => {
       try {
-        // slug 중복 확인 (동일 사용자의 기존 slug는 허용)
-        const slugConflict = await tx
-          .select({ id: workerProfiles.id, userId: workerProfiles.userId })
-          .from(workerProfiles)
-          .where(eq(workerProfiles.slug, slug))
-          .limit(1);
+        // slug가 제공된 경우에만 중복 확인 (동일 사용자의 기존 slug는 허용)
+        if (slug !== undefined) {
+          const slugConflict = await tx
+            .select({ id: workerProfiles.id, userId: workerProfiles.userId })
+            .from(workerProfiles)
+            .where(eq(workerProfiles.slug, slug))
+            .limit(1);
 
-        if (slugConflict.length > 0 && slugConflict[0].userId !== userId) {
-          this.logger.warn({ slug }, 'slug 중복 충돌');
-          throw new ConflictException('이미 사용 중인 slug입니다');
+          if (slugConflict.length > 0 && slugConflict[0].userId !== userId) {
+            this.logger.warn({ slug }, 'slug 중복 충돌');
+            throw new ConflictException('이미 사용 중인 slug입니다');
+          }
         }
 
         // 기존 프로필 조회 (upsert 처리)
         const existingProfile = await tx
-          .select({ id: workerProfiles.id })
+          .select({ id: workerProfiles.id, slug: workerProfiles.slug })
           .from(workerProfiles)
           .where(eq(workerProfiles.userId, userId))
           .limit(1);
@@ -366,18 +368,29 @@ export class ProfileService {
           workerProfileId = existingProfile[0].id;
           this.logger.debug({ workerProfileId }, '기존 워커 프로필 업데이트');
 
+          // slug가 없으면 기존 slug 유지 (4단계 온보딩 재호출 시 slug 덮어쓰기 방지)
+          const updateValues: Record<string, unknown> = {
+            businessName,
+            updatedAt: new Date(),
+          };
+          if (slug !== undefined) updateValues.slug = slug;
+          if (yearsOfExperience !== undefined)
+            updateValues.yearsOfExperience = yearsOfExperience;
+          if (careerSummary !== undefined)
+            updateValues.careerSummary = careerSummary;
+
           await tx
             .update(workerProfiles)
-            .set({
-              slug,
-              businessName,
-              yearsOfExperience: yearsOfExperience ?? undefined,
-              careerSummary: careerSummary ?? undefined,
-              updatedAt: new Date(),
-            })
+            .set(updateValues)
             .where(eq(workerProfiles.id, workerProfileId));
         } else {
-          // 신규 프로필 생성
+          // 신규 프로필 생성 — /onboarding/slug 페이지를 먼저 거쳐야 slug가 확정됨
+          if (!slug) {
+            throw new BadRequestException(
+              'slug는 첫 온보딩 시 반드시 제공해야 합니다',
+            );
+          }
+
           this.logger.debug({ userId }, '신규 워커 프로필 생성');
 
           const [newProfile] = await tx
@@ -394,17 +407,19 @@ export class ProfileService {
           workerProfileId = newProfile.id;
         }
 
-        // 전문 분야 업데이트: 기존 삭제 후 재삽입
+        // 전문 분야 업데이트: 기존 삭제 후 재삽입 (빈 배열이면 전체 삭제만)
         await tx
           .delete(workerFields)
           .where(eq(workerFields.workerProfileId, workerProfileId));
 
-        await tx.insert(workerFields).values(
-          fieldCodes.map((fieldCode) => ({
-            workerProfileId,
-            fieldCode,
-          })),
-        );
+        if (fieldCodes.length > 0) {
+          await tx.insert(workerFields).values(
+            fieldCodes.map((fieldCode) => ({
+              workerProfileId,
+              fieldCode,
+            })),
+          );
+        }
 
         this.logger.debug(
           { workerProfileId, count: fieldCodes.length },
@@ -455,6 +470,14 @@ export class ProfileService {
           areas: updatedAreas.map((a) => ({ areaCode: a.areaCode })),
         };
       } catch (error) {
+        // DB 유니크 제약 위반 (TOCTOU 경쟁 조건) → 409로 변환
+        if (
+          error instanceof Error &&
+          error.message.includes('unique') &&
+          error.message.toLowerCase().includes('slug')
+        ) {
+          throw new ConflictException('이미 사용 중인 slug입니다');
+        }
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         this.logger.error({ error: errorMessage }, '온보딩 완료 처리 실패');

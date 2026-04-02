@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Menu, X, LogOut, User } from "lucide-react";
+import { getMe, logout, type AuthUser } from "@/lib/api";
 
 interface NavbarProps {
   onSignupClick: () => void;
@@ -9,6 +11,23 @@ interface NavbarProps {
 
 export function Navbar({ onSignupClick }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    getMe()
+      .then(setUser)
+      .catch(() => setUser(null));
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
+    setUserMenuOpen(false);
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -38,18 +57,43 @@ export function Navbar({ onSignupClick }: NavbarProps) {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
-          <button
-            onClick={onSignupClick}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            로그인
-          </button>
-          <button
-            onClick={onSignupClick}
-            className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            회원가입
-          </button>
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen((v) => !v)}
+                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+              >
+                <User size={16} />
+                {user.email}
+              </button>
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-card border border-border rounded-xl shadow-lg py-1 z-50">
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <LogOut size={14} />
+                    로그아웃
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => router.push("/login")}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                로그인
+              </button>
+              <button
+                onClick={onSignupClick}
+                className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                회원가입
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile Toggle */}
@@ -75,18 +119,36 @@ export function Navbar({ onSignupClick }: NavbarProps) {
             서비스 소개
           </a>
           <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <button
-              onClick={onSignupClick}
-              className="text-sm font-medium text-muted-foreground"
-            >
-              로그인
-            </button>
-            <button
-              onClick={onSignupClick}
-              className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-lg"
-            >
-              회원가입
-            </button>
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+              >
+                <LogOut size={14} />
+                로그아웃
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    router.push("/login");
+                  }}
+                  className="text-sm font-medium text-muted-foreground"
+                >
+                  로그인
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onSignupClick();
+                  }}
+                  className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-lg"
+                >
+                  회원가입
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
