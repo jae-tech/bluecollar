@@ -1,9 +1,13 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
-export default defineCloudflareConfig({
+const cloudflareConfig = defineCloudflareConfig();
+
+export default {
+  ...cloudflareConfig,
+  // App Router only 프로젝트 — pages-manifest.json 없으므로 ISR/태그 캐시 비활성화
   dangerous: {
-    // App Router only 프로젝트에서 pages-manifest.json 없음 → ISR/태그 캐시 불필요
+    ...cloudflareConfig.dangerous,
     disableIncrementalCache: true,
     disableTagCache: true,
   },
-});
+};
