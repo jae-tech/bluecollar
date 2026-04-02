@@ -12,7 +12,7 @@ const PROTECTED_PATHS = ["/onboarding", "/dashboard"];
  */
 const AUTH_PATHS = ["/login"];
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // accessToken 쿠키 존재 여부 확인
