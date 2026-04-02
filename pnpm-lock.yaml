@@ -381,8 +381,8 @@ importers:
         specifier: ^4.2.0
         version: 4.2.2
       '@types/node':
-        specifier: ^22
-        version: 22.15.3
+        specifier: ^24
+        version: 24.12.0
       '@types/react':
         specifier: 19.2.14
         version: 19.2.14
@@ -3817,6 +3817,9 @@ packages:
 
   '@types/node@22.15.3':
     resolution: {integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==}
+
+  '@types/node@24.12.0':
+    resolution: {integrity: sha512-GYDxsZi3ChgmckRT9HPU0WEhKLP08ev/Yfcq2AstjrDASOYCSXeyjDsHg4v5t4jOj7cyDX3vmprafKlWIG9MXQ==}
 
   '@types/node@25.2.0':
     resolution: {integrity: sha512-DZ8VwRFUNzuqJ5khrvwMXHmvPe+zGayJhr2CDNiKB1WBE1ST8Djl00D0IC4vvNmHMdj6DlbYRIaFE7WHjlDl5w==}
@@ -10963,7 +10966,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
 
   '@types/chai@5.2.3':
     dependencies:
@@ -10972,7 +10975,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
 
   '@types/cookiejar@2.1.5': {}
 
@@ -11016,7 +11019,7 @@ snapshots:
 
   '@types/express-serve-static-core@5.1.1':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -11036,7 +11039,7 @@ snapshots:
   '@types/jsonwebtoken@9.0.10':
     dependencies:
       '@types/ms': 2.1.0
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
 
   '@types/luxon@3.7.1': {}
 
@@ -11050,7 +11053,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
       form-data: 4.0.5
 
   '@types/node@18.19.130':
@@ -11060,6 +11063,10 @@ snapshots:
   '@types/node@22.15.3':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/node@24.12.0':
+    dependencies:
+      undici-types: 7.16.0
 
   '@types/node@25.2.0':
     dependencies:
@@ -11071,7 +11078,7 @@ snapshots:
 
   '@types/oauth@0.9.6':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
 
   '@types/passport-google-oauth20@2.0.17':
     dependencies:
@@ -11132,18 +11139,18 @@ snapshots:
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
 
   '@types/superagent@8.1.9':
     dependencies:
       '@types/cookiejar': 2.1.5
       '@types/methods': 1.1.4
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
       form-data: 4.0.5
 
   '@types/supertest@6.0.3':
@@ -13415,7 +13422,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.15.3
+      '@types/node': 25.2.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
