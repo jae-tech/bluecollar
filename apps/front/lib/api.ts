@@ -162,7 +162,7 @@ export interface WorkerProfile {
 }
 
 export interface CompleteOnboardingPayload {
-  slug: string;
+  slug?: string;
   businessName: string;
   fieldCodes: string[];
   yearsOfExperience?: number;
@@ -246,6 +246,82 @@ export async function completeOnboarding(
   await tryRefresh();
   return profile;
 }
+
+// ─── Public Profile ──────────────────────────────────────────────────────────
+
+export interface PublicProfileMedia {
+  id: string;
+  mediaUrl: string;
+  mediaType: string;
+  imageType: string | null;
+  videoDuration: number | null;
+  thumbnailUrl: string | null;
+  displayOrder: number;
+  description: string | null;
+}
+
+export interface PublicProfilePortfolio {
+  id: string;
+  title: string;
+  content: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  difficulty: string | null;
+  estimatedCost: number | null;
+  actualCost: number | null;
+  costVisibility: string | null;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+  media: PublicProfileMedia[];
+}
+
+export interface PublicProfile {
+  profile: {
+    id: string;
+    slug: string;
+    businessName: string;
+    profileImageUrl: string | null;
+    description: string | null;
+    careerSummary: string | null;
+    yearsOfExperience: number | null;
+    businessVerified: boolean;
+    officeAddress: string | null;
+    officeCity: string | null;
+    officeDistrict: string | null;
+    officePhoneNumber: string | null;
+    operatingHours: string | null;
+    officeImageUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  user: {
+    id: string;
+    realName: string;
+    role: string;
+  } | null;
+  fields: { fieldCode: string }[];
+  areas: { areaCode: string }[];
+  portfolios: PublicProfilePortfolio[];
+}
+
+/** 공개 워커 프로필 조회 (slug 기반, 토큰 불필요) */
+export async function getPublicProfile(
+  slug: string,
+): Promise<PublicProfile | null> {
+  try {
+    return await apiFetch<PublicProfile>(
+      `/public/profiles/${encodeURIComponent(slug)}`,
+      {},
+      true,
+    );
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+// ─── Slug ─────────────────────────────────────────────────────────────────────
 
 /**
  * slug 사용 가능 여부 확인
