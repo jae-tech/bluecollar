@@ -5,10 +5,21 @@ const config: OpenNextConfig = {
     override: {
       wrapper: "cloudflare-node",
       converter: "edge",
-      // Cloudflare KV 기반 incremental cache (선택사항 — 추후 KV 바인딩 추가 시 활성화)
-      // incrementalCache: 'fetch',
-      // tagCache: 'dummy',
-      // queue: 'dummy',
+      proxyExternalRequest: "fetch",
+      incrementalCache: "dummy",
+      tagCache: "dummy",
+      queue: "dummy",
+    },
+  },
+  middleware: {
+    external: true,
+    override: {
+      wrapper: "cloudflare-edge",
+      converter: "edge",
+      proxyExternalRequest: "fetch",
+      incrementalCache: "dummy",
+      tagCache: "dummy",
+      queue: "dummy",
     },
   },
 };
