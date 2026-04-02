@@ -12,6 +12,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // OpenNext Cloudflare 빌드에 필요한 standalone 출력 모드
+  output: "standalone",
   images: {
     // Cloudflare Workers는 자체 Image Optimization API가 없으므로 unoptimized 유지
     unoptimized: true,
