@@ -12,10 +12,6 @@ const nextConfig = {
     // Cloudflare Workers는 자체 Image Optimization API가 없으므로 unoptimized 유지
     unoptimized: true,
   },
-  turbopack: {
-    // pnpm workspace 환경에서 Turbopack이 workspace root를 잘못 추론하는 버그 방지
-    root: "../..",
-  },
 };
 
 export default nextConfig;
