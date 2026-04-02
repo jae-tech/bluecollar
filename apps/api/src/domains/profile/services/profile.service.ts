@@ -470,6 +470,14 @@ export class ProfileService {
           areas: updatedAreas.map((a) => ({ areaCode: a.areaCode })),
         };
       } catch (error) {
+        // DB 유니크 제약 위반 (TOCTOU 경쟁 조건) → 409로 변환
+        if (
+          error instanceof Error &&
+          error.message.includes('unique') &&
+          error.message.toLowerCase().includes('slug')
+        ) {
+          throw new ConflictException('이미 사용 중인 slug입니다');
+        }
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         this.logger.error({ error: errorMessage }, '온보딩 완료 처리 실패');
