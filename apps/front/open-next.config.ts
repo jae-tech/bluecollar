@@ -4,7 +4,7 @@ const config: OpenNextConfig = {
   edgeExternals: ["node:crypto"],
   default: {
     override: {
-      wrapper: "cloudflare-edge",
+      wrapper: "cloudflare-node",
       converter: "edge",
       proxyExternalRequest: "fetch",
       incrementalCache: "dummy",
