@@ -1,7 +1,11 @@
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // 개발 서버(`next dev`)에서 Cloudflare 바인딩 시뮬레이션 활성화
 initOpenNextCloudflareForDev();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -12,6 +16,8 @@ const nextConfig = {
     // Cloudflare Workers는 자체 Image Optimization API가 없으므로 unoptimized 유지
     unoptimized: true,
   },
+  // pnpm monorepo 환경에서 outputFileTracing이 workspace root를 올바르게 탐색하도록 설정
+  outputFileTracingRoot: path.join(__dirname, "../../"),
 };
 
 export default nextConfig;
