@@ -1,4 +1,4 @@
-name = "bluecollar-front"
+name = "bluecollar"
 main = ".open-next/worker.js"
 compatibility_date = "2024-12-30"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
@@ -9,7 +9,7 @@ assets = { directory = ".open-next/assets", binding = "ASSETS" }
 # Worker 자기 참조 (OpenNext 내부 라우팅용)
 [[services]]
 binding = "WORKER_SELF_REFERENCE"
-service = "bluecollar-front"
+service = "bluecollar"
 
 # 환경변수는 Cloudflare Dashboard 또는 .dev.vars 에서 관리
 # [vars]

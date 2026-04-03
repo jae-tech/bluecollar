@@ -78,3 +78,10 @@ If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to bu
 - Backend (NestJS/Fastify) not yet deployed — runs locally on port 4000
 - wrangler.toml: apps/front/wrangler.toml, worker name: bluecollar-front
 - NEXT_PUBLIC_API_URL injected at build time via GitHub Actions secret
+## Design System
+UI 작업 전 반드시 `DESIGN.md`를 읽을 것.
+- 폰트, 색상, 여백, radius, 모션 등 모든 시각적 결정의 기준은 DESIGN.md에 정의되어 있음
+- DESIGN.md에서 정의된 값과 다른 방향은 사용자 명시적 승인 없이 적용 금지
+- 컴포넌트 수정 시: `--radius-sm` (버튼), `--radius-md` (카드), `--radius-lg` (모달) 계층 준수
+- 그림자(shadow) 대신 `border border-border`로 elevation 표현
+- primary 오렌지(`#FF6B00`)는 CTA 버튼, 링크, 포커스링에만 제한적으로 사용
