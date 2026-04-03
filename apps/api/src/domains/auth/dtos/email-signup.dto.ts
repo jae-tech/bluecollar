@@ -34,11 +34,7 @@ export const EmailSignupSchema = z.object({
     .string()
     .min(8, '비밀번호는 최소 8자 이상이어야 합니다')
     .max(128, '비밀번호는 128자 이하여야 합니다')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      '비밀번호는 영문 대문자, 소문자, 숫자를 포함해야 합니다',
-    )
-    .describe('비밀번호: 8-128자, 대문자/소문자/숫자 포함'),
+    .describe('비밀번호: 8-128자'),
 
   realName: z
     .string()
