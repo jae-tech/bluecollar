@@ -17,6 +17,7 @@
     "db:seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
+    "@repo/constants": "workspace:*",
     "drizzle-orm": "^0.45.1",
     "postgres": "^3.4.4"
   },

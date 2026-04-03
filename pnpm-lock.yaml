@@ -95,6 +95,9 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.2.5
         version: 11.2.5(@fastify/static@9.0.0)(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)
+      '@repo/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
       '@repo/database':
         specifier: workspace:^
         version: link:../../packages/database
@@ -318,6 +321,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: 1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@repo/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.27(postcss@8.5.8)
@@ -410,8 +416,13 @@ importers:
         specifier: 4.79.0
         version: 4.79.0
 
+  packages/constants: {}
+
   packages/database:
     dependencies:
+      '@repo/constants':
+        specifier: workspace:*
+        version: link:../constants
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(gel@2.2.0)(postgres@3.4.8)

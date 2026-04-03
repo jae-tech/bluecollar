@@ -1,0 +1,9 @@
+{
+  "name": "@repo/constants",
+  "version": "1.0.0",
+  "main": "./src/reserved-slugs.ts",
+  "types": "./src/reserved-slugs.ts",
+  "exports": {
+    ".": "./src/reserved-slugs.ts"
+  }
+}
