@@ -19,9 +19,9 @@ const nextConfig = {
     unoptimized: true,
   },
   // pnpm 모노레포에서 Turbopack이 workspace root를 올바르게 인식하도록 설정
-  // next.config.mjs 기준 상대 경로 사용 (apps/front → 두 단계 위 = 모노레포 루트)
+  // 절대 경로를 사용해야 함 (next.config.mjs → apps/front → 두 단계 위 = 모노레포 루트)
   turbopack: {
-    root: "../..",
+    root: path.join(__dirname, "../../"),
   },
   // pnpm 모노레포 환경에서 outputFileTracing이 workspace root를 올바르게 탐색하도록 설정
   outputFileTracingRoot: path.join(__dirname, "../../"),
