@@ -16,6 +16,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/index.ts", "src/schema.ts"],
+  "include": ["src/index.ts", "src/schema.ts", "src/constants/**/*.ts"],
   "exclude": ["node_modules", "dist", "src/scripts"]
 }
