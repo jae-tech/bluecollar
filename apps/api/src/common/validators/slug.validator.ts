@@ -1,4 +1,4 @@
-import { isSlugReserved } from '@repo/database';
+import { isSlugReserved } from '@repo/constants';
 
 /**
  * Slug 유효성 검사 함수
@@ -27,6 +27,14 @@ export function validateSlug(slug: string): { valid: boolean; error?: string } {
     return {
       valid: false,
       error: 'slug는 소문자, 숫자, 하이픈만 포함할 수 있습니다',
+    };
+  }
+
+  // 첫 글자 숫자 금지: URL에서 혼란 방지 및 가독성 향상
+  if (/^[0-9]/.test(slug)) {
+    return {
+      valid: false,
+      error: 'slug는 숫자로 시작할 수 없습니다',
     };
   }
 

@@ -8,8 +8,8 @@ import {
   portfolios,
   portfolioMedia,
   users,
-  isSlugReserved,
 } from '@repo/database';
+import { validateSlug } from '@/common/validators/slug.validator';
 import { eq, inArray, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
@@ -200,9 +200,10 @@ export class PublicService {
   async checkSlugAvailability(
     slug: string,
   ): Promise<{ available: boolean; reason?: string }> {
-    // 예약어 체크
-    if (isSlugReserved(slug)) {
-      return { available: false, reason: 'reserved' };
+    // 포맷 및 예약어 통합 검증 (validateSlug가 isSlugReserved도 포함)
+    const validation = validateSlug(slug);
+    if (!validation.valid) {
+      return { available: false, reason: 'invalid_format' };
     }
 
     // DB 중복 체크

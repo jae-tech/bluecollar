@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
+import { validateSlug } from '@/common/validators/slug.validator';
 
 /**
  * 온보딩 완료 DTO
@@ -20,11 +21,18 @@ import { createZodDto } from 'nestjs-zod';
 export const CompleteOnboardingSchema = z.object({
   slug: z
     .string()
-    .min(3, 'slug는 최소 3자 이상이어야 합니다')
-    .max(50, 'slug는 최대 50자입니다')
-    .regex(/^[a-z0-9-]+$/, 'slug는 소문자, 숫자, 하이픈(-)만 사용 가능합니다')
-    .describe('프로필 URL slug (예: hong-gildong)')
-    .optional(),
+    .optional()
+    .superRefine((v, ctx) => {
+      if (v === undefined) return;
+      const result = validateSlug(v);
+      if (!result.valid) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: result.error ?? '유효하지 않은 slug입니다',
+        });
+      }
+    })
+    .describe('프로필 URL slug (예: hong-gildong)'),
 
   businessName: z
     .string()

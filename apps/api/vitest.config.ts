@@ -3,10 +3,14 @@ import path from 'path';
 
 // tsconfig.json의 path mapping을 Vitest에서도 인식하도록 설정
 export default defineConfig({
-  // 절대 경로 alias 설정 (@/ → src/)
+  // 절대 경로 alias 설정 (@/ → src/, @repo/* → packages/*/src)
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@repo/constants': path.resolve(
+        __dirname,
+        '../../packages/constants/src/reserved-slugs.ts',
+      ),
     },
   },
   test: {
