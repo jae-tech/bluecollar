@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY}:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/api:latest
     container_name: bluecollar-api
     restart: unless-stopped
     ports:
