@@ -7,6 +7,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { PinoLogger } from 'nestjs-pino';
 import { PublicService } from '../services/public.service';
 import { Public } from '@/common/decorators/public.decorator';
@@ -50,6 +51,7 @@ export class PublicController {
    */
   @Get('slug-check')
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 60 } }) // 실시간 debounce 허용 (기본 10req/60s는 5초 타이핑 후 429)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Slug 사용 가능 여부 확인',
