@@ -43,8 +43,8 @@ export default function OnboardingPage() {
         // 이미 /onboarding/slug에서 생성된 프로필의 slug 조회
         const existing = await getMyWorkerProfile();
         const profile = await completeOnboarding({
-          slug: existing?.slug ?? "",
-          businessName: existing?.slug ?? "",
+          slug: existing?.slug || undefined,
+          businessName: existing?.slug || "미설정",
           fieldCodes: data.industry ? [data.industry] : [],
           yearsOfExperience:
             EXPERIENCE_TO_YEARS[data.experienceLevel ?? "EXP_1TO3"] ?? 2,
@@ -174,34 +174,38 @@ export default function OnboardingPage() {
       </div>
 
       {/* Fixed Bottom Controls */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-6 py-4 flex flex-col gap-2">
-        {submitError && (
-          <p className="text-sm text-red-500 text-center">{submitError}</p>
-        )}
-        <div className="flex gap-3">
-          {data.step > 1 && (
-            <button
-              onClick={handleBack}
-              disabled={submitLoading}
-              className="flex-1 py-3.5 rounded-xl border-2 border-border text-foreground font-bold hover:bg-secondary transition-colors disabled:opacity-50"
-            >
-              뒤로
-            </button>
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <div className="w-full max-w-lg mx-auto px-6 py-4 flex flex-col gap-2">
+          {submitError && (
+            <p className="text-sm text-destructive text-center">
+              {submitError}
+            </p>
           )}
-          <button
-            onClick={handleNext}
-            disabled={isNextDisabled() || submitLoading}
-            className={`flex-1 py-3.5 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-              isNextDisabled() || submitLoading
-                ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95"
-            }`}
-          >
-            {submitLoading && (
-              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+          <div className="flex gap-3">
+            {data.step > 1 && (
+              <button
+                onClick={handleBack}
+                disabled={submitLoading}
+                className="flex-1 py-3.5 rounded-xl border-2 border-border text-foreground font-bold hover:bg-secondary transition-colors disabled:opacity-50"
+              >
+                뒤로
+              </button>
             )}
-            {data.step === TOTAL_STEPS ? "완료" : "다음"}
-          </button>
+            <button
+              onClick={handleNext}
+              disabled={isNextDisabled() || submitLoading}
+              className={`flex-1 py-3.5 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+                isNextDisabled() || submitLoading
+                  ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95"
+              }`}
+            >
+              {submitLoading && (
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              )}
+              {data.step === TOTAL_STEPS ? "완료" : "다음"}
+            </button>
+          </div>
         </div>
       </div>
 

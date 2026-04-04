@@ -9,6 +9,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 모노레포 workspace 패키지 트랜스파일 (TypeScript 소스 직접 참조)
+  transpilePackages: ["@repo/constants"],
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -19,9 +21,9 @@ const nextConfig = {
     unoptimized: true,
   },
   // pnpm 모노레포에서 Turbopack이 workspace root를 올바르게 인식하도록 설정
-  // 절대 경로를 사용해야 함 (next.config.mjs → apps/front → 두 단계 위 = 모노레포 루트)
+  // 반드시 상대 경로 문자열로 지정 (절대 경로 사용 시 Next.js가 올바르게 해석하지 못함)
   turbopack: {
-    root: path.join(__dirname, "../../"),
+    root: "../..",
   },
   // pnpm 모노레포 환경에서 outputFileTracing이 workspace root를 올바르게 탐색하도록 설정
   outputFileTracingRoot: path.join(__dirname, "../../"),

@@ -15,15 +15,20 @@ export default function OnboardingCompletePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getMyWorkerProfile().then((p) => {
-      if (!p) {
-        // 프로필 없으면 온보딩 처음으로
+    getMyWorkerProfile()
+      .then((p) => {
+        if (!p?.slug) {
+          // 프로필 없거나 slug 미설정 → slug 설정 단계로
+          router.replace("/onboarding/slug");
+          return;
+        }
+        setProfile(p);
+        setLoading(false);
+      })
+      .catch(() => {
+        // API 오류 시 slug 설정 단계로 이동
         router.replace("/onboarding/slug");
-        return;
-      }
-      setProfile(p);
-      setLoading(false);
-    });
+      });
   }, [router]);
 
   const profileUrl = profile ? `${BASE_URL}/worker/${profile.slug}` : "";
@@ -48,7 +53,7 @@ export default function OnboardingCompletePage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-lg text-center">
         {/* 축하 아이콘 */}
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
