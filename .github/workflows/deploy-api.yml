@@ -7,13 +7,14 @@ on:
     paths:
       - "apps/api/**"
       - "packages/database/**"
-      - "pnpm-lock.yaml"
+      - "packages/constants/**"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/api
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ── Job 1: Docker 이미지 빌드 & GHCR Push ───────────────────────────────────
