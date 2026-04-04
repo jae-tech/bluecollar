@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/uploads
+**/coverage
+**/*.log
+.git
+.github
+bluecollar-infra
+apps/front
