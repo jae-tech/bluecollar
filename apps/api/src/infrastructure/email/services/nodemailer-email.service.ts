@@ -113,7 +113,11 @@ export class NodemailerEmailService implements IEmailService {
     } catch (error) {
       this.logger.error(
         { error: (error as Error).message },
-        '❌ 이메일 템플릿 로드 실패',
+        '❌ 이메일 템플릿 로드 실패 — 앱을 시작할 수 없습니다',
+      );
+      // 템플릿 없이 발송하면 런타임 에러가 발생하므로 앱 시작 시 즉시 실패
+      throw new Error(
+        `이메일 템플릿 로드 실패: ${(error as Error).message}`,
       );
     }
   }

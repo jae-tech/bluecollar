@@ -56,9 +56,6 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
     if (!email) errors.email = "이메일을 입력해주세요";
     if (password.length < 8)
       errors.password = "비밀번호는 8자 이상이어야 합니다";
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors.password = "영문 대문자, 소문자, 숫자를 모두 포함해야 합니다";
-    }
     if (password !== passwordConfirm)
       errors.passwordConfirm = "비밀번호가 일치하지 않습니다";
     if (!agreeTerms) errors.agreeTerms = "이용약관에 동의해야 합니다";
@@ -246,7 +243,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 <input
                   id="modal-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="8자 이상, 대/소문자 + 숫자 포함"
+                  placeholder="8자 이상"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className={inputClass(!!fieldErrors.password) + " pr-10"}

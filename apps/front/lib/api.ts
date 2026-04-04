@@ -159,6 +159,7 @@ export interface WorkerProfile {
   businessName: string;
   yearsOfExperience?: number;
   careerSummary?: string;
+  fields?: { fieldCode: string }[];
 }
 
 export interface CompleteOnboardingPayload {

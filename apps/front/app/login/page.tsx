@@ -35,14 +35,15 @@ export default function LoginPage() {
       // 로그인 성공 → 워커 프로필 확인
       try {
         const profile = await getMyWorkerProfile();
-        if (profile) {
+        if (profile?.slug) {
           router.push(`/worker/${profile.slug}`);
         } else {
-          router.push("/onboarding");
+          // 프로필 없거나 slug 미설정 → slug 선택 단계부터
+          router.push("/onboarding/slug");
         }
       } catch {
-        // 프로필 조회 실패 시에도 온보딩으로 이동 (로그인은 성공했으므로)
-        router.push("/onboarding");
+        // 프로필 조회 실패 시에도 slug 설정 단계로
+        router.push("/onboarding/slug");
       }
     } catch (err) {
       if (err instanceof ApiError) {

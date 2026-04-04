@@ -12,6 +12,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@repo/constants": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@opennextjs/cloudflare": "^1.18.0",
     "@radix-ui/react-accordion": "1.2.12",
