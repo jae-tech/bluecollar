@@ -9,6 +9,7 @@ WORKDIR /repo
 # monorepo 루트 메타파일 복사
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
+COPY patches/ ./patches/
 
 # 각 패키지 package.json 복사 (레이어 캐시 최적화)
 COPY packages/constants/package.json ./packages/constants/
@@ -45,6 +46,7 @@ WORKDIR /repo
 
 # 프로덕션 의존성만 재설치
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY patches/ ./patches/
 COPY packages/constants/package.json ./packages/constants/
 COPY packages/database/package.json ./packages/database/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
