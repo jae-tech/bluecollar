@@ -280,20 +280,11 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 
 ## 🐛 QA 발견 버그 (2026-04-02)
 
-### TODO-021: "나중에" 버튼 — slug 미설정 상태로 /onboarding 진입 시 400 에러
+### ~~TODO-021: "나중에" 버튼 — slug 미설정 상태로 /onboarding 진입 시 400 에러~~
 
-**What:** `/onboarding/slug`의 "나중에" 버튼이 slug를 설정하지 않고 `/onboarding`으로 이동. 이후 4단계 완료 시 `completeOnboarding` 호출에서 `slug: ""` (빈 문자열)가 전달돼 백엔드 400 에러 발생.
-**Why:** 플랜 원안의 "나중에"는 "4단계를 나중에"지 "slug 설정을 나중에"가 아님. 현재 구현이 플랜과 다름.
-**Repro:**
-1. 회원가입 → 이메일 인증 → `/onboarding/slug`
-2. "나중에" 버튼 클릭 → `/onboarding` 진입
-3. 4단계 모두 완료 후 "완료" 클릭 → 400 Bad Request
-**Fix 방향 (둘 중 선택):**
-- A) "나중에" = slug 확정 후 `/worker/:slug` 바로 이동 (4단계 스킵) — 플랜 원안
-- B) "나중에" 버튼 제거 — slug 확정은 필수 CTA만
-**Effort:** S
-**Priority:** P1
-**Found by:** /qa on main, 2026-04-02
+**Fixed on main, 2026-04-04** — `/autoplan` Phase 3 Eng Review에서 발견, "나중에" 버튼 제거 (Fix 방향 B 채택). 백엔드가 slug를 필수로 강제하므로 스킵 자체가 불가능. `handleSkip` 함수와 버튼 제거, slug 확정 CTA만 유지.
+
+**Original:** `/onboarding/slug`의 "나중에" 버튼이 slug를 설정하지 않고 `/onboarding`으로 이동. 이후 4단계 완료 시 `completeOnboarding` 호출에서 `slug: ""` (빈 문자열)가 전달돼 백엔드 400 에러 발생.
 
 ---
 
@@ -305,3 +296,67 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 **Effort:** S
 **Priority:** P2
 **Found by:** /qa on main, 2026-04-02
+
+---
+
+## 🎨 디자인 토큰 & UX (2026-04-04 /autoplan 발견)
+
+### TODO-023: 온보딩 상태 표시 색상을 디자인 토큰으로 교체
+
+**What:** `onboarding/slug/page.tsx`의 `bg-green-50/border-green-300/text-orange-600` 클래스를 디자인 시스템 토큰으로 교체.
+**Why:** Raw Tailwind 색상이 다크모드에서 깨짐. DESIGN.md 토큰 계층 위반.
+**Fix:** `bg-success/10 border-success text-success`, `bg-warning/10 text-warning` 패턴 사용 (DESIGN.md 참조).
+**Effort:** S
+**Priority:** P2
+**Found by:** /autoplan Design Review, 2026-04-04
+
+---
+
+### TODO-024: 온보딩 radius 계층 정비
+
+**What:** 온보딩 페이지 전반의 `rounded-xl` 일괄 사용을 DESIGN.md 계층(`rounded-sm` 입력/버튼, `rounded-md` 카드)으로 교체.
+**Why:** 모든 요소가 동일 radius면 시각적 계층이 무너짐.
+**Effort:** M
+**Priority:** P3
+**Found by:** /autoplan Design Review, 2026-04-04
+
+---
+
+### TODO-025: 온보딩 진행률 바 개선
+
+**What:** `h-1` → `h-1.5`, 단계 레이블("2 / 4") 추가.
+**Why:** 현재 진행률 바가 너무 얇고 몇 단계인지 알 수 없음.
+**Effort:** S
+**Priority:** P3
+**Found by:** /autoplan Design Review, 2026-04-04
+
+---
+
+### TODO-026: "나중에" 재유도 — 워커 대시보드에 slug 설정 미완료 배너
+
+**What:** slug가 없는 워커가 대시보드에 진입 시 slug 설정 재유도 배너 표시.
+**Why:** "나중에" 버튼 제거로 slug 설정은 필수가 됐지만, 향후 탈출구가 필요할 경우를 위한 안전망.
+**Effort:** S
+**Priority:** P3
+**Found by:** /autoplan Phase 3 Eng Review, 2026-04-04
+
+---
+
+### TODO-027: `step-5-username.tsx` 좀비 컴포넌트 제거
+
+**What:** `apps/front/components/step-5-username.tsx` — mock 검증 로직이 있고 온보딩 플로우에 연결되지 않은 사용되지 않는 컴포넌트.
+**Why:** 코드베이스 노이즈, 향후 혼란 방지.
+**Effort:** XS
+**Priority:** P3
+**Found by:** /autoplan Design Review, 2026-04-04
+
+---
+
+### TODO-028: 클립보드 복사 폴백 (KakaoTalk/삼성 인터넷 인앱 브라우저)
+
+**What:** `/onboarding/complete`의 링크 복사 버튼이 `navigator.clipboard` 미지원 환경에서 조용히 실패.
+**Why:** KakaoTalk 인앱 브라우저, 삼성 인터넷 등에서는 Clipboard API가 제한됨.
+**Fix:** `execCommand('copy')` 폴백 또는 "직접 복사하세요" toast 안내 UI 추가.
+**Effort:** S
+**Priority:** P2
+**Found by:** /autoplan Design Review, 2026-04-04
