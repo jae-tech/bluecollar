@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.1.2] - 2026-04-04
+
+### Features
+- Slug 강화: 첫 글자 숫자 금지 규칙 추가 (`1abc` → invalid)
+- `@repo/constants` 신규 패키지 — `RESERVED_SLUGS` + `isSlugReserved()` 단일 소스 (프론트/백엔드 동기화)
+- `public.service.ts:checkSlugAvailability` — 포맷 검증 + 예약어 체크를 `validateSlug()`로 통합 (이전: 예약어만 체크, `1abc` → available 오신호 버그 수정)
+- 예약어 확장: `worker`, `onboarding`, `dashboard`, `settings`, `profile`, `billing`, `null`, `undefined`, `true`, `false`, `nan` 추가
+
+### Bug Fixes
+- 온보딩 slug 페이지 & complete 페이지 guard `useEffect`에 `.catch()` 추가 — API 오류 시 무한 스피너 버그 수정
+- "나중에" skip 버튼 제거 — 백엔드가 `slug` 필수 강제, 스킵 시 unrecoverable 400 루프 버그 수정
+- slug 가용성 확인 오류 상태 (`error`) 추가 — 네트워크 오류 시 silently swallow 버그 수정
+- `login/page.tsx` slug 미설정 시 `/onboarding` → `/onboarding/slug`로 리다이렉트 수정 (undefined slug 방지)
+- `onboarding/complete/page.tsx` `!p` → `!p?.slug` 가드 수정 (/worker/undefined 버그 수정)
+- `onboarding/page.tsx` `text-red-500` → `text-destructive` 디자인 토큰 수정
+- `signup-modal.tsx` 비밀번호 placeholder 복사 오류 수정 ("8자 이상, 대/소문자 포함" → "8자 이상")
+
+### Changes
+- 온보딩 데스크탑 반응형: `max-w-lg mx-auto` centering, fixed 하단 버튼 inner wrapper
+- `onboarding/complete/page.tsx` `max-w-md` → `max-w-lg` 컨테이너 너비 통일
+- 비밀번호 정책 완화: 대문자 `.regex()` 제거 (백엔드 DTO + 프론트 검증)
+- `complete-onboarding.dto.ts` Zod regex 복사본 제거 → `superRefine(validateSlug)` 중앙화
+
+### Tests
+- `slug.validator.spec.ts` 24개 유닛 테스트 추가 (예약어, 포맷, 숫자 시작 금지 등)
+- Vitest `@repo/constants` alias 추가 — 모노레포 raw TS 패키지 모듈 해석 문제 해결
+
 ## [0.1.1] - 2026-04-02
 
 ### Features
