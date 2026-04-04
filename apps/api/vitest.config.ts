@@ -5,11 +5,16 @@ import path from 'path';
 export default defineConfig({
   // 절대 경로 alias 설정 (@/ → src/, @repo/* → packages/*/src)
   resolve: {
+    extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs'],
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@repo/constants': path.resolve(
         __dirname,
-        '../../packages/constants/src/reserved-slugs.ts',
+        '../../packages/constants/src/index.ts',
+      ),
+      '@repo/database': path.resolve(
+        __dirname,
+        '../../packages/database/src/index.ts',
       ),
     },
   },
