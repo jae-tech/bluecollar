@@ -11,6 +11,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
 
 # 각 패키지 package.json 복사 (레이어 캐시 최적화)
+COPY packages/constants/package.json ./packages/constants/
 COPY packages/database/package.json ./packages/database/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
@@ -23,6 +24,7 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 
 # 소스 복사
+COPY packages/constants ./packages/constants
 COPY packages/database ./packages/database
 COPY packages/typescript-config ./packages/typescript-config
 COPY apps/api ./apps/api
@@ -43,6 +45,7 @@ WORKDIR /repo
 
 # 프로덕션 의존성만 재설치
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/constants/package.json ./packages/constants/
 COPY packages/database/package.json ./packages/database/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY apps/api/package.json ./apps/api/
@@ -50,6 +53,7 @@ COPY apps/api/package.json ./apps/api/
 RUN pnpm install --frozen-lockfile --prod
 
 # 빌드 결과물 복사
+COPY --from=builder /repo/packages/constants/src ./packages/constants/src
 COPY --from=builder /repo/packages/database/dist ./packages/database/dist
 COPY --from=builder /repo/apps/api/dist ./apps/api/dist
 
