@@ -3,6 +3,7 @@
 Generated from `/plan-design-review` on 2026-03-30.
 Updated from `/plan-eng-review` on 2026-03-31.
 Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
+Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
@@ -127,6 +128,7 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 ### ~~TODO-011: staging 환경 인증 코드 노출 방지~~
 
 **Fixed on main, 2026-03-31**
+
 - `email-verification.service.ts`: `NODE_ENV !== 'production'` → `EXPOSE_EMAIL_CODE === 'true'`
 - `auth.service.ts`: SMS 코드도 동일하게 `EXPOSE_SMS_CODE === 'true'` 조건으로 변경
 - 로컬 개발 시 `.env`에 `EXPOSE_EMAIL_CODE=true` 설정 필요, staging은 해당 변수 없이 운영
@@ -136,6 +138,7 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 ### ~~TODO-012: cleanupExpiredCodes() Cron 연결~~
 
 **Fixed on main, 2026-03-31**
+
 - `@nestjs/schedule` 패키지 설치
 - `app.module.ts`에 `ScheduleModule.forRoot()` 추가
 - `EmailVerificationService.cleanupExpiredCodes()`에 `@Cron(CronExpression.EVERY_DAY_AT_2AM)` 데코레이터 추가
@@ -198,15 +201,16 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 **Pros:** 이탈률 감소, URL 조기 확정
 **Cons:** 없음
 **Context:**
+
 - 마운트 시 workerProfileId 있으면 `/worker/:slug` 리다이렉트 (재접근 가드)
 - `GET /public/:slug` 재활용해 slug 중복 확인 (404=사용가능, 200=중복)
 - 제출 시 `completeOnboarding(slug, slug, [])` → `/auth/refresh` → `/onboarding` 또는 `/worker/:slug`
 - "나중에" 버튼: slug 설정 없이 `/worker/:slug`로 이동
 - 409 응답 시 인라인 에러 표시
 - `Step5Username` 컴포넌트 재활용, mock 중복 확인 → 실제 API로 교체
-**Effort:** M
-**Priority:** P1
-**Depends on:** 백엔드 `complete-onboarding.dto.ts` slug optional 변경
+  **Effort:** M
+  **Priority:** P1
+  **Depends on:** 백엔드 `complete-onboarding.dto.ts` slug optional 변경
 
 ---
 
@@ -360,3 +364,49 @@ Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 **Effort:** S
 **Priority:** P2
 **Found by:** /autoplan Design Review, 2026-04-04
+
+---
+
+## 🔧 Eng 품질 (autoplan Eng Review, 2026-04-04)
+
+### TODO-029: TOCTOU catch — pg 에러코드로 교체
+
+**What:** `apps/api/src/domains/profile/services/profile.service.ts:472` — slug 유니크 위반 catch가 `error.message` 문자열 매치 사용.
+**Why:** pg 드라이버 버전/로케일에 따라 메시지 포맷이 달라질 수 있음. `(error as any).code === '23505'`가 표준.
+**Fix:** `if (error.message.includes('unique') && ...)` → `if ((error as any).code === '23505')`
+**Effort:** XS
+**Priority:** P3
+**Found by:** /autoplan Eng Review, 2026-04-04
+
+---
+
+### TODO-030: `areaCodes: []` 서비스 지역 미삭제 버그
+
+**What:** `apps/api/src/domains/profile/services/profile.service.ts:430` — `areaCodes` 빈 배열 전달 시 지역이 삭제되지 않음 (fieldCodes는 항상 재삽입).
+**Why:** `if (areaCodes && areaCodes.length > 0)` 조건 때문에 빈 배열은 무시됨. fieldCodes와 비대칭.
+**Fix:** 빈 배열도 허용하여 기존 지역 전체 삭제하도록 수정, 또는 의도적 비대칭임을 주석으로 명시.
+**Effort:** XS
+**Priority:** P2
+**Found by:** /autoplan Eng Review, 2026-04-04
+
+---
+
+### TODO-031: 온보딩 4단계 실패 시 slug 페이지로 redirect 누락
+
+**What:** `apps/front/app/onboarding/page.tsx:44-62` — `getMyWorkerProfile()` 실패 시 오류 표시만 하고 `/onboarding/slug`로 redirect하지 않음.
+**Why:** 이 경우 `existing` = undefined → slug=undefined → 백엔드 400. 사용자가 stuck 상태.
+**Fix:** catch block에서 BadRequest(400) 수신 시 `router.replace('/onboarding/slug')` 추가.
+**Effort:** XS
+**Priority:** P2
+**Found by:** /autoplan Eng Review, 2026-04-04
+
+---
+
+### TODO-032: 프론트 `isValidFormat()` 단위 테스트 및 추출
+
+**What:** `apps/front/app/onboarding/slug/page.tsx`의 `isValidFormat()` 함수가 백엔드 `validateSlug()`와 동일 로직이지만 테스트 없음.
+**Why:** 백엔드 규칙 변경 시 프론트 복사본이 silent하게 불일치 발생.
+**Fix:** `apps/front/lib/slug-format.ts`로 추출 후 `apps/front/lib/slug-format.test.ts` 작성.
+**Effort:** S
+**Priority:** P3
+**Found by:** /autoplan Eng Review, 2026-04-04
