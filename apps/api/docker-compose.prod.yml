@@ -1,0 +1,43 @@
+services:
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY}:latest
+    container_name: bluecollar-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      # DATABASE_URL은 /app/secrets/에서 런타임에 주입
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-15m}
+      JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-30d}
+      EMAIL_SERVICE: ${EMAIL_SERVICE:-mock}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      STORAGE_PATH: /repo/apps/api/uploads
+      MEDIA_BASE_URL: ${MEDIA_BASE_URL}
+      API_URL: ${API_URL}
+      APP_URL: ${APP_URL}
+      EXPOSE_EMAIL_CODE: ${EXPOSE_EMAIL_CODE:-false}
+      EXPOSE_SMS_CODE: ${EXPOSE_SMS_CODE:-false}
+    volumes:
+      # NFS 마운트된 호스트 /app/uploads → 컨테이너 /repo/apps/api/uploads
+      - /app/uploads:/repo/apps/api/uploads
+    networks:
+      - bluecollar
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  bluecollar:
+    driver: bridge
