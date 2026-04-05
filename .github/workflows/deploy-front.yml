@@ -6,8 +6,7 @@ on:
       - main
     paths:
       - "apps/front/**"
-      - "packages/constants/**"
-      - "packages/database/**"
+      - "packages/constants/src/**"
       - ".github/workflows/deploy-front.yml"
   workflow_dispatch:
 
