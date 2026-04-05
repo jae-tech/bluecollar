@@ -8,6 +8,8 @@ on:
       - "apps/api/**"
       - "packages/database/src/**"
       - "packages/constants/src/**"
+      - "packages/constants/package.json"
+      - "pnpm-lock.yaml"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 

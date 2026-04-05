@@ -1,6 +1,10 @@
 name = "bluecollar"
 main = ".open-next/worker.js"
 compatibility_date = "2024-12-30"
+
+[build]
+# @repo/constants dist 빌드 후 프론트 빌드 (monorepo root 기준 실행)
+command = "pnpm --filter @repo/constants build && pnpm --filter bluecollar-front build:cf"
 compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 
 # 정적 자산 (Next.js 빌드 결과물)
