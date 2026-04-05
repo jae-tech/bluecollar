@@ -15,8 +15,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
           {/* Left: Copy */}
           <div className="flex flex-col gap-8">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold w-fit">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-md text-sm font-semibold w-fit">
               현장 전문가를 위한 디지털 명함
             </div>
 
@@ -36,7 +35,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
             <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={onSignupClick}
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground text-base font-bold px-8 py-4 rounded-xl hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground text-base font-bold px-8 py-4 rounded-md hover:bg-primary/90 active:scale-95 transition-colors"
               >
                 나만의 프로필 만들기
                 <svg
@@ -55,7 +54,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                   />
                 </svg>
               </button>
-              <button className="inline-flex items-center justify-center gap-2 text-base font-medium text-foreground px-8 py-4 rounded-xl border border-border hover:bg-secondary transition-colors">
+              <button className="inline-flex items-center justify-center gap-2 text-base font-medium text-foreground px-8 py-4 rounded-md border border-border hover:bg-secondary transition-colors">
                 워커 둘러보기
               </button>
             </div>
@@ -100,12 +99,12 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative w-full max-w-lg">
               {/* Main mockup card */}
-              <div className="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-card rounded-lg border border-border overflow-hidden">
                 {/* Profile header */}
                 <div className="bg-foreground/5 px-6 pt-6 pb-4 border-b border-border">
                   <div className="flex items-start gap-4">
                     <div className="relative flex-shrink-0">
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary/20">
+                      <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border">
                         <Image
                           src="/images/worker-avatar-1.jpg"
                           alt="김철수 프로필"
@@ -126,7 +125,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                         <h3 className="font-bold text-lg text-foreground">
                           김철수
                         </h3>
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium">
                           인증됨
                         </span>
                       </div>
@@ -137,7 +136,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                         {["목공", "타일", "전기"].map((tag) => (
                           <span
                             key={tag}
-                            className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-full border border-border font-medium"
+                            className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border font-medium"
                           >
                             {tag}
                           </span>
@@ -160,7 +159,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
 
                 {/* Project grid */}
                 <div className="p-4">
-                  <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-muted-foreground mb-3">
                     최근 시공 프로젝트
                   </p>
                   <div className="grid grid-cols-3 gap-2">
@@ -171,7 +170,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                     ].map((item, i) => (
                       <div
                         key={i}
-                        className="aspect-square rounded-lg overflow-hidden border border-border relative"
+                        className="aspect-square rounded-md overflow-hidden border border-border relative"
                       >
                         <Image
                           src={item.src}
@@ -190,17 +189,14 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
 
                 {/* CTA in card */}
                 <div className="px-4 pb-4">
-                  <button
-                    // onClick={onSignupClick}
-                    className="w-full bg-primary text-primary-foreground text-sm font-semibold py-3.5 rounded-xl hover:bg-primary/90 transition-colors"
-                  >
+                  <button className="w-full bg-primary text-primary-foreground text-sm font-semibold py-3.5 rounded-md hover:bg-primary/90 transition-colors">
                     워커에게 문의하기
                   </button>
                 </div>
               </div>
 
               {/* Floating stat badge */}
-              <div className="hidden sm:block absolute -top-4 -right-4 bg-card border border-border rounded-2xl px-4 py-3 shadow-lg">
+              <div className="hidden sm:block absolute -top-4 -right-4 bg-card border border-border rounded-lg px-4 py-3">
                 <p className="text-xs text-muted-foreground font-medium">
                   이번 달 완료
                 </p>
@@ -213,15 +209,15 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
               </div>
 
               {/* Floating profile link */}
-              <div className="hidden sm:flex absolute -bottom-4 -left-4 bg-card border border-border rounded-2xl px-4 py-3 shadow-lg items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">
+              <div className="hidden sm:flex absolute -bottom-4 -left-4 bg-card border border-border rounded-lg px-4 py-3 items-center gap-3">
+                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
                   <svg
                     width="14"
                     height="14"
                     viewBox="0 0 16 16"
                     fill="none"
                     aria-hidden="true"
-                    className="text-brand"
+                    className="text-primary"
                   >
                     <path
                       d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10a5.5 5.5 0 01-4.33-2.1C4.68 9.9 6.26 9 8 9s3.32.9 4.33 1.9A5.5 5.5 0 018 13z"

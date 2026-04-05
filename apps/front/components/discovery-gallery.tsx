@@ -59,12 +59,12 @@ export function DiscoveryGallery({ onCardClick }: DiscoveryGalleryProps) {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 bg-secondary rounded-xl p-1 w-fit mb-8 border border-border">
+        <div className="flex items-center gap-1 bg-secondary rounded-md p-1 w-fit mb-8 border border-border">
           <button
             onClick={() => setActiveTab("projects")}
-            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            className={`px-6 py-2.5 rounded-md text-sm font-semibold transition-colors ${
               activeTab === "projects"
-                ? "bg-card text-foreground shadow-sm border border-border"
+                ? "bg-card text-foreground border border-border"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -72,9 +72,9 @@ export function DiscoveryGallery({ onCardClick }: DiscoveryGalleryProps) {
           </button>
           <button
             onClick={() => setActiveTab("workers")}
-            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            className={`px-6 py-2.5 rounded-md text-sm font-semibold transition-colors ${
               activeTab === "workers"
-                ? "bg-card text-foreground shadow-sm border border-border"
+                ? "bg-card text-foreground border border-border"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -91,7 +91,7 @@ export function DiscoveryGallery({ onCardClick }: DiscoveryGalleryProps) {
                 setActiveFilter(s);
                 handleFilterClick(s);
               }}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+              className={`px-4 py-2 rounded-md text-sm font-medium border transition-colors ${
                 activeFilter === s
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-foreground border-border hover:border-primary/50 hover:text-primary"
@@ -135,7 +135,7 @@ function ProjectGrid({
           <button
             key={project.id}
             onClick={onCardClick}
-            className={`group text-left rounded-xl overflow-hidden border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all ${
+            className={`group text-left rounded-md overflow-hidden border border-border bg-card hover:border-primary/40 transition-colors ${
               i >= 4 ? "opacity-0" : ""
             }`}
             style={i >= 4 ? { pointerEvents: "none" } : {}}
@@ -156,7 +156,7 @@ function ProjectGrid({
               <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">
                 {project.title}
               </p>
-              <span className="inline-block mt-2 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
+              <span className="inline-block mt-2 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-md font-medium">
                 {project.category}
               </span>
             </div>
@@ -186,7 +186,7 @@ function WorkerGrid({
           <button
             key={worker.id}
             onClick={onCardClick}
-            className={`group text-left rounded-xl overflow-hidden border border-border bg-card p-5 hover:border-primary/40 hover:shadow-md transition-all ${
+            className={`group text-left rounded-md overflow-hidden border border-border bg-card p-5 hover:border-primary/40 transition-colors ${
               i >= 4 ? "opacity-0" : ""
             }`}
             style={i >= 4 ? { pointerEvents: "none" } : {}}
@@ -217,7 +217,7 @@ function WorkerGrid({
                 {worker.specialty.map((s) => (
                   <span
                     key={s}
-                    className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-full border border-border"
+                    className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border"
                   >
                     {s}
                   </span>
@@ -247,7 +247,7 @@ function SoftWall({ onSignupClick }: { onSignupClick: () => void }) {
       className="absolute bottom-0 left-0 right-0 h-[62%] flex items-center justify-center"
       style={{
         background:
-          "linear-gradient(to bottom, transparent 0%, rgba(249,250,251,0.7) 25%, rgba(249,250,251,0.97) 60%, #F9FAFB 100%)",
+          "linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.7) 25%, rgba(255,255,255,0.97) 60%, #FFFFFF 100%)",
         backdropFilter: "blur(2px)",
         WebkitBackdropFilter: "blur(2px)",
       }}
@@ -258,7 +258,7 @@ function SoftWall({ onSignupClick }: { onSignupClick: () => void }) {
         </p>
         <button
           onClick={onSignupClick}
-          className="bg-primary text-primary-foreground text-sm font-bold px-8 py-3.5 rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+          className="bg-primary text-primary-foreground text-sm font-bold px-8 py-3.5 rounded-md hover:bg-primary/90 transition-colors"
         >
           회원가입
         </button>
