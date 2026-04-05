@@ -6,8 +6,8 @@ on:
       - main
     paths:
       - "apps/api/**"
-      - "packages/database/**"
-      - "packages/constants/**"
+      - "packages/database/src/**"
+      - "packages/constants/src/**"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
