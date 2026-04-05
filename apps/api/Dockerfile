@@ -30,7 +30,10 @@ COPY packages/database ./packages/database
 COPY packages/typescript-config ./packages/typescript-config
 COPY apps/api ./apps/api
 
-# @repo/database 먼저 빌드 (api가 workspace 패키지 참조)
+# @repo/constants 빌드 (database, api 모두 의존)
+RUN pnpm --filter @repo/constants build
+
+# @repo/database 빌드 (api가 workspace 패키지 참조)
 RUN pnpm --filter @repo/database build
 
 # API 빌드
@@ -55,7 +58,7 @@ COPY apps/api/package.json ./apps/api/
 RUN pnpm install --frozen-lockfile --prod
 
 # 빌드 결과물 복사
-COPY --from=builder /repo/packages/constants/src ./packages/constants/src
+COPY --from=builder /repo/packages/constants/dist ./packages/constants/dist
 COPY --from=builder /repo/packages/database/dist ./packages/database/dist
 COPY --from=builder /repo/apps/api/dist ./apps/api/dist
 
