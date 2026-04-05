@@ -67,7 +67,7 @@ export function Navbar({ onSignupClick }: NavbarProps) {
                 {user.email}
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-card border border-border rounded-xl shadow-lg py-1 z-50">
+                <div className="absolute right-0 mt-2 w-44 bg-card border border-border rounded-md py-1 z-50">
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
@@ -88,7 +88,7 @@ export function Navbar({ onSignupClick }: NavbarProps) {
               </button>
               <button
                 onClick={onSignupClick}
-                className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors"
+                className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-md hover:bg-primary/90 transition-colors"
               >
                 회원가입
               </button>
@@ -143,7 +143,7 @@ export function Navbar({ onSignupClick }: NavbarProps) {
                     setMobileOpen(false);
                     onSignupClick();
                   }}
-                  className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-lg"
+                  className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-md"
                 >
                   회원가입
                 </button>
