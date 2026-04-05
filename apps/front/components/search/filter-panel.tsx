@@ -38,15 +38,13 @@ function FilterSection({
 }) {
   return (
     <div className="flex flex-col gap-2.5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        {title}
-      </p>
+      <p className="text-xs font-semibold text-muted-foreground">{title}</p>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => (
           <button
             key={opt}
             onClick={() => onChange(opt)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+            className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
               value === opt
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-foreground border-border hover:border-primary/50 hover:text-primary"
@@ -77,7 +75,7 @@ export function FilterPanel({ filters, onChange, onClose }: FilterPanelProps) {
     onChange({ ...filters, [key]: value });
 
   return (
-    <aside className="flex flex-col gap-6 bg-card border border-border rounded-2xl p-5 h-fit">
+    <aside className="flex flex-col gap-6 bg-card border border-border rounded-lg p-5 h-fit">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-foreground">필터</h2>
@@ -100,7 +98,7 @@ export function FilterPanel({ filters, onChange, onClose }: FilterPanelProps) {
             <button
               onClick={onClose}
               aria-label="필터 닫기"
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <X size={16} />
             </button>
