@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.3] - 2026-04-08
+
+### Features
+- 서브도메인 라우팅 — `slug.bluecollar.cv`로 워커 프로필에 직접 접근 가능 (middleware.ts rewrite)
+- `wrangler.toml` 와일드카드 라우트 추가 — `*.bluecollar.cv` 요청을 동일 Cloudflare Worker로 처리
+- 대시보드에 워커 검색 링크 추가 (header nav)
+- 포트폴리오 상세 모달 — 이미지 타입별(BEFORE/AFTER/DETAIL) 탭, 전화 연결 CTA
+- 워커 프로필 공유 기능 — `navigator.share` API + 클립보드 복사 폴백, 토스트 알림
+
+### Bug Fixes
+- CORS origin 정규식 수정 — apex 도메인(`bluecollar.cv`) 누락 버그 수정
+- 쿠키 도메인 설정 — 모든 `setCookie` 호출에 `domain: '.bluecollar.cv'` 추가 (서브도메인 간 쿠키 공유)
+
+### Changes
+- `lib/api.ts` 공개 프로필 조회 및 내 워커 프로필 조회 API 함수 추가
+
 ## [0.1.2] - 2026-04-04
 
 ### Features
