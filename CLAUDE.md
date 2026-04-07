@@ -60,26 +60,32 @@ If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to bu
 /autoplan, /careful, /freeze, /guard, /unfreeze, /gstack-upgrade
 
 ## Deploy Configuration (configured by /setup-deploy)
+
 - Platform: Cloudflare Workers (frontend) / 미배포 (backend)
-- Production URL: https://bluecollarcv.kr
-- Deploy workflow: .github/workflows/deploy-front.yml (auto-deploy on push to main, paths: apps/front/**)
+- Production URL: https://bluecollar.cv
+- Deploy workflow: .github/workflows/deploy-front.yml (auto-deploy on push to main, paths: apps/front/\*\*)
 - Deploy status command: GitHub Actions workflow status
 - Merge method: merge
 - Project type: web app (Next.js 14 via OpenNext on Cloudflare Workers)
-- Post-deploy health check: https://bluecollarcv.kr
+- Post-deploy health check: https://bluecollar.cv
 
 ### Custom deploy hooks
+
 - Pre-merge: pnpm build
 - Deploy trigger: automatic on push to main (frontend only, via wrangler-action)
-- Deploy status: poll https://bluecollarcv.kr
-- Health check: https://bluecollarcv.kr
+- Deploy status: poll https://bluecollar.cv
+- Health check: https://bluecollar.cv
 
 ### Notes
+
 - Backend (NestJS/Fastify) not yet deployed — runs locally on port 4000
 - wrangler.toml: apps/front/wrangler.toml, worker name: bluecollar-front
 - NEXT_PUBLIC_API_URL injected at build time via GitHub Actions secret
+
 ## Design System
+
 UI 작업 전 반드시 `DESIGN.md`를 읽을 것.
+
 - 폰트, 색상, 여백, radius, 모션 등 모든 시각적 결정의 기준은 DESIGN.md에 정의되어 있음
 - DESIGN.md에서 정의된 값과 다른 방향은 사용자 명시적 승인 없이 적용 금지
 - 컴포넌트 수정 시: `--radius-sm` (버튼), `--radius-md` (카드), `--radius-lg` (모달) 계층 준수

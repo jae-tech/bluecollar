@@ -368,6 +368,77 @@ export async function getOnboardingCodes(): Promise<OnboardingCodes> {
  * - 조회수 증가 없음 (전용 엔드포인트)
  * @returns true = 사용 가능, false = 사용 불가 (예약어 또는 중복)
  */
+// ─── Upload ───────────────────────────────────────────────────────────────────
+
+export interface UploadResult {
+  filename: string;
+  url: string;
+  originalName: string;
+  mimetype: string;
+  size: number;
+  uploadedAt: string;
+}
+
+/** 파일 업로드 (multipart/form-data) → S3/로컬 URL 반환 */
+export async function uploadFile(file: File): Promise<UploadResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_URL}/media/upload`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    let message = "파일 업로드 중 오류가 발생했습니다";
+    try {
+      const data = await res.json();
+      message = data.message || message;
+    } catch {}
+    throw new ApiError(res.status, message);
+  }
+
+  return res.json() as Promise<UploadResult>;
+}
+
+// ─── Portfolio ────────────────────────────────────────────────────────────────
+
+export interface CreatePortfolioMediaPayload {
+  mediaUrl: string;
+  mediaType: "IMAGE" | "VIDEO" | "PDF";
+  imageType?: "BEFORE" | "AFTER" | "DETAIL" | "BLUEPRINT";
+  description?: string;
+}
+
+export interface CreatePortfolioPayload {
+  workerProfileId: string;
+  title: string;
+  content?: string;
+  startDate?: string;
+  endDate?: string;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  estimatedCost?: number;
+  actualCost?: number;
+  costVisibility?: "PUBLIC" | "PRIVATE";
+  media: CreatePortfolioMediaPayload[];
+}
+
+/** 포트폴리오 생성 */
+export async function createPortfolio(
+  payload: CreatePortfolioPayload,
+): Promise<PublicProfilePortfolio> {
+  return apiFetch<PublicProfilePortfolio>("/portfolios", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** 포트폴리오 삭제 */
+export async function deletePortfolio(id: string): Promise<void> {
+  return apiFetch<void>(`/portfolios/${id}`, { method: "DELETE" });
+}
+
 export async function checkSlugAvailability(slug: string): Promise<boolean> {
   const result = await apiFetch<{ available: boolean; reason?: string }>(
     `/public/profiles/slug-check?slug=${encodeURIComponent(slug)}`,

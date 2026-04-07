@@ -12,8 +12,31 @@ const PROTECTED_PATHS = ["/onboarding", "/dashboard"];
  */
 const AUTH_PATHS = ["/login"];
 
+/** 프로덕션 apex 도메인 (서브도메인 감지에 사용) */
+const APEX_DOMAIN = "bluecollar.cv";
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get("host") ?? "";
+
+  // ── 서브도메인 감지 ──────────────────────────────────────────────────────────
+  // slug.bluecollar.cv 형태의 요청을 /worker/slug 로 rewrite
+  // localhost 개발 환경 및 www 서브도메인은 제외
+  const isApexOrWww =
+    hostname === APEX_DOMAIN ||
+    hostname === `www.${APEX_DOMAIN}` ||
+    hostname.startsWith("localhost") ||
+    hostname.startsWith("127.0.0.1");
+
+  if (!isApexOrWww && hostname.endsWith(`.${APEX_DOMAIN}`)) {
+    const slug = hostname.replace(`.${APEX_DOMAIN}`, "");
+    // 빈 slug 또는 잘못된 slug 방어
+    if (slug && /^[a-z0-9-]+$/.test(slug)) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/worker/${slug}`;
+      return NextResponse.rewrite(url);
+    }
+  }
 
   // accessToken 쿠키 존재 여부 확인
   const accessToken = request.cookies.get("accessToken")?.value;
