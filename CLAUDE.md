@@ -12,7 +12,7 @@
 
 ## 2. 아키텍처 원칙 (Domain-Driven Design)
 
-모든 비즈니스 로직은 `apps/api/src/modules` 내에 도메인 단위로 격리한다.
+모든 비즈니스 로직은 `apps/api/src/domains` 내에 도메인 단위로 격리한다.
 
 - **Common**: 전역 유틸, 필터, 가드
 - **Infrastructure**: 외부 API(SMS, S3 등), DB 연결 로직

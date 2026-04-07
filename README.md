@@ -141,7 +141,12 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 **인증 흐름**
 1. 이메일 회원가입 → 인증 코드 발송 → 코드 확인 → JWT 발급
 2. Access Token 15분 / Refresh Token 30일 (DB 저장, httpOnly 쿠키)
-3. 미들웨어(`proxy.ts`)에서 쿠키 존재 여부로 1차 라우트 보호
+3. 미들웨어(`middleware.ts`)에서 쿠키 존재 여부로 1차 라우트 보호
+
+**서브도메인 라우팅**
+- `slug.bluecollar.cv` → `bluecollar.cv/worker/slug` 투명 rewrite (URL 변경 없음)
+- `wrangler.toml` `*.bluecollar.cv` 와일드카드 라우트 + Cloudflare DNS Proxied 레코드 필요
+- 쿠키 도메인 `.bluecollar.cv` — apex + 모든 서브도메인에서 인증 공유
 
 **이미지 처리**
 - Sharp로 WebP 변환 (품질 85%), 최대 2560×1920
