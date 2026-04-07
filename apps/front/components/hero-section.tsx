@@ -230,7 +230,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                     나만의 링크
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    my.bluecollarcv.kr
+                    my.bluecollar.cv
                   </p>
                 </div>
               </div>

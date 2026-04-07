@@ -36,7 +36,7 @@ export default function LoginPage() {
       try {
         const profile = await getMyWorkerProfile();
         if (profile?.slug) {
-          router.push(`/worker/${profile.slug}`);
+          router.push("/dashboard");
         } else {
           // 프로필 없거나 slug 미설정 → slug 선택 단계부터
           router.push("/onboarding/slug");

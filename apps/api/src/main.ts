@@ -69,7 +69,7 @@ async function bootstrap(): Promise<void> {
 
   // 5. CORS (서브도메인 대응)
   app.enableCors({
-    origin: [/\.bluecollar\.cv$/, /localhost:\d+$/],
+    origin: [/(?:^|\.)bluecollar\.cv$/, /localhost:\d+$/],
     credentials: true,
   });
 

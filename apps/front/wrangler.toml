@@ -6,6 +6,13 @@ compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 # 정적 자산 (Next.js 빌드 결과물)
 assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
+# Worker 라우트: apex 도메인 + 모든 서브도메인을 동일 Worker로 처리
+# Cloudflare Dashboard에서 DNS Wildcard 레코드(*.bluecollar.cv → Worker)도 필요
+routes = [
+  { pattern = "bluecollar.cv/*", zone_name = "bluecollar.cv" },
+  { pattern = "*.bluecollar.cv/*", zone_name = "bluecollar.cv" },
+]
+
 # Worker 자기 참조 (OpenNext 내부 라우팅용)
 [[services]]
 binding = "WORKER_SELF_REFERENCE"
@@ -13,4 +20,4 @@ service = "bluecollar"
 
 # 환경변수는 Cloudflare Dashboard 또는 .dev.vars 에서 관리
 # [vars]
-# NEXT_PUBLIC_API_URL = "https://api.bluecollarcv.kr"
+# NEXT_PUBLIC_API_URL = "https://api.bluecollar.cv"

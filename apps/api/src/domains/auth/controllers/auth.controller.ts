@@ -307,6 +307,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 900,
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
 
     return res.status(HttpStatus.OK).send({
@@ -471,6 +472,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 900, // 15분
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
     res.setCookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
@@ -478,6 +480,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30일
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
 
     return res.status(HttpStatus.OK).send({
@@ -577,6 +580,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 900, // 15분
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
     res.setCookie('refreshToken', result.tokens.refreshToken, {
       httpOnly: true,
@@ -584,6 +588,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30일
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
 
     return res.status(HttpStatus.OK).send({
@@ -684,6 +689,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 900, // 15분
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
     res.setCookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
@@ -691,6 +697,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30일
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
 
     // 기존 워커(프로필 있음) → 대시보드, 신규 워커 → slug 설정 페이지
@@ -758,6 +765,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 900,
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
     res.setCookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
@@ -765,6 +773,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
     });
 
     // 기존 워커(프로필 있음) → 대시보드, 신규 워커 → slug 설정 페이지

@@ -6,7 +6,7 @@ import { CheckCircle2, Copy, Check, ArrowRight } from "lucide-react";
 import { getMyWorkerProfile } from "@/lib/api";
 import type { WorkerProfile } from "@/lib/api";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://worker.cv";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "bluecollar.cv";
 
 export default function OnboardingCompletePage() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function OnboardingCompletePage() {
       });
   }, [router]);
 
-  const profileUrl = profile ? `${BASE_URL}/worker/${profile.slug}` : "";
+  const profileUrl = profile ? `${profile.slug}.${BASE_URL}` : "";
 
   const handleCopy = async () => {
     try {
@@ -100,10 +100,10 @@ export default function OnboardingCompletePage() {
         {/* 내 프로필 보기 CTA */}
         <button
           type="button"
-          onClick={() => router.push(`/worker/${profile?.slug}`)}
-          className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
+          onClick={() => router.push("/dashboard")}
+          className="w-full py-3.5 rounded-md bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 active:scale-95 transition-colors flex items-center justify-center gap-2"
         >
-          내 프로필 보기
+          대시보드로 이동
           <ArrowRight size={18} />
         </button>
       </div>
