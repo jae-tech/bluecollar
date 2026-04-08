@@ -21,7 +21,7 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="py-20 border-t border-border">
+    <section id="about" className="py-20 border-t border-border">
       <div className="max-w-2xl mx-auto px-6">
         <h2 className="text-2xl font-bold text-foreground tracking-tight mb-2">
           3분이면 생깁니다
