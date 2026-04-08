@@ -91,3 +91,23 @@ UI 작업 전 반드시 `DESIGN.md`를 읽을 것.
 - 컴포넌트 수정 시: `--radius-sm` (버튼), `--radius-md` (카드), `--radius-lg` (모달) 계층 준수
 - 그림자(shadow) 대신 `border border-border`로 elevation 표현
 - primary 오렌지(`#FF6B00`)는 CTA 버튼, 링크, 포커스링에만 제한적으로 사용
+
+## Skill routing
+
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
+
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, design polish → invoke design-review
+- Architecture review → invoke plan-eng-review
+- Save progress, checkpoint, resume → invoke checkpoint
+- Code quality, health check → invoke health
