@@ -1,240 +1,98 @@
 "use client";
 
-import Image from "next/image";
-import { CheckCircle2, Star } from "lucide-react";
+import Link from "next/link";
+import { WORKERS } from "@/lib/data";
 
 interface HeroSectionProps {
   onSignupClick: () => void;
 }
 
 export function HeroSection({ onSignupClick }: HeroSectionProps) {
+  // 워커 미니카드 — 최대 4명
+  const featured = WORKERS.slice(0, 4);
+
   return (
-    <section className="pt-28 pb-20 bg-background overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left: Copy */}
-          <div className="flex flex-col gap-8">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-md text-sm font-semibold w-fit">
-              현장 전문가를 위한 디지털 명함
-            </div>
+    <section className="min-h-[90vh] flex flex-col justify-center pt-28 pb-16 px-6">
+      <div className="max-w-3xl mx-auto w-full">
+        {/* 배지 */}
+        <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded text-xs font-semibold mb-8 w-fit">
+          ✦ 현장 기술자를 위한 포트폴리오
+        </div>
 
-            <div className="flex flex-col gap-5">
-              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight text-balance text-foreground">
-                현장의 땀방울이
-                <br />
-                <span className="text-primary">당신의 이력</span>이<br />
-                됩니다.
-              </h1>
-              <p className="text-lg leading-relaxed text-muted-foreground text-pretty max-w-lg">
-                흩어져 있던 시공 기록을 60초 만에 세련된 디지털 프로필 사이트로
-                만드세요. 명함 대신 링크 하나면 충분합니다.
-              </p>
-            </div>
+        {/* 헤드라인 */}
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight text-foreground mb-6">
+          일한 만큼
+          <br />
+          <span className="text-primary">증명하세요.</span>
+        </h1>
 
-            <div className="flex flex-col sm:flex-row gap-4">
+        {/* 서브텍스트 */}
+        <p className="text-lg text-muted-foreground leading-relaxed max-w-md mb-10">
+          시공 사진 몇 장으로 나만의 프로필 페이지를 만드세요.
+          <br />
+          견적 문의가 링크 하나로 들어옵니다.
+        </p>
+
+        {/* CTA */}
+        <div className="flex items-center gap-3 mb-16">
+          <button
+            onClick={onSignupClick}
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-bold px-6 py-3 rounded-md hover:bg-primary/90 active:scale-95 transition-colors"
+          >
+            무료로 시작하기
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M3 8h10M9 4l4 4-4 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <Link
+            href="/search?tab=workers"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-3 rounded-md border border-border hover:bg-secondary"
+          >
+            워커 둘러보기
+          </Link>
+        </div>
+
+        {/* 워커 미니카드 */}
+        <div className="border-t border-border pt-7">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+            지금 활동 중인 전문가
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+            {featured.map((w) => (
               <button
+                key={w.id}
                 onClick={onSignupClick}
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground text-base font-bold px-8 py-4 rounded-md hover:bg-primary/90 active:scale-95 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2.5 border border-border rounded-md bg-card hover:border-primary/50 transition-colors flex-shrink-0 text-left"
               >
-                나만의 프로필 만들기
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M3 8h10M9 4l4 4-4 4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center text-sm font-bold text-muted-foreground flex-shrink-0">
+                  {w.name.slice(0, 1)}
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-semibold text-foreground">
+                    {w.name}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {w.specialty[0]}
+                    {w.specialty[1] ? ` · ${w.specialty[1]}` : ""} · {w.region}
+                  </span>
+                  <span className="text-[11px] text-primary font-medium">
+                    {w.slug}.bluecollar.cv
+                  </span>
+                </div>
               </button>
-              <button className="inline-flex items-center justify-center gap-2 text-base font-medium text-foreground px-8 py-4 rounded-md border border-border hover:bg-secondary transition-colors">
-                워커 둘러보기
-              </button>
-            </div>
-
-            {/* Social proof */}
-            <div className="flex items-center gap-6 pt-2">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-9 h-9 rounded-full border-2 border-background bg-secondary overflow-hidden"
-                  >
-                    <Image
-                      src={`/images/worker-avatar-${Math.min(i, 4)}.jpg`}
-                      alt={`워커 ${i}`}
-                      width={36}
-                      height={36}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={12}
-                      className="fill-primary text-primary"
-                    />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">2,400+</span>{" "}
-                  명의 현장 전문가가 이미 사용 중
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: UI Mockup */}
-          <div className="relative flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-lg">
-              {/* Main mockup card */}
-              <div className="bg-card rounded-lg border border-border overflow-hidden">
-                {/* Profile header */}
-                <div className="bg-foreground/5 px-6 pt-6 pb-4 border-b border-border">
-                  <div className="flex items-start gap-4">
-                    <div className="relative flex-shrink-0">
-                      <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border">
-                        <Image
-                          src="/images/worker-avatar-1.jpg"
-                          alt="김철수 프로필"
-                          width={64}
-                          height={64}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-0.5">
-                        <CheckCircle2
-                          size={14}
-                          className="text-primary-foreground fill-primary-foreground"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-lg text-foreground">
-                          김철수
-                        </h3>
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-md font-medium">
-                          인증됨
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        서울 · 경기 전문 시공팀
-                      </p>
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {["목공", "타일", "전기"].map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border font-medium"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="flex items-center gap-1 justify-end">
-                        <Star size={12} className="fill-primary text-primary" />
-                        <span className="text-sm font-bold text-foreground">
-                          4.9
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        리뷰 138개
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Project grid */}
-                <div className="p-4">
-                  <p className="text-xs font-semibold text-muted-foreground mb-3">
-                    최근 시공 프로젝트
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { src: "/images/project-woodwork.jpg", label: "목공" },
-                      { src: "/images/project-tile-work.jpg", label: "타일" },
-                      { src: "/images/project-electrical.jpg", label: "전기" },
-                    ].map((item, i) => (
-                      <div
-                        key={i}
-                        className="aspect-square rounded-md overflow-hidden border border-border relative"
-                      >
-                        <Image
-                          src={item.src}
-                          alt={item.label}
-                          width={120}
-                          height={120}
-                          className="w-full h-full object-cover"
-                        />
-                        <span className="absolute bottom-1 left-1 text-[10px] bg-foreground/70 text-primary-foreground px-1.5 py-0.5 rounded font-medium">
-                          {item.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* CTA in card */}
-                <div className="px-4 pb-4">
-                  <button className="w-full bg-primary text-primary-foreground text-sm font-semibold py-3.5 rounded-md hover:bg-primary/90 transition-colors">
-                    워커에게 문의하기
-                  </button>
-                </div>
-              </div>
-
-              {/* Floating stat badge */}
-              <div className="hidden sm:block absolute -top-4 -right-4 bg-card border border-border rounded-lg px-4 py-3">
-                <p className="text-xs text-muted-foreground font-medium">
-                  이번 달 완료
-                </p>
-                <p className="text-2xl font-bold text-foreground mt-0.5">
-                  12건
-                </p>
-                <p className="text-xs text-primary font-semibold mt-0.5">
-                  +3 지난달 대비
-                </p>
-              </div>
-
-              {/* Floating profile link */}
-              <div className="hidden sm:flex absolute -bottom-4 -left-4 bg-card border border-border rounded-lg px-4 py-3 items-center gap-3">
-                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden="true"
-                    className="text-primary"
-                  >
-                    <path
-                      d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10a5.5 5.5 0 01-4.33-2.1C4.68 9.9 6.26 9 8 9s3.32.9 4.33 1.9A5.5 5.5 0 018 13z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-foreground">
-                    나만의 링크
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    my.bluecollar.cv
-                  </p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

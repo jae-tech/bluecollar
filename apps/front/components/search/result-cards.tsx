@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Star, MessageCircle, Award } from "lucide-react";
 import type { Project, Worker } from "@/lib/data";
 
@@ -72,8 +73,21 @@ export function WorkerCard({
   onClick: () => void;
   priority?: boolean;
 }) {
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    if (worker.slug) {
+      router.push(`/worker/${worker.slug}`);
+    } else {
+      onClick();
+    }
+  };
+
   return (
-    <div className="group rounded-md border border-border bg-card hover:border-primary/40 transition-colors overflow-hidden">
+    <div
+      className="group rounded-md border border-border bg-card hover:border-primary/40 transition-colors overflow-hidden cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="p-5 flex flex-col items-center text-center gap-3">
         {/* Avatar */}
         <div className="relative">
@@ -141,7 +155,10 @@ export function WorkerCard({
       {/* Contact button */}
       <div className="px-4 pb-4">
         <button
-          onClick={onClick}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
           className="w-full flex items-center justify-center gap-2 border border-border text-sm font-semibold text-foreground py-2.5 rounded-md hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
         >
           <MessageCircle size={14} />

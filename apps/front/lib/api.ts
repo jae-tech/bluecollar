@@ -226,11 +226,14 @@ export async function logout(): Promise<void> {
 }
 
 /** 현재 로그인한 사용자의 워커 프로필 조회 (없으면 null) */
-export async function getMyWorkerProfile(): Promise<WorkerProfile | null> {
+export async function getMyWorkerProfile(
+  skipRedirect = false,
+): Promise<WorkerProfile | null> {
   try {
-    return await apiFetch<WorkerProfile>("/workers/me");
+    return await apiFetch<WorkerProfile>("/workers/me", {}, skipRedirect);
   } catch (err) {
-    if (err instanceof ApiError && err.status === 404) return null;
+    if (err instanceof ApiError && (err.status === 404 || err.status === 401))
+      return null;
     throw err;
   }
 }

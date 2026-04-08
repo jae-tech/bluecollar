@@ -48,7 +48,13 @@ export function Navbar({ onSignupClick }: NavbarProps) {
             워커 탐색
           </a>
           <a
-            href="/"
+            href="/search?tab=projects"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            프로젝트 탐색
+          </a>
+          <a
+            href="/#about"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             서비스 소개
@@ -63,11 +69,20 @@ export function Navbar({ onSignupClick }: NavbarProps) {
                 onClick={() => setUserMenuOpen((v) => !v)}
                 className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
               >
-                <User size={16} />
-                {user.email}
+                <User size={16} />내 계정
               </button>
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-card border border-border rounded-md py-1 z-50">
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      router.push("/dashboard");
+                    }}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <User size={14} />
+                    대시보드
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
@@ -111,22 +126,46 @@ export function Navbar({ onSignupClick }: NavbarProps) {
         <div className="md:hidden border-t border-border bg-background px-6 py-4 flex flex-col gap-4">
           <a
             href="/search?tab=workers"
+            onClick={() => setMobileOpen(false)}
             className="text-sm font-medium text-foreground"
           >
             워커 탐색
           </a>
-          <a href="/" className="text-sm font-medium text-foreground">
+          <a
+            href="/search?tab=projects"
+            onClick={() => setMobileOpen(false)}
+            className="text-sm font-medium text-foreground"
+          >
+            프로젝트 탐색
+          </a>
+          <a
+            href="/#about"
+            onClick={() => setMobileOpen(false)}
+            className="text-sm font-medium text-foreground"
+          >
             서비스 소개
           </a>
           <div className="flex items-center gap-3 pt-2 border-t border-border">
             {user ? (
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-              >
-                <LogOut size={14} />
-                로그아웃
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    router.push("/dashboard");
+                  }}
+                  className="flex items-center gap-2 text-sm font-medium text-foreground"
+                >
+                  <User size={14} />
+                  대시보드
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                >
+                  <LogOut size={14} />
+                  로그아웃
+                </button>
+              </>
             ) : (
               <>
                 <button

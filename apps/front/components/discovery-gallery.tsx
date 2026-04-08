@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { CheckCircle2, Star } from "lucide-react";
 import { PROJECTS, WORKERS } from "@/lib/data";
 import { getCodes, type MasterCode } from "@/lib/api";
+import { ProjectCard, WorkerCard } from "@/components/search/result-cards";
 
 interface DiscoveryGalleryProps {
   onCardClick: () => void;
@@ -126,45 +125,23 @@ function ProjectGrid({
   projects: typeof PROJECTS;
   onCardClick: () => void;
 }) {
+  // 4개만 보이고 SoftWall이 덮임 — 실제 카드를 렌더링해야 블러 효과가 자연스러움
   const visible = projects.slice(0, 8);
 
   return (
     <div className="relative">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {visible.map((project, i) => (
-          <button
+          <ProjectCard
             key={project.id}
+            project={project}
             onClick={onCardClick}
-            className={`group text-left rounded-md overflow-hidden border border-border bg-card hover:border-primary/40 transition-colors ${
-              i >= 4 ? "opacity-0" : ""
-            }`}
-            style={i >= 4 ? { pointerEvents: "none" } : {}}
-            aria-label={project.title}
-          >
-            <div className="aspect-video overflow-hidden bg-secondary">
-              <Image
-                src={project.img}
-                alt={project.title}
-                width={400}
-                height={225}
-                loading={i === 0 ? "eager" : "lazy"}
-                priority={i === 0}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-3">
-              <p className="text-sm font-semibold text-foreground leading-snug line-clamp-2">
-                {project.title}
-              </p>
-              <span className="inline-block mt-2 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-md font-medium">
-                {project.category}
-              </span>
-            </div>
-          </button>
+            priority={i === 0}
+          />
         ))}
       </div>
 
-      {/* Soft wall blur overlay — over 2nd row */}
+      {/* Soft wall blur overlay — 2번째 행을 흐릿하게 덮어 가입 유도 */}
       <SoftWall onSignupClick={onCardClick} />
     </div>
   );
@@ -183,55 +160,12 @@ function WorkerGrid({
     <div className="relative">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {visible.map((worker, i) => (
-          <button
+          <WorkerCard
             key={worker.id}
+            worker={worker}
             onClick={onCardClick}
-            className={`group text-left rounded-md overflow-hidden border border-border bg-card p-5 hover:border-primary/40 transition-colors ${
-              i >= 4 ? "opacity-0" : ""
-            }`}
-            style={i >= 4 ? { pointerEvents: "none" } : {}}
-            aria-label={`${worker.name} 프로필`}
-          >
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border">
-                  <Image
-                    src={worker.img}
-                    alt={worker.name}
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-0.5">
-                  <CheckCircle2 size={12} className="text-primary-foreground" />
-                </div>
-              </div>
-              <div>
-                <p className="font-bold text-foreground">{worker.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {worker.region}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-1 justify-center">
-                {worker.specialty.map((s) => (
-                  <span
-                    key={s}
-                    className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border"
-                  >
-                    {s}
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Star size={12} className="fill-primary text-primary" />
-                <span className="font-semibold text-foreground">
-                  {worker.rating}
-                </span>
-                <span>({worker.reviews})</span>
-              </div>
-            </div>
-          </button>
+            priority={i === 0}
+          />
         ))}
       </div>
 

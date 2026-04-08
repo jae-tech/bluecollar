@@ -37,6 +37,7 @@ yarn-error.log*
 .DS_Store
 *.pem
 .gstack/
+.gstack-reports/
 
 # Claude Code local settings
 .claude/skills/
