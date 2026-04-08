@@ -134,7 +134,7 @@ function SearchPageInner() {
       <Navbar onSignupClick={() => setModalOpen(true)} />
 
       {/* ── Search header bar ───────────────────────────────────────────────── */}
-      <div className="pt-16 border-b border-border bg-card sticky top-16 z-40">
+      <div className="pt-16 border-b border-border bg-card sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
           {/* Search input */}
           <form onSubmit={handleQuerySubmit} className="flex-1 relative">
@@ -196,7 +196,7 @@ function SearchPageInner() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex gap-8 items-start">
           {/* Sidebar — desktop */}
-          <div className="hidden md:block w-60 flex-shrink-0">
+          <div className="hidden md:block w-60 flex-shrink-0 sticky top-[145px] self-start">
             <FilterPanel filters={filters} onChange={applyFilters} />
           </div>
 

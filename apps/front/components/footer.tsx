@@ -37,27 +37,23 @@ export function Footer({ onSignupClick }: FooterProps) {
               프로젝트 의뢰
             </a>
             <a
-              href="/"
+              href="/#about"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               서비스 소개
             </a>
-            <a
-              href="#"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <span className="text-sm text-muted-foreground/50 cursor-not-allowed">
               개인정보처리방침
-            </a>
+            </span>
           </nav>
 
-          {/* Social + CTA */}
-          <div className="flex items-center gap-4">
+          {/* Social + CTA — 의미적으로 분리 */}
+          <div className="flex flex-col gap-4 items-start md:items-end">
             {/* Social icons */}
-            <div className="flex items-center gap-3">
-              <a
-                href="#"
-                aria-label="인스타그램"
-                className="w-9 h-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+            <div className="flex items-center gap-2">
+              <span
+                aria-label="인스타그램 (준비 중)"
+                className="w-9 h-9 rounded-md border border-border flex items-center justify-center text-muted-foreground/40 cursor-not-allowed"
               >
                 <svg
                   width="16"
@@ -85,11 +81,10 @@ export function Footer({ onSignupClick }: FooterProps) {
                   />
                   <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
                 </svg>
-              </a>
-              <a
-                href="#"
-                aria-label="카카오채널"
-                className="w-9 h-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+              </span>
+              <span
+                aria-label="카카오채널 (준비 중)"
+                className="w-9 h-9 rounded-md border border-border flex items-center justify-center text-muted-foreground/40 cursor-not-allowed"
               >
                 <svg
                   width="16"
@@ -100,11 +95,10 @@ export function Footer({ onSignupClick }: FooterProps) {
                 >
                   <path d="M12 3C6.477 3 2 6.477 2 11c0 2.913 1.717 5.463 4.29 7.023L5.21 21l3.88-2.046A12.084 12.084 0 0012 19c5.523 0 10-3.477 10-8s-4.477-8-10-8z" />
                 </svg>
-              </a>
-              <a
-                href="#"
-                aria-label="유튜브"
-                className="w-9 h-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
+              </span>
+              <span
+                aria-label="유튜브 (준비 중)"
+                className="w-9 h-9 rounded-md border border-border flex items-center justify-center text-muted-foreground/40 cursor-not-allowed"
               >
                 <svg
                   width="16"
@@ -115,7 +109,7 @@ export function Footer({ onSignupClick }: FooterProps) {
                 >
                   <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 00-1.95 1.96C1 8.14 1 12 1 12s0 3.86.46 5.58a2.78 2.78 0 001.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.96C23 15.86 23 12 23 12s0-3.86-.46-5.58zM10 15.5v-7l6 3.5-6 3.5z" />
                 </svg>
-              </a>
+              </span>
             </div>
 
             <button
@@ -127,12 +121,9 @@ export function Footer({ onSignupClick }: FooterProps) {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mt-10 pt-6 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            © 2026 Bluecollar CV. All rights reserved.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            사업자등록번호: 123-45-67890 · 대표: 김현장 · 서울특별시 강남구
+            © {new Date().getFullYear()} Bluecollar CV. All rights reserved.
           </p>
         </div>
       </div>

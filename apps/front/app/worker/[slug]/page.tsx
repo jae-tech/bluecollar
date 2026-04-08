@@ -72,8 +72,8 @@ export default function WorkerProfilePage() {
         setLoading(false);
       });
 
-    // 소유자 확인 (로그인 여부와 무관하게 조용히)
-    getMyWorkerProfile()
+    // 소유자 확인 — 비로그인 시 /login 리다이렉트 없이 조용히 처리
+    getMyWorkerProfile(true)
       .then((p) => {
         if (p?.slug === urlSlug) setIsOwner(true);
       })
@@ -108,11 +108,50 @@ export default function WorkerProfilePage() {
 
   if (notFound || !publicProfile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6">
-        <p className="text-foreground font-semibold">프로필을 찾을 수 없어요</p>
-        <p className="text-sm text-muted-foreground text-center">
-          주소를 다시 확인해주세요.
-        </p>
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* 헤더 — 정상 프로필 헤더와 동일한 스타일 */}
+        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+          <div className="max-w-2xl mx-auto px-5 h-12 flex items-center">
+            <a
+              href="/"
+              className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
+            >
+              Bluecollar <span className="text-primary">CV</span>
+            </a>
+          </div>
+        </header>
+
+        {/* 본문 */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6 text-center">
+          {/* 아이콘 영역 */}
+          <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center">
+            <AlertTriangle size={22} className="text-muted-foreground" />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <p className="text-lg font-bold text-foreground">
+              프로필을 찾을 수 없어요
+            </p>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              링크가 잘못되었거나 워커가 프로필을 삭제했을 수 있습니다.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <a
+              href="/"
+              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              홈으로 돌아가기
+            </a>
+            <a
+              href="/search?tab=workers"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-md border border-border text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+            >
+              다른 워커 둘러보기
+            </a>
+          </div>
+        </div>
       </div>
     );
   }
