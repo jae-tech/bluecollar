@@ -21,8 +21,15 @@ import {
   getMyWorkerProfile,
   getPublicProfile,
   deletePortfolio,
+  updateWorkerProfileInfo,
+  updateWorkerProfileFields,
+  getCodes,
 } from "@/lib/api";
-import type { WorkerProfile, PublicProfilePortfolio } from "@/lib/api";
+import type {
+  WorkerProfile,
+  PublicProfilePortfolio,
+  MasterCode,
+} from "@/lib/api";
 import { PortfolioAddModal } from "@/components/dashboard/portfolio-add-modal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -47,6 +54,8 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>("portfolio");
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editingPortfolio, setEditingPortfolio] =
+    useState<PublicProfilePortfolio | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // 포트폴리오 목록 새로고침
@@ -191,6 +200,7 @@ export default function DashboardPage() {
             portfolios={portfolios}
             profile={profile}
             onAdd={() => setAddModalOpen(true)}
+            onEdit={(p) => setEditingPortfolio(p)}
             onDelete={async (id) => {
               if (
                 !confirm(
@@ -227,6 +237,20 @@ export default function DashboardPage() {
           }}
         />
       )}
+
+      {/* ── 포트폴리오 편집 모달 ───────────────────────────────────────────── */}
+      {editingPortfolio && profile?.id && (
+        <PortfolioAddModal
+          workerProfileId={profile.id}
+          portfolioId={editingPortfolio.id}
+          initialData={editingPortfolio}
+          onClose={() => setEditingPortfolio(null)}
+          onSuccess={async () => {
+            setEditingPortfolio(null);
+            if (profile?.slug) await refreshPortfolios(profile.slug);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -237,11 +261,13 @@ function PortfolioTab({
   portfolios,
   profile,
   onAdd,
+  onEdit,
   onDelete,
 }: {
   portfolios: PublicProfilePortfolio[];
   profile: WorkerProfile | null;
   onAdd: () => void;
+  onEdit: (p: PublicProfilePortfolio) => void;
   onDelete: (id: string) => Promise<void>;
 }) {
   return (
@@ -267,7 +293,12 @@ function PortfolioTab({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {portfolios.map((p) => (
-            <PortfolioCard key={p.id} portfolio={p} onDelete={onDelete} />
+            <PortfolioCard
+              key={p.id}
+              portfolio={p}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))}
           <AddPortfolioCard onAdd={onAdd} />
         </div>
@@ -300,9 +331,11 @@ function EmptyPortfolio({ onAdd }: { onAdd: () => void }) {
 
 function PortfolioCard({
   portfolio,
+  onEdit,
   onDelete,
 }: {
   portfolio: PublicProfilePortfolio;
+  onEdit: (p: PublicProfilePortfolio) => void;
   onDelete: (id: string) => Promise<void>;
 }) {
   const thumb =
@@ -343,6 +376,13 @@ function PortfolioCard({
       {/* 액션 */}
       <div className="px-3.5 pb-3.5 flex items-center gap-2">
         <button
+          onClick={() => onEdit(portfolio)}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          <Pencil size={12} />
+          편집
+        </button>
+        <button
           onClick={() => onDelete(portfolio.id)}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto"
         >
@@ -375,56 +415,466 @@ function ProfileTab({
   profile: WorkerProfile | null;
   setProfile: (p: WorkerProfile) => void;
 }) {
+  type EditSection = "info" | "fields" | "location" | null;
+  const [editingSection, setEditingSection] = useState<EditSection>(null);
+
+  // 기본 정보 편집 폼 상태
+  const [infoForm, setInfoForm] = useState({
+    businessName: profile?.businessName ?? "",
+    yearsOfExperience: profile?.yearsOfExperience?.toString() ?? "",
+    careerSummary: profile?.careerSummary ?? "",
+  });
+  const [infoSaving, setInfoSaving] = useState(false);
+  const [infoError, setInfoError] = useState<string | null>(null);
+
+  // 업장 정보 편집 폼 상태
+  const [locationForm, setLocationForm] = useState({
+    officeCity: profile?.officeCity ?? "",
+    officeDistrict: profile?.officeDistrict ?? "",
+    officeAddress: profile?.officeAddress ?? "",
+    operatingHours: profile?.operatingHours ?? "",
+  });
+  const [locationSaving, setLocationSaving] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // 전문 분야 편집 상태
+  const [allFields, setAllFields] = useState<MasterCode[]>([]);
+  const [selectedFields, setSelectedFields] = useState<string[]>(
+    profile?.fields?.map((f) => f.fieldCode) ?? [],
+  );
+  const [fieldsSaving, setFieldsSaving] = useState(false);
+  const [fieldsError, setFieldsError] = useState<string | null>(null);
+
+  const openInfoEdit = () => {
+    setInfoForm({
+      businessName: profile?.businessName ?? "",
+      yearsOfExperience: profile?.yearsOfExperience?.toString() ?? "",
+      careerSummary: profile?.careerSummary ?? "",
+    });
+    setInfoError(null);
+    setEditingSection("info");
+  };
+
+  const openLocationEdit = () => {
+    setLocationForm({
+      officeCity: profile?.officeCity ?? "",
+      officeDistrict: profile?.officeDistrict ?? "",
+      officeAddress: profile?.officeAddress ?? "",
+      operatingHours: profile?.operatingHours ?? "",
+    });
+    setLocationError(null);
+    setEditingSection("location");
+  };
+
+  const saveLocation = async () => {
+    if (!profile?.id) return;
+    setLocationSaving(true);
+    setLocationError(null);
+    try {
+      const updated = await updateWorkerProfileInfo(profile.id, {
+        officeCity: locationForm.officeCity || undefined,
+        officeDistrict: locationForm.officeDistrict || undefined,
+        officeAddress: locationForm.officeAddress || undefined,
+        operatingHours: locationForm.operatingHours || undefined,
+      });
+      setProfile({ ...profile, ...updated });
+      setEditingSection(null);
+    } catch (err) {
+      setLocationError(
+        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setLocationSaving(false);
+    }
+  };
+
+  const openFieldsEdit = async () => {
+    setFieldsError(null);
+    setSelectedFields(profile?.fields?.map((f) => f.fieldCode) ?? []);
+    if (allFields.length === 0) {
+      try {
+        const codes = await getCodes("FIELD");
+        setAllFields(codes);
+      } catch {
+        setFieldsError("분야 목록을 불러오지 못했습니다.");
+      }
+    }
+    setEditingSection("fields");
+  };
+
+  const saveInfo = async () => {
+    if (!profile?.id) return;
+    setInfoSaving(true);
+    setInfoError(null);
+    try {
+      const years = infoForm.yearsOfExperience
+        ? parseInt(infoForm.yearsOfExperience, 10)
+        : undefined;
+      const updated = await updateWorkerProfileInfo(profile.id, {
+        businessName: infoForm.businessName || undefined,
+        yearsOfExperience: years,
+        careerSummary: infoForm.careerSummary || undefined,
+      });
+      setProfile({ ...profile, ...updated });
+      setEditingSection(null);
+    } catch (err) {
+      setInfoError(
+        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setInfoSaving(false);
+    }
+  };
+
+  const saveFields = async () => {
+    if (!profile?.id || selectedFields.length === 0) return;
+    setFieldsSaving(true);
+    setFieldsError(null);
+    try {
+      await updateWorkerProfileFields(profile.id, selectedFields);
+      setProfile({
+        ...profile,
+        fields: selectedFields.map((code) => ({ fieldCode: code })),
+      });
+      setEditingSection(null);
+    } catch (err) {
+      setFieldsError(
+        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setFieldsSaving(false);
+    }
+  };
+
   return (
     <div className="max-w-xl">
       <h2 className="text-base font-bold text-foreground mb-5">프로필 편집</h2>
 
       <div className="flex flex-col gap-4">
         {/* 기본 정보 */}
-        <SectionCard title="기본 정보" href="#">
-          <InfoRow label="상호명" value={profile?.businessName ?? "미설정"} />
-          <InfoRow
-            label="경력"
-            value={
-              profile?.yearsOfExperience
-                ? `${profile.yearsOfExperience}년차`
-                : "미설정"
-            }
-          />
-          <InfoRow
-            label="자기소개"
-            value={profile?.careerSummary ?? "미설정"}
-            truncate
-          />
-        </SectionCard>
+        <div className="bg-card border border-border rounded-md p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-muted-foreground">
+              기본 정보
+            </p>
+            {editingSection !== "info" && (
+              <button
+                onClick={openInfoEdit}
+                className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Pencil size={11} />
+                편집
+              </button>
+            )}
+          </div>
 
-        {/* 전문 분야 */}
-        <SectionCard title="전문 분야" href="#">
-          {profile?.fields && profile.fields.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              {profile.fields.map((f) => (
-                <span
-                  key={f.fieldCode}
-                  className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border"
+          {editingSection === "info" ? (
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  상호명
+                </label>
+                <input
+                  type="text"
+                  value={infoForm.businessName}
+                  onChange={(e) =>
+                    setInfoForm((f) => ({ ...f, businessName: e.target.value }))
+                  }
+                  placeholder="예: 홍길동 타일"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  경력 (년)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={infoForm.yearsOfExperience}
+                  onChange={(e) =>
+                    setInfoForm((f) => ({
+                      ...f,
+                      yearsOfExperience: e.target.value,
+                    }))
+                  }
+                  placeholder="예: 15"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  자기소개
+                </label>
+                <textarea
+                  value={infoForm.careerSummary}
+                  onChange={(e) =>
+                    setInfoForm((f) => ({
+                      ...f,
+                      careerSummary: e.target.value,
+                    }))
+                  }
+                  placeholder="예: 15년 경력 타일 전문가입니다."
+                  maxLength={200}
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
+                />
+              </div>
+              {infoError && (
+                <p className="text-xs text-destructive">{infoError}</p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={saveInfo}
+                  disabled={infoSaving}
+                  className="flex-1 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-40"
                 >
-                  {f.fieldCode}
-                </span>
-              ))}
+                  {infoSaving ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  onClick={() => setEditingSection(null)}
+                  className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  취소
+                </button>
+              </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">분야 미설정</p>
+            <>
+              <InfoRow
+                label="상호명"
+                value={profile?.businessName ?? "미설정"}
+              />
+              <InfoRow
+                label="경력"
+                value={
+                  profile?.yearsOfExperience
+                    ? `${profile.yearsOfExperience}년차`
+                    : "미설정"
+                }
+              />
+              <InfoRow
+                label="자기소개"
+                value={profile?.careerSummary ?? "미설정"}
+                truncate
+              />
+            </>
           )}
-        </SectionCard>
+        </div>
+
+        {/* 업장 정보 */}
+        <div className="bg-card border border-border rounded-md p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-muted-foreground">
+              업장 정보
+            </p>
+            {editingSection !== "location" && (
+              <button
+                onClick={openLocationEdit}
+                className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Pencil size={11} />
+                편집
+              </button>
+            )}
+          </div>
+
+          {editingSection === "location" ? (
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  도시
+                </label>
+                <input
+                  type="text"
+                  value={locationForm.officeCity}
+                  onChange={(e) =>
+                    setLocationForm((f) => ({
+                      ...f,
+                      officeCity: e.target.value,
+                    }))
+                  }
+                  placeholder="예: 서울시"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  구/동
+                </label>
+                <input
+                  type="text"
+                  value={locationForm.officeDistrict}
+                  onChange={(e) =>
+                    setLocationForm((f) => ({
+                      ...f,
+                      officeDistrict: e.target.value,
+                    }))
+                  }
+                  placeholder="예: 강남구"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  상세 주소
+                </label>
+                <input
+                  type="text"
+                  value={locationForm.officeAddress}
+                  onChange={(e) =>
+                    setLocationForm((f) => ({
+                      ...f,
+                      officeAddress: e.target.value,
+                    }))
+                  }
+                  placeholder="예: 테헤란로 123"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">
+                  운영시간
+                </label>
+                <input
+                  type="text"
+                  value={locationForm.operatingHours}
+                  onChange={(e) =>
+                    setLocationForm((f) => ({
+                      ...f,
+                      operatingHours: e.target.value,
+                    }))
+                  }
+                  placeholder="예: 월-금 09:00-18:00"
+                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+              {locationError && (
+                <p className="text-xs text-destructive">{locationError}</p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={saveLocation}
+                  disabled={locationSaving}
+                  className="flex-1 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-40"
+                >
+                  {locationSaving ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  onClick={() => setEditingSection(null)}
+                  className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <InfoRow
+                label="지역"
+                value={
+                  profile?.officeCity && profile?.officeDistrict
+                    ? `${profile.officeCity} ${profile.officeDistrict}`
+                    : (profile?.officeCity ?? "미설정")
+                }
+              />
+              <InfoRow
+                label="운영시간"
+                value={profile?.operatingHours ?? "미설정"}
+              />
+            </>
+          )}
+        </div>
+
+        {/* 전문 분야 */}
+        <div className="bg-card border border-border rounded-md p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-muted-foreground">
+              전문 분야
+            </p>
+            {editingSection !== "fields" && (
+              <button
+                onClick={openFieldsEdit}
+                className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Pencil size={11} />
+                편집
+              </button>
+            )}
+          </div>
+
+          {editingSection === "fields" ? (
+            <div className="flex flex-col gap-3">
+              {allFields.length === 0 ? (
+                <p className="text-sm text-muted-foreground">불러오는 중...</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {allFields.map((f) => (
+                    <button
+                      key={f.code}
+                      onClick={() =>
+                        setSelectedFields((prev) =>
+                          prev.includes(f.code)
+                            ? prev.filter((c) => c !== f.code)
+                            : [...prev, f.code],
+                        )
+                      }
+                      className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
+                        selectedFields.includes(f.code)
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card text-foreground border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {f.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {fieldsError && (
+                <p className="text-xs text-destructive">{fieldsError}</p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={saveFields}
+                  disabled={fieldsSaving || selectedFields.length === 0}
+                  className="flex-1 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-40"
+                >
+                  {fieldsSaving ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  onClick={() => setEditingSection(null)}
+                  className="px-4 py-2 rounded-md border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {profile?.fields && profile.fields.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {profile.fields.map((f) => (
+                    <span
+                      key={f.fieldCode}
+                      className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border"
+                    >
+                      {f.fieldCode}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">분야 미설정</p>
+              )}
+            </>
+          )}
+        </div>
 
         {/* 슬러그 / 공개 URL */}
         <SectionCard title="공개 주소" href="#">
           <InfoRow label="슬러그" value={`${profile?.slug}`} />
         </SectionCard>
       </div>
-
-      <p className="text-xs text-muted-foreground mt-4">
-        프로필 편집 기능은 순차적으로 오픈됩니다.
-      </p>
     </div>
   );
 }

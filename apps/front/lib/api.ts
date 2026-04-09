@@ -80,7 +80,6 @@ async function tryRefresh(): Promise<boolean> {
     const res = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
     });
     return res.ok;
   } catch {
@@ -160,6 +159,10 @@ export interface WorkerProfile {
   yearsOfExperience?: number;
   careerSummary?: string;
   fields?: { fieldCode: string }[];
+  officeAddress?: string;
+  officeCity?: string;
+  officeDistrict?: string;
+  operatingHours?: string;
 }
 
 export interface CompleteOnboardingPayload {
@@ -437,9 +440,51 @@ export async function createPortfolio(
   });
 }
 
+/** 포트폴리오 수정 */
+export async function updatePortfolio(
+  id: string,
+  payload: Partial<Omit<CreatePortfolioPayload, "workerProfileId">>,
+): Promise<PublicProfilePortfolio> {
+  return apiFetch<PublicProfilePortfolio>(`/portfolios/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 /** 포트폴리오 삭제 */
 export async function deletePortfolio(id: string): Promise<void> {
   return apiFetch<void>(`/portfolios/${id}`, { method: "DELETE" });
+}
+
+/** 워커 프로필 핵심 정보 수정 (businessName, careerSummary, yearsOfExperience 등) */
+export async function updateWorkerProfileInfo(
+  workerProfileId: string,
+  payload: {
+    businessName?: string;
+    careerSummary?: string;
+    yearsOfExperience?: number;
+    description?: string;
+    officeAddress?: string;
+    officeCity?: string;
+    officeDistrict?: string;
+    operatingHours?: string;
+  },
+): Promise<WorkerProfile> {
+  return apiFetch<WorkerProfile>(`/workers/profile/${workerProfileId}/info`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** 워커 전문 분야 수정 */
+export async function updateWorkerProfileFields(
+  workerProfileId: string,
+  fieldCodes: string[],
+): Promise<{ workerProfileId: string; fields: { fieldCode: string }[] }> {
+  return apiFetch(`/workers/profile/${workerProfileId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ fieldCodes }),
+  });
 }
 
 export async function checkSlugAvailability(slug: string): Promise<boolean> {
