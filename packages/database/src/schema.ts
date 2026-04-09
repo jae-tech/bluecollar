@@ -496,7 +496,10 @@ export const portfolios = pgTable(
 
     // ▪️ 기본 정보
     title: text("title").notNull(), // 시공 사례 제목
-    content: text("content").notNull(), // 상세 설명 (마크다운 지원 고려)
+    content: text("content"), // 상세 설명 (선택, 마크다운 지원 고려)
+    location: varchar("location", { length: 200 }), // 시공 위치 (자유텍스트)
+    spaceType: varchar("space_type", { length: 50 }), // 'RESIDENTIAL'|'COMMERCIAL'|'OTHER'
+    constructionScope: text("construction_scope"), // 시공 범위 상세 설명
 
     // ▪️ 시공 기간
     startDate: date("start_date"), // 시공 시작일
@@ -537,18 +540,22 @@ export const portfolioDetails = pgTable("portfolio_details", {
   id: uuid("id").primaryKey().defaultRandom(),
   portfolioId: uuid("portfolio_id")
     .references(() => portfolios.id, { onDelete: "cascade" })
-    .notNull(),
+    .notNull()
+    .unique(), // UPSERT(onConflictDoUpdate)를 위해 UNIQUE 필수
 
   // ▪️ 공사 규모 (선택)
   area: numeric("area", { precision: 8, scale: 2 }), // 평수 (84.5 등)
-  areaUnit: varchar("area_unit", { length: 10 }), // "평" 또는 "m²"
-  roomType: varchar("room_type", { length: 20 }), // "2룸", "3룸" (인테리어 전용)
+  areaUnit: varchar("area_unit", { length: 10 }), // 'PYEONG' 또는 'SQMETER'
+  roomType: varchar("room_type", { length: 50 }), // "2룸", "3룸" (인테리어 전용)
 
-  // ▪️ 비용 및 기간
+  // ▪️ 보증 기간
+  warrantyMonths: integer("warranty_months"), // A/S 보증 기간 (개월, 최대 120)
+
+  // ▪️ 비용 및 기간 (레거시 — 기존 데이터 보존, 신규 폼에서는 미사용)
   budget: text("budget"), // "5,000만원대" (텍스트로 유연성 제공)
   duration: text("duration"), // "3개월" (텍스트로 유연성 제공)
 
-  // ▪️ 상세 내용
+  // ▪️ 상세 내용 (레거시 — constructionScope 컬럼으로 대체)
   workDescription: text("work_description"), // 상세 작업 내용
   materials: text("materials"), // 사용된 자재 (쉼표 구분: "타일, 대리석, 콘크리트")
 

@@ -7,6 +7,8 @@ import {
   workerAreas,
   portfolios,
   portfolioMedia,
+  portfolioDetails,
+  portfolioTags,
   users,
 } from '@repo/database';
 import { validateSlug } from '@/common/validators/slug.validator';
@@ -87,19 +89,32 @@ export class PublicService {
       .where(eq(portfolios.workerProfileId, workerProfileId))
       .orderBy((t) => t.createdAt);
 
-    // Step 6: 모든 포트폴리오의 미디어를 한 번에 조회 (N+1 쿼리 최적화)
+    // Step 6: 모든 포트폴리오의 미디어/details/tags를 한 번에 조회 (N+1 쿼리 최적화)
     const portfolioIds = portfoliosList.map((p) => p.id);
     let allMedia: any[] = [];
+    let allDetails: any[] = [];
+    let allTags: any[] = [];
 
     if (portfolioIds.length > 0) {
-      allMedia = await this.db
-        .select()
-        .from(portfolioMedia)
-        .where(inArray(portfolioMedia.portfolioId, portfolioIds))
-        .orderBy((t) => t.displayOrder);
+      [allMedia, allDetails, allTags] = await Promise.all([
+        this.db
+          .select()
+          .from(portfolioMedia)
+          .where(inArray(portfolioMedia.portfolioId, portfolioIds))
+          .orderBy((t) => t.displayOrder),
+        this.db
+          .select()
+          .from(portfolioDetails)
+          .where(inArray(portfolioDetails.portfolioId, portfolioIds)),
+        this.db
+          .select()
+          .from(portfolioTags)
+          .where(inArray(portfolioTags.portfolioId, portfolioIds))
+          .orderBy((t) => t.displayOrder),
+      ]);
     }
 
-    // Step 7: 메모리에서 포트폴리오별로 미디어 그룹핑
+    // Step 7: 메모리에서 포트폴리오별로 그룹핑
     const mediaByPortfolio = new Map<string, typeof allMedia>();
     allMedia.forEach((media) => {
       if (!mediaByPortfolio.has(media.portfolioId)) {
@@ -108,8 +123,20 @@ export class PublicService {
       mediaByPortfolio.get(media.portfolioId)!.push(media);
     });
 
+    const detailsByPortfolio = new Map<string, (typeof allDetails)[0]>();
+    allDetails.forEach((d) => detailsByPortfolio.set(d.portfolioId, d));
+
+    const tagsByPortfolio = new Map<string, string[]>();
+    allTags.forEach((t) => {
+      const arr = tagsByPortfolio.get(t.portfolioId) ?? [];
+      arr.push(t.tagName);
+      tagsByPortfolio.set(t.portfolioId, arr);
+    });
+
     const portfoliosWithMedia = portfoliosList.map((portfolio) => ({
       ...portfolio,
+      details: detailsByPortfolio.get(portfolio.id) ?? null,
+      tags: tagsByPortfolio.get(portfolio.id) ?? [],
       media: mediaByPortfolio.get(portfolio.id) || [],
     }));
 
@@ -160,20 +187,33 @@ export class PublicService {
         areaCode: a.areaCode,
       })),
 
-      // 포트폴리오 목록 (미디어 포함)
+      // 포트폴리오 목록 (미디어/details/tags 포함)
       portfolios: portfoliosWithMedia.map((p) => ({
         id: p.id,
         title: p.title,
         content: p.content,
+        location: p.location,
+        spaceType: p.spaceType,
+        constructionScope: p.constructionScope,
         startDate: p.startDate,
         endDate: p.endDate,
         difficulty: p.difficulty,
         estimatedCost: p.estimatedCost,
-        actualCost: p.actualCost,
+        // SEC-1: costVisibility === 'PRIVATE'이면 actualCost 마스킹
+        actualCost: p.costVisibility === 'PRIVATE' ? null : p.actualCost,
         costVisibility: p.costVisibility,
         viewCount: p.viewCount,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
+        details: p.details
+          ? {
+              area: p.details.area,
+              areaUnit: p.details.areaUnit,
+              roomType: p.details.roomType,
+              warrantyMonths: p.details.warrantyMonths,
+            }
+          : null,
+        tags: p.tags,
         media: p.media.map((m) => ({
           id: m.id,
           mediaUrl: m.mediaUrl,
