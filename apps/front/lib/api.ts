@@ -4,56 +4,63 @@
  * fetch 기반 API 호출 유틸리티.
  * withCredentials 역할: `credentials: 'include'`로 httpOnly 쿠키 자동 전송.
  * 401 응답 시 /auth/refresh를 호출하여 토큰을 자동 갱신합니다.
+ *
+ * 401 처리 흐름:
+ *   401 수신 → tryRefresh() 시도 → 성공: 원본 요청 재시도
+ *                                  실패: skipAutoRedirect=true → throw ApiError(401)
+ *                                        skipAutoRedirect=false → /login 리다이렉트
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 /**
+ * fetch 결과에서 응답 바디를 안전하게 파싱합니다.
+ * 204 No Content는 undefined 반환, 나머지는 JSON 파싱.
+ */
+async function parseResponse<T>(res: Response): Promise<T> {
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+/**
  * 기본 fetch 래퍼 (쿠키 자동 포함)
  *
- * @param skipAutoRedirect true 시 401 응답에서 /login 자동 이동 생략 (인증 상태 조회 등)
+ * @param skipAutoRedirect true 시 refresh 실패 후 /login 자동 이동 생략.
+ *   refresh 자체는 skipAutoRedirect 여부와 무관하게 항상 시도합니다.
  */
 async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {},
   skipAutoRedirect = false,
 ): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const fetchOptions: RequestInit = {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
-  });
+  };
+
+  const res = await fetch(`${API_URL}${path}`, fetchOptions);
 
   if (res.status === 401) {
-    if (skipAutoRedirect) {
-      throw new ApiError(401, "인증이 필요합니다");
-    }
-    // 토큰 만료 시 refresh 시도
+    // skipAutoRedirect 여부와 무관하게 refresh 항상 시도
     const refreshed = await tryRefresh();
     if (refreshed) {
-      // 재시도
-      const retryRes = await fetch(`${API_URL}${path}`, {
-        ...options,
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-      });
-      if (!retryRes.ok) {
-        // refresh 후에도 실패 → 로그인 페이지로
-        if (typeof window !== "undefined") {
+      // refresh 성공 → 원본 요청 재시도
+      const retryRes = await fetch(`${API_URL}${path}`, fetchOptions);
+      if (retryRes.status === 401 || !retryRes.ok) {
+        // refresh 후에도 인증 실패
+        if (!skipAutoRedirect && typeof window !== "undefined") {
           window.location.href = "/login";
         }
         throw new ApiError(retryRes.status, "인증이 만료되었습니다");
       }
-      return retryRes.json() as Promise<T>;
+      return parseResponse<T>(retryRes);
     } else {
-      // refresh 실패 → 로그인 페이지로
-      if (typeof window !== "undefined") {
+      // refresh 실패
+      if (!skipAutoRedirect && typeof window !== "undefined") {
         window.location.href = "/login";
       }
       throw new ApiError(401, "인증이 만료되었습니다");
@@ -69,10 +76,7 @@ async function apiFetch<T = unknown>(
     throw new ApiError(res.status, message);
   }
 
-  // 204 No Content
-  if (res.status === 204) return undefined as T;
-
-  return res.json() as Promise<T>;
+  return parseResponse<T>(res);
 }
 
 async function tryRefresh(): Promise<boolean> {
