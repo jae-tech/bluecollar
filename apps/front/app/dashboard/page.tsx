@@ -418,6 +418,13 @@ function ProfileTab({
   type EditSection = "info" | "fields" | "location" | null;
   const [editingSection, setEditingSection] = useState<EditSection>(null);
 
+  // 저장 완료 토스트
+  const [saveToast, setSaveToast] = useState(false);
+  const showSaveToast = () => {
+    setSaveToast(true);
+    setTimeout(() => setSaveToast(false), 2000);
+  };
+
   // 기본 정보 편집 폼 상태
   const [infoForm, setInfoForm] = useState({
     businessName: profile?.businessName ?? "",
@@ -479,6 +486,7 @@ function ProfileTab({
       });
       setProfile({ ...profile, ...updated });
       setEditingSection(null);
+      showSaveToast();
     } catch (err) {
       setLocationError(
         err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
@@ -517,6 +525,7 @@ function ProfileTab({
       });
       setProfile({ ...profile, ...updated });
       setEditingSection(null);
+      showSaveToast();
     } catch (err) {
       setInfoError(
         err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
@@ -537,6 +546,7 @@ function ProfileTab({
         fields: selectedFields.map((code) => ({ fieldCode: code })),
       });
       setEditingSection(null);
+      showSaveToast();
     } catch (err) {
       setFieldsError(
         err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
@@ -870,11 +880,24 @@ function ProfileTab({
           )}
         </div>
 
-        {/* 슬러그 / 공개 URL */}
-        <SectionCard title="공개 주소" href="#">
+        {/* 슬러그 / 공개 URL — 한번 정하면 변경 불가 */}
+        <div className="bg-card border border-border rounded-md p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-muted-foreground">
+              공개 주소
+            </p>
+            <span className="text-xs text-muted-foreground">변경 불가</span>
+          </div>
           <InfoRow label="슬러그" value={`${profile?.slug}`} />
-        </SectionCard>
+        </div>
       </div>
+
+      {/* 저장 완료 토스트 */}
+      {saveToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-md bg-foreground text-background text-xs font-medium">
+          저장되었습니다
+        </div>
+      )}
     </div>
   );
 }
