@@ -30,7 +30,6 @@ import type {
   PublicProfilePortfolio,
   MasterCode,
 } from "@/lib/api";
-import { PortfolioAddModal } from "@/components/dashboard/portfolio-add-modal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "bluecollar.cv";
@@ -53,9 +52,6 @@ export default function DashboardPage() {
   const [portfolios, setPortfolios] = useState<PublicProfilePortfolio[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>("portfolio");
   const [loading, setLoading] = useState(true);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editingPortfolio, setEditingPortfolio] =
-    useState<PublicProfilePortfolio | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // 포트폴리오 목록 새로고침
@@ -199,8 +195,8 @@ export default function DashboardPage() {
           <PortfolioTab
             portfolios={portfolios}
             profile={profile}
-            onAdd={() => setAddModalOpen(true)}
-            onEdit={(p) => setEditingPortfolio(p)}
+            onAdd={() => router.push("/dashboard/portfolio/new")}
+            onEdit={(p) => router.push(`/dashboard/portfolio/${p.id}/edit`)}
             onDelete={async (id) => {
               if (
                 !confirm(
@@ -225,32 +221,6 @@ export default function DashboardPage() {
         )}
         {activeTab === "settings" && <SettingsTab />}
       </div>
-
-      {/* ── 포트폴리오 추가 모달 ───────────────────────────────────────────── */}
-      {addModalOpen && profile?.id && (
-        <PortfolioAddModal
-          workerProfileId={profile.id}
-          onClose={() => setAddModalOpen(false)}
-          onSuccess={async () => {
-            setAddModalOpen(false);
-            if (profile?.slug) await refreshPortfolios(profile.slug);
-          }}
-        />
-      )}
-
-      {/* ── 포트폴리오 편집 모달 ───────────────────────────────────────────── */}
-      {editingPortfolio && profile?.id && (
-        <PortfolioAddModal
-          workerProfileId={profile.id}
-          portfolioId={editingPortfolio.id}
-          initialData={editingPortfolio}
-          onClose={() => setEditingPortfolio(null)}
-          onSuccess={async () => {
-            setEditingPortfolio(null);
-            if (profile?.slug) await refreshPortfolios(profile.slug);
-          }}
-        />
-      )}
     </div>
   );
 }

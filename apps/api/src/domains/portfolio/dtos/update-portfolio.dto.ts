@@ -24,6 +24,37 @@ export const UpdatePortfolioSchema = z
       .optional()
       .describe('포트폴리오 상세 설명'),
 
+    location: z.string().trim().max(200).optional().describe('시공 위치'),
+
+    spaceType: z
+      .enum(['RESIDENTIAL', 'COMMERCIAL', 'OTHER'])
+      .optional()
+      .describe('공간 유형: 주거/상업/기타'),
+
+    constructionScope: z
+      .string()
+      .trim()
+      .max(1000)
+      .optional()
+      .describe('시공 범위 상세 설명'),
+
+    details: z
+      .object({
+        area: z.number().positive().max(9999.99).optional(),
+        areaUnit: z.enum(['PYEONG', 'SQMETER']).optional(),
+        roomType: z.string().max(50).optional(),
+        warrantyMonths: z.number().int().min(0).max(120).optional(),
+      })
+      .optional()
+      .describe('시공 상세 정보'),
+
+    // tags: undefined = 변경없음, [] = 전체삭제, [...] = 교체
+    tags: z
+      .array(z.string().max(50))
+      .max(20)
+      .optional()
+      .describe('자재/기술 태그 배열 (제공 시 전체 교체)'),
+
     // 시공 기간 (선택사항)
     startDate: z
       .string()

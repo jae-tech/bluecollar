@@ -4,10 +4,17 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  HttpException,
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
-import { portfolios, portfolioMedia, workerProfiles } from '@repo/database';
+import {
+  portfolios,
+  portfolioMedia,
+  portfolioDetails,
+  portfolioTags,
+  workerProfiles,
+} from '@repo/database';
 import { CreatePortfolioDto } from '../dtos/create-portfolio.dto';
 import { UpdatePortfolioDto } from '../dtos/update-portfolio.dto';
 import { eq, inArray } from 'drizzle-orm';
@@ -42,6 +49,11 @@ export class PortfolioService {
       workerProfileId,
       title,
       content,
+      location,
+      spaceType,
+      constructionScope,
+      details,
+      tags,
       startDate,
       endDate,
       difficulty,
@@ -80,11 +92,15 @@ export class PortfolioService {
         const portfolioValues: any = {
           workerProfileId,
           title,
-          content: content ?? '',
+          content: content ?? null,
           costVisibility: costVisibility || 'PRIVATE',
         };
 
         // 선택사항 필드는 값이 있을 때만 추가
+        if (location) portfolioValues.location = location;
+        if (spaceType) portfolioValues.spaceType = spaceType;
+        if (constructionScope)
+          portfolioValues.constructionScope = constructionScope;
         if (startDate) {
           portfolioValues.startDate = new Date(startDate);
         }
@@ -112,7 +128,29 @@ export class PortfolioService {
         const portfolioId = newPortfolio.id;
         this.logger.info({ portfolioId, title }, '포트폴리오 생성 완료');
 
-        // Step 3: portfolio_media 테이블에 미디어 배열 저장
+        // Step 3: portfolioDetails INSERT (area는 numeric → .toString() 변환 필수)
+        if (details) {
+          await tx.insert(portfolioDetails).values({
+            portfolioId,
+            area: details.area?.toString(),
+            areaUnit: details.areaUnit,
+            roomType: details.roomType,
+            warrantyMonths: details.warrantyMonths,
+          });
+        }
+
+        // Step 4: portfolioTags INSERT (displayOrder는 배열 인덱스 기반)
+        if (tags && tags.length > 0) {
+          await tx.insert(portfolioTags).values(
+            tags.map((tagName, index) => ({
+              portfolioId,
+              tagName,
+              displayOrder: index + 1,
+            })),
+          );
+        }
+
+        // Step 5: portfolio_media 테이블에 미디어 배열 저장
         // displayOrder는 배열 순서를 1부터 시작하여 자동 부여
         if (media && media.length > 0) {
           this.logger.debug(
@@ -162,15 +200,34 @@ export class PortfolioService {
 
         this.logger.info({ portfolioId }, '포트폴리오 생성 프로세스 완료');
 
+        // 저장된 details/tags 조회
+        const savedDetails = await tx
+          .select()
+          .from(portfolioDetails)
+          .where(eq(portfolioDetails.portfolioId, portfolioId))
+          .limit(1);
+        const savedTags = await tx
+          .select()
+          .from(portfolioTags)
+          .where(eq(portfolioTags.portfolioId, portfolioId))
+          .orderBy((t) => t.displayOrder);
+
+        this.logger.info({ portfolioId }, '포트폴리오 생성 프로세스 완료');
+
         return {
           id: newPortfolio.id,
           title: newPortfolio.title,
           content: newPortfolio.content,
+          location: newPortfolio.location,
+          spaceType: newPortfolio.spaceType,
+          constructionScope: newPortfolio.constructionScope,
           workerProfileId: newPortfolio.workerProfileId,
           startDate: newPortfolio.startDate,
           endDate: newPortfolio.endDate,
           difficulty: newPortfolio.difficulty,
           costVisibility: newPortfolio.costVisibility,
+          details: savedDetails.length > 0 ? savedDetails[0] : null,
+          tags: savedTags.map((t) => t.tagName),
           media: savedMedia.map((m) => ({
             id: m.id,
             mediaUrl: m.mediaUrl,
@@ -181,6 +238,8 @@ export class PortfolioService {
           })),
         };
       } catch (error) {
+        // HttpException 서브클래스(BadRequestException 등)는 그대로 전파 (BUG-1)
+        if (error instanceof HttpException) throw error;
         // 에러 발생 시 Transaction이 자동으로 rollback됨
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -238,6 +297,12 @@ export class PortfolioService {
       if (updateDto.title !== undefined) updateValues.title = updateDto.title;
       if (updateDto.content !== undefined)
         updateValues.content = updateDto.content;
+      if (updateDto.location !== undefined)
+        updateValues.location = updateDto.location;
+      if (updateDto.spaceType !== undefined)
+        updateValues.spaceType = updateDto.spaceType;
+      if (updateDto.constructionScope !== undefined)
+        updateValues.constructionScope = updateDto.constructionScope;
       if (updateDto.startDate !== undefined)
         updateValues.startDate = updateDto.startDate;
       if (updateDto.endDate !== undefined)
@@ -261,7 +326,47 @@ export class PortfolioService {
         .where(eq(portfolios.id, portfolioId))
         .returning();
 
-      // Step 4: 미디어 업데이트 (제공 시 기존 미디어 전체 교체)
+      // Step 4: portfolioDetails UPSERT (UNIQUE constraint 기반)
+      if (updateDto.details !== undefined) {
+        const d = updateDto.details;
+        await tx
+          .insert(portfolioDetails)
+          .values({
+            portfolioId,
+            area: d.area?.toString(),
+            areaUnit: d.areaUnit,
+            roomType: d.roomType,
+            warrantyMonths: d.warrantyMonths,
+          })
+          .onConflictDoUpdate({
+            target: portfolioDetails.portfolioId,
+            set: {
+              area: d.area?.toString(),
+              areaUnit: d.areaUnit,
+              roomType: d.roomType,
+              warrantyMonths: d.warrantyMonths,
+              updatedAt: new Date(),
+            },
+          });
+      }
+
+      // Step 5: tags 교체 (undefined = 변경없음, [] = 전체삭제, [...] = 교체)
+      if (updateDto.tags !== undefined) {
+        await tx
+          .delete(portfolioTags)
+          .where(eq(portfolioTags.portfolioId, portfolioId));
+        if (updateDto.tags.length > 0) {
+          await tx.insert(portfolioTags).values(
+            updateDto.tags.map((tagName, index) => ({
+              portfolioId,
+              tagName,
+              displayOrder: index + 1,
+            })),
+          );
+        }
+      }
+
+      // Step 6: 미디어 업데이트 (제공 시 기존 미디어 전체 교체)
       if (updateDto.media !== undefined) {
         this.logger.debug(
           { portfolioId, mediaCount: updateDto.media.length },
@@ -291,16 +396,30 @@ export class PortfolioService {
         await tx.insert(portfolioMedia).values(mediaRecords);
       }
 
-      // 최종 미디어 조회
+      // 최종 미디어/details/tags 조회
       const savedMedia = await tx
         .select()
         .from(portfolioMedia)
         .where(eq(portfolioMedia.portfolioId, portfolioId));
 
+      const savedDetails = await tx
+        .select()
+        .from(portfolioDetails)
+        .where(eq(portfolioDetails.portfolioId, portfolioId))
+        .limit(1);
+
+      const savedTags = await tx
+        .select()
+        .from(portfolioTags)
+        .where(eq(portfolioTags.portfolioId, portfolioId))
+        .orderBy((t) => t.displayOrder);
+
       this.logger.info({ portfolioId }, '포트폴리오 수정 완료');
 
       return {
         ...updated,
+        details: savedDetails.length > 0 ? savedDetails[0] : null,
+        tags: savedTags.map((t) => t.tagName),
         media: savedMedia.map((m) => ({
           id: m.id,
           mediaUrl: m.mediaUrl,
@@ -368,15 +487,33 @@ export class PortfolioService {
       return null;
     }
 
-    // 포트폴리오 미디어 조회 (displayOrder 순서대로)
-    const media = await this.db
-      .select()
-      .from(portfolioMedia)
-      .where(eq(portfolioMedia.portfolioId, portfolioId))
-      .orderBy((t) => t.displayOrder);
+    const p = portfolio[0];
+
+    // 미디어, details, tags 조회
+    const [media, detailsList, tagsList] = await Promise.all([
+      this.db
+        .select()
+        .from(portfolioMedia)
+        .where(eq(portfolioMedia.portfolioId, portfolioId))
+        .orderBy((t) => t.displayOrder),
+      this.db
+        .select()
+        .from(portfolioDetails)
+        .where(eq(portfolioDetails.portfolioId, portfolioId))
+        .limit(1),
+      this.db
+        .select()
+        .from(portfolioTags)
+        .where(eq(portfolioTags.portfolioId, portfolioId))
+        .orderBy((t) => t.displayOrder),
+    ]);
 
     return {
-      ...portfolio[0],
+      ...p,
+      // SEC-1: costVisibility === 'PRIVATE'이면 actualCost 마스킹
+      actualCost: p.costVisibility === 'PRIVATE' ? null : p.actualCost,
+      details: detailsList.length > 0 ? detailsList[0] : null,
+      tags: tagsList.map((t) => t.tagName),
       media,
     };
   }

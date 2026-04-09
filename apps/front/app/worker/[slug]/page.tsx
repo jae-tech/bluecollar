@@ -17,6 +17,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getPublicProfile, getMyWorkerProfile } from "@/lib/api";
 import type { PublicProfile, PublicProfilePortfolio } from "@/lib/api";
 import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
+import { SPACE_TYPE_LABEL } from "@/lib/constants";
 
 // 업종 코드 → 표시명 매핑
 const FIELD_LABEL: Record<string, string> = {
@@ -369,6 +370,32 @@ export default function WorkerProfilePage() {
                     <p className="text-xs font-medium text-foreground leading-snug mb-0.5">
                       {portfolio.title}
                     </p>
+                    {/* 위치·평형·공간 유형 칩 */}
+                    {(portfolio.location ||
+                      portfolio.details?.area ||
+                      portfolio.spaceType) && (
+                      <div className="flex gap-1 mt-1 mb-0.5 flex-wrap">
+                        {portfolio.location && (
+                          <span className="px-1.5 py-0.5 rounded bg-secondary text-muted-foreground text-[10px] font-medium">
+                            {portfolio.location}
+                          </span>
+                        )}
+                        {portfolio.details?.area && (
+                          <span className="px-1.5 py-0.5 rounded bg-secondary text-muted-foreground text-[10px] font-medium">
+                            {parseFloat(portfolio.details.area)}
+                            {portfolio.details.areaUnit === "SQMETER"
+                              ? "m²"
+                              : "평"}
+                          </span>
+                        )}
+                        {portfolio.spaceType && (
+                          <span className="px-1.5 py-0.5 rounded bg-secondary text-muted-foreground text-[10px] font-medium">
+                            {SPACE_TYPE_LABEL[portfolio.spaceType] ??
+                              portfolio.spaceType}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {portfolio.startDate && (
                       <p className="text-[11px] text-muted-foreground">
                         {portfolio.startDate.slice(0, 7).replace("-", "년 ")}월

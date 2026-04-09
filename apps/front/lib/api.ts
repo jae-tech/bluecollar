@@ -275,6 +275,9 @@ export interface PublicProfilePortfolio {
   id: string;
   title: string;
   content: string | null;
+  location: string | null;
+  spaceType: string | null;
+  constructionScope: string | null;
   startDate: string | null;
   endDate: string | null;
   difficulty: string | null;
@@ -284,6 +287,13 @@ export interface PublicProfilePortfolio {
   viewCount: number;
   createdAt: string;
   updatedAt: string;
+  details: {
+    area: string | null; // numeric → DB에서 문자열로 반환됨
+    areaUnit: string | null;
+    roomType: string | null;
+    warrantyMonths: number | null;
+  } | null;
+  tags: string[];
   media: PublicProfileMedia[];
 }
 
@@ -425,6 +435,16 @@ export interface CreatePortfolioPayload {
   workerProfileId: string;
   title: string;
   content?: string;
+  location?: string;
+  spaceType?: "RESIDENTIAL" | "COMMERCIAL" | "OTHER";
+  constructionScope?: string;
+  details?: {
+    area?: number;
+    areaUnit?: "PYEONG" | "SQMETER";
+    roomType?: string;
+    warrantyMonths?: number;
+  };
+  tags?: string[];
   startDate?: string;
   endDate?: string;
   difficulty?: "EASY" | "MEDIUM" | "HARD";
@@ -432,6 +452,26 @@ export interface CreatePortfolioPayload {
   actualCost?: number;
   costVisibility?: "PUBLIC" | "PRIVATE";
   media: CreatePortfolioMediaPayload[];
+}
+
+export interface GetPortfolioByIdResponse extends PublicProfilePortfolio {
+  workerProfileId: string;
+}
+
+/** 포트폴리오 단건 조회 (편집 폼 초기 데이터용) */
+export async function getPortfolioById(
+  id: string,
+): Promise<GetPortfolioByIdResponse | null> {
+  try {
+    return await apiFetch<GetPortfolioByIdResponse>(
+      `/portfolios/${encodeURIComponent(id)}`,
+      {},
+      true,
+    );
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
 }
 
 /** 포트폴리오 생성 */

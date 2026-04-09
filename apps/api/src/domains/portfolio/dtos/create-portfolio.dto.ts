@@ -28,6 +28,52 @@ export const CreatePortfolioSchema = z.object({
     .optional()
     .describe('포트폴리오 상세 설명 (선택)'),
 
+  location: z.string().trim().max(200).optional().describe('시공 위치 (자유텍스트)'),
+
+  spaceType: z
+    .enum(['RESIDENTIAL', 'COMMERCIAL', 'OTHER'])
+    .optional()
+    .describe('공간 유형: 주거/상업/기타'),
+
+  constructionScope: z
+    .string()
+    .trim()
+    .max(1000)
+    .optional()
+    .describe('시공 범위 상세 설명'),
+
+  // 상세 정보 (선택사항)
+  details: z
+    .object({
+      area: z
+        .number()
+        .positive()
+        .max(9999.99)
+        .optional()
+        .describe('평수 (서비스에서 문자열로 변환)'),
+      areaUnit: z
+        .enum(['PYEONG', 'SQMETER'])
+        .optional()
+        .describe('면적 단위: 평/m²'),
+      roomType: z.string().max(50).optional().describe('룸 타입'),
+      warrantyMonths: z
+        .number()
+        .int()
+        .min(0)
+        .max(120)
+        .optional()
+        .describe('A/S 보증기간 (개월, 최대 10년)'),
+    })
+    .optional()
+    .describe('시공 상세 정보'),
+
+  // 자재 태그 (선택사항)
+  tags: z
+    .array(z.string().max(50))
+    .max(20)
+    .optional()
+    .describe('자재/기술 태그 배열'),
+
   // 시공 기간 (선택사항)
   startDate: z.string().date().optional().describe('시공 시작일 (YYYY-MM-DD)'),
 
