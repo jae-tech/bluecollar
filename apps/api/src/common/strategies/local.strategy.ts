@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { Inject } from '@nestjs/common';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
-import { users } from '@repo/database';
+import { users, workerProfiles } from '@repo/database';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
@@ -112,6 +112,19 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
       // INACTIVE 계정은 컨트롤러에서 emailVerified: false 여부를 확인하여 분기 처리
       this.logger.info({ email, userId: userRecord.id }, '✓ 로컬 인증 성공');
 
+      // 4️⃣ WORKER인 경우 workerProfileId 조회 (JWT 페이로드에 포함 필요)
+      let workerProfileId: string | undefined;
+      if (userRecord.role === 'WORKER') {
+        const profile = await this.db
+          .select({ id: workerProfiles.id })
+          .from(workerProfiles)
+          .where(eq(workerProfiles.userId, userRecord.id))
+          .limit(1);
+        if (profile.length > 0) {
+          workerProfileId = profile[0].id;
+        }
+      }
+
       return {
         id: userRecord.id,
         email: userRecord.email,
@@ -120,6 +133,7 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
         provider: userRecord.provider,
         emailVerified: userRecord.emailVerified,
         phoneVerified: userRecord.phoneVerified,
+        workerProfileId,
       };
     } catch (error) {
       // 이미 throw된 예외는 그대로 propagate

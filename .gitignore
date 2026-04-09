@@ -42,3 +42,4 @@ yarn-error.log*
 # Claude Code local settings
 .claude/skills/
 .claude/worktrees/
+.claude/skills/gstack/

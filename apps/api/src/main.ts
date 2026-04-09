@@ -71,6 +71,7 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: [/(?:^|\.)bluecollar\.cv$/, /localhost:\d+$/],
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   });
 
   // 6. 헬스체크 엔드포인트 (LB health check용)

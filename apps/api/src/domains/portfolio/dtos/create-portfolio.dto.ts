@@ -24,9 +24,9 @@ export const CreatePortfolioSchema = z.object({
 
   content: z
     .string()
-    .min(10, '설명은 최소 10자 이상이어야 합니다')
     .max(5000, '설명은 최대 5000자입니다')
-    .describe('포트폴리오 상세 설명'),
+    .optional()
+    .describe('포트폴리오 상세 설명 (선택)'),
 
   // 시공 기간 (선택사항)
   startDate: z.string().date().optional().describe('시공 시작일 (YYYY-MM-DD)'),

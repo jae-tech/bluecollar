@@ -410,3 +410,38 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 **Effort:** S
 **Priority:** P3
 **Found by:** /autoplan Eng Review, 2026-04-04
+
+---
+
+## 📦 포트폴리오 스키마 확장 (portfolio-schema-expansion PR defer, 2026-04-09)
+
+### TODO-033: portfolios orderBy ASC 버그
+
+**What:** `apps/api/src/domains/public/services/public.service.ts:88` — `.orderBy((t) => t.createdAt)` 가 ASC 정렬로 오래된 포트폴리오가 먼저 표시됨.
+**Why:** 공개 프로필에서 최신 시공 사례가 상단에 와야 함. DESC가 맞음.
+**Fix:** `.orderBy(desc(portfolios.createdAt))` — `desc` import from drizzle-orm 필요.
+**Effort:** XS
+**Priority:** P2
+**Found by:** /plan-eng-review, 2026-04-09
+
+---
+
+### TODO-034: warrantyMonths 검색 필터 API
+
+**What:** `GET /portfolios?spaceType=RESIDENTIAL&minWarranty=12` 백엔드 API + 검색 페이지 필터 UI.
+**Why:** warrantyMonths/spaceType/location 컬럼이 이번 PR에서 추가됨. 필터 API는 컬럼 데이터가 충분히 쌓인 후 구현.
+**Effort:** M
+**Priority:** P2
+**Depends on:** portfolio-schema-expansion PR 머지 + 워커 데이터 축적
+**Found by:** /plan-ceo-review, 2026-04-09
+
+---
+
+### TODO-035: location autocomplete (건물 API 연동)
+
+**What:** 포트폴리오 작성 폼의 location 입력에 행안부/국토부 API autocomplete 연동.
+**Why:** 현재 자유텍스트로 저장 — 지역 필터 정확도를 위해 정규화 필요.
+**Effort:** L
+**Priority:** P3
+**Depends on:** TODO-034 (필터 API 먼저 구현)
+**Found by:** /plan-ceo-review, 2026-04-09
