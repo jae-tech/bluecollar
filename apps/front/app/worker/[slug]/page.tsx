@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Briefcase,
   Calendar,
+  Clock,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getPublicProfile, getMyWorkerProfile } from "@/lib/api";
@@ -245,16 +246,27 @@ export default function WorkerProfilePage() {
 
           {/* 메타 행 */}
           <div className="flex items-center gap-3 text-xs text-muted-foreground mb-5 flex-wrap">
-            {profile.officeDistrict && (
+            {profile.officeDistrict ? (
               <span className="flex items-center gap-1">
                 <MapPin size={11} />
                 {profile.officeCity} {profile.officeDistrict}
               </span>
-            )}
+            ) : profile.officeAddress ? (
+              <span className="flex items-center gap-1">
+                <MapPin size={11} />
+                {profile.officeAddress}
+              </span>
+            ) : null}
             {profile.yearsOfExperience != null && (
               <span className="flex items-center gap-1">
                 <Briefcase size={11} />
                 경력 {profile.yearsOfExperience}년
+              </span>
+            )}
+            {profile.operatingHours && (
+              <span className="flex items-center gap-1">
+                <Clock size={11} />
+                {profile.operatingHours}
               </span>
             )}
             {portfolios.length > 0 && (
