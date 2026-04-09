@@ -80,7 +80,7 @@ export class PortfolioService {
         const portfolioValues: any = {
           workerProfileId,
           title,
-          content,
+          content: content ?? '',
           costVisibility: costVisibility || 'PRIVATE',
         };
 
@@ -189,7 +189,7 @@ export class PortfolioService {
           { error: errorMessage, stack: errorStack },
           '포트폴리오 생성 실패',
         );
-        throw error;
+        throw new Error('포트폴리오 저장 중 오류가 발생했습니다');
       }
     });
   }

@@ -14,7 +14,9 @@ import {
 import {
   uploadFile,
   createPortfolio,
+  updatePortfolio,
   type CreatePortfolioMediaPayload,
+  type PublicProfilePortfolio,
 } from "@/lib/api";
 
 // ── 자재 카테고리 ──────────────────────────────────────────────────────────────
@@ -70,27 +72,66 @@ interface Props {
   workerProfileId: string;
   onClose: () => void;
   onSuccess: () => void;
+  /** 편집 모드: 기존 포트폴리오 ID */
+  portfolioId?: string;
+  /** 편집 모드: 초기값 */
+  initialData?: PublicProfilePortfolio;
 }
 
 export function PortfolioAddModal({
   workerProfileId,
   onClose,
   onSuccess,
+  portfolioId,
+  initialData,
 }: Props) {
+  const isEditMode = !!portfolioId && !!initialData;
+
+  // 편집 모드 초기 이미지: 기존 미디어를 UploadedImage 형태로 변환
+  const buildInitialImages = (): UploadedImage[] => {
+    if (!initialData) return [];
+    return initialData.media
+      .filter((m) => m.mediaType === "IMAGE")
+      .map((m) => ({
+        file: new File([], m.mediaUrl.split("/").pop() ?? "image"),
+        previewUrl: m.mediaUrl,
+        uploadedUrl: m.mediaUrl,
+        uploading: false,
+        error: null,
+        imageType:
+          (m.imageType as "BEFORE" | "AFTER" | "DETAIL" | null) ?? null,
+      }));
+  };
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [images, setImages] = useState<UploadedImage[]>([]);
-  const [title, setTitle] = useState("");
+  const [images, setImages] = useState<UploadedImage[]>(buildInitialImages);
+  const [title, setTitle] = useState(initialData?.title ?? "");
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(initialData?.content ?? "");
   const [materials, setMaterials] = useState<Material[]>([]);
   const [materialCat, setMaterialCat] = useState("");
   const [materialName, setMaterialName] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [difficulty, setDifficulty] = useState<"EASY" | "MEDIUM" | "HARD" | "">(
-    "",
+  const [startDate, setStartDate] = useState(
+    initialData?.startDate
+      ? new Date(initialData.startDate).toISOString().split("T")[0]
+      : "",
   );
-  const [costRange, setCostRange] = useState<number>(-1);
+  const [endDate, setEndDate] = useState(
+    initialData?.endDate
+      ? new Date(initialData.endDate).toISOString().split("T")[0]
+      : "",
+  );
+  const [difficulty, setDifficulty] = useState<"EASY" | "MEDIUM" | "HARD" | "">(
+    (initialData?.difficulty as "EASY" | "MEDIUM" | "HARD" | undefined) ?? "",
+  );
+  const [costRange, setCostRange] = useState<number>(() => {
+    if (!initialData?.estimatedCost) return -1;
+    const costInManwon = initialData.estimatedCost / 10000;
+    const idx = COST_OPTIONS.findIndex(
+      (o) => costInManwon >= o.min && costInManwon <= o.max,
+    );
+    return idx >= 0 ? idx : -1;
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -210,19 +251,34 @@ export function PortfolioAddModal({
 
       const cost = costRange >= 0 ? COST_OPTIONS[costRange] : null;
 
-      await createPortfolio({
-        workerProfileId,
-        title: title.trim(),
-        content: description.trim() || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-        difficulty: difficulty || undefined,
-        estimatedCost: cost?.min ? cost.min * 10000 : undefined,
-        actualCost:
-          cost?.max && cost.max < 99999 ? cost.max * 10000 : undefined,
-        costVisibility: cost ? "PUBLIC" : "PRIVATE",
-        media,
-      });
+      if (isEditMode) {
+        await updatePortfolio(portfolioId!, {
+          title: title.trim(),
+          content: description.trim() || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          difficulty: difficulty || undefined,
+          estimatedCost: cost?.min ? cost.min * 10000 : undefined,
+          actualCost:
+            cost?.max && cost.max < 99999 ? cost.max * 10000 : undefined,
+          costVisibility: cost ? "PUBLIC" : "PRIVATE",
+          media,
+        });
+      } else {
+        await createPortfolio({
+          workerProfileId,
+          title: title.trim(),
+          content: description.trim() || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          difficulty: difficulty || undefined,
+          estimatedCost: cost?.min ? cost.min * 10000 : undefined,
+          actualCost:
+            cost?.max && cost.max < 99999 ? cost.max * 10000 : undefined,
+          costVisibility: cost ? "PUBLIC" : "PRIVATE",
+          media,
+        });
+      }
 
       onSuccess();
     } catch (err: unknown) {
@@ -276,7 +332,7 @@ export function PortfolioAddModal({
               )}
               <div>
                 <h2 className="text-sm font-bold text-foreground">
-                  포트폴리오 추가
+                  {isEditMode ? "포트폴리오 편집" : "포트폴리오 추가"}
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   {step === 1 && "사진 선택"}
@@ -738,7 +794,7 @@ export function PortfolioAddModal({
                 ) : (
                   <>
                     <CheckCircle2 size={15} />
-                    포트폴리오 저장
+                    {isEditMode ? "수정 저장" : "포트폴리오 저장"}
                   </>
                 )}
               </button>
