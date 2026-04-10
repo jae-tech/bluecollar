@@ -224,7 +224,7 @@ export default function LoginPage() {
             아직 계정이 없으신가요?{" "}
             <button
               type="button"
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/?signup=1")}
               className="text-primary font-semibold hover:underline"
             >
               회원가입

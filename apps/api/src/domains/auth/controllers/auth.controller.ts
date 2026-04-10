@@ -362,6 +362,7 @@ export class AuthController {
     // 쿠키 삭제
     res.clearCookie('accessToken', { path: '/' });
     res.clearCookie('refreshToken', { path: '/' });
+    res.clearCookie('authState', { path: '/' });
 
     return res
       .status(HttpStatus.OK)
@@ -482,6 +483,15 @@ export class AuthController {
       path: '/',
       domain: isProduction ? '.bluecollar.cv' : undefined,
     });
+    // JS에서 읽을 수 있는 로그인 상태 표시 쿠키 (httpOnly 아님)
+    res.setCookie('authState', '1', {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // refreshToken과 동일 수명
+      path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
+    });
 
     return res.status(HttpStatus.OK).send({
       user: {
@@ -587,6 +597,15 @@ export class AuthController {
       secure: isProduction,
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60, // 30일
+      path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
+    });
+    // JS에서 읽을 수 있는 로그인 상태 표시 쿠키 (httpOnly 아님)
+    res.setCookie('authState', '1', {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
       path: '/',
       domain: isProduction ? '.bluecollar.cv' : undefined,
     });
@@ -699,6 +718,15 @@ export class AuthController {
       path: '/',
       domain: isProduction ? '.bluecollar.cv' : undefined,
     });
+    // JS에서 읽을 수 있는 로그인 상태 표시 쿠키 (httpOnly 아님)
+    res.setCookie('authState', '1', {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
+    });
 
     // 기존 워커(프로필 있음) → 대시보드, 신규 워커 → slug 설정 페이지
     const APP_URL = process.env.APP_URL || 'http://localhost:3000';
@@ -769,6 +797,15 @@ export class AuthController {
     });
     res.setCookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+      domain: isProduction ? '.bluecollar.cv' : undefined,
+    });
+    // JS에서 읽을 수 있는 로그인 상태 표시 쿠키 (httpOnly 아님)
+    res.setCookie('authState', '1', {
+      httpOnly: false,
       secure: isProduction,
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, LogOut, User } from "lucide-react";
-import { getMe, logout, type AuthUser } from "@/lib/api";
+import { logout } from "@/lib/api";
 
 interface NavbarProps {
   onSignupClick: () => void;
@@ -11,19 +11,22 @@ interface NavbarProps {
 
 export function Navbar({ onSignupClick }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    getMe()
-      .then(setUser)
-      .catch(() => setUser(null));
+    // accessToken은 httpOnly라 JS에서 읽을 수 없으므로
+    // 로그인 시 서버가 심는 non-httpOnly authState 쿠키로 상태 판단
+    const isLoggedIn = document.cookie
+      .split(";")
+      .some((c) => c.trim().startsWith("authState="));
+    setLoggedIn(isLoggedIn);
   }, []);
 
   const handleLogout = async () => {
     await logout();
-    setUser(null);
+    setLoggedIn(false);
     setUserMenuOpen(false);
     router.push("/");
     router.refresh();
@@ -63,7 +66,7 @@ export function Navbar({ onSignupClick }: NavbarProps) {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
-          {user ? (
+          {loggedIn ? (
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((v) => !v)}
@@ -146,7 +149,7 @@ export function Navbar({ onSignupClick }: NavbarProps) {
             서비스 소개
           </a>
           <div className="flex items-center gap-3 pt-2 border-t border-border">
-            {user ? (
+            {loggedIn ? (
               <>
                 <button
                   onClick={() => {
