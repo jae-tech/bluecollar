@@ -68,6 +68,30 @@ export const imageTypeEnum = pgEnum("image_type", [
 export const difficultyEnum = pgEnum("difficulty", ["EASY", "MEDIUM", "HARD"]);
 
 /**
+ * 방 유형 (포트폴리오 공간 분류)
+ * - LIVING: 거실
+ * - BATHROOM: 욕실
+ * - KITCHEN: 주방
+ * - BEDROOM: 침실
+ * - BALCONY: 발코니/베란다
+ * - ENTRANCE: 현관
+ * - UTILITY: 다용도실
+ * - STUDY: 서재/작업실
+ * - OTHER: 기타
+ */
+export const roomTypeEnum = pgEnum("room_type", [
+  "LIVING",
+  "BATHROOM",
+  "KITCHEN",
+  "BEDROOM",
+  "BALCONY",
+  "ENTRANCE",
+  "UTILITY",
+  "STUDY",
+  "OTHER",
+]);
+
+/**
  * 비용 공개 여부
  * - PUBLIC: 공개 (누구나 볼 수 있음)
  * - PRIVATE: 비공개 (워커만 볼 수 있음)
@@ -442,6 +466,41 @@ export const manualReviews = pgTable("manual_reviews", {
 // ─────────────────────────────────────────────────────
 
 /**
+ * materials 테이블
+ *
+ * 자재 라이브러리 — 자유텍스트 태그를 정규화된 자재 ID로 연결합니다.
+ * 브랜드 협업, 단가 통계, 검색 정확도 향상의 기반 데이터입니다.
+ *
+ * 시드 데이터: 타일/바닥재/페인트/도배 등 업계 표준 자재명 ~50개
+ * slug: 한국어 이름 기반으로 수동 지정 (충돌 방지)
+ */
+export const materials = pgTable(
+  "materials",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+
+    // ▪️ 자재 정보
+    name: text("name").notNull(), // 자재명 (예: "포세린 타일", "강화마루")
+    category: text("category").notNull(), // 카테고리 (예: "타일", "바닥재", "페인트")
+    brandName: text("brand_name"), // 브랜드명 (선택, 예: "LG하우시스", "KCC")
+    slug: varchar("slug", { length: 100 }).notNull().unique(), // URL-safe 식별자
+
+    // ▪️ 상태
+    isActive: boolean("is_active").default(true).notNull(), // 비활성화 시 검색에서 제외
+
+    // ▪️ 타임스탬프
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    // 카테고리별 자재 조회 인덱스
+    categoryIdx: index("idx_materials_category").on(table.category),
+    // 활성 자재 조회 인덱스
+    activeIdx: index("idx_materials_active").on(table.isActive),
+  }),
+);
+
+/**
  * buildings 테이블
  *
  * 포트폴리오의 시공 사례가 이루어진 건물 정보를 저장합니다.
@@ -531,6 +590,40 @@ export const portfolios = pgTable(
 );
 
 /**
+ * portfolioRooms 테이블
+ *
+ * 포트폴리오의 공간(방) 분류를 저장합니다.
+ * 사진/태그를 특정 방에 연결하여 "욕실만 보기" 같은 필터를 가능하게 합니다.
+ *
+ * 예: 욕실 리모델링 포트폴리오에 "욕실 1", "욕실 2" 두 개의 방 등록 가능
+ * 삭제 시: portfolioMedia.roomId, portfolioTags.roomId → SET NULL (미디어/태그는 보존)
+ */
+export const portfolioRooms = pgTable(
+  "portfolio_rooms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    portfolioId: uuid("portfolio_id")
+      .references(() => portfolios.id, { onDelete: "cascade" })
+      .notNull(),
+
+    // ▪️ 방 정보
+    roomType: roomTypeEnum("room_type").notNull(), // LIVING, BATHROOM, KITCHEN 등
+    roomLabel: varchar("room_label", { length: 100 }), // 사용자 정의 레이블 (예: "욕실 1", "안방")
+    displayOrder: integer("display_order").notNull().default(0), // 정렬 순서
+
+    // ▪️ 타임스탬프
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    // 포트폴리오별 방 목록 조회 인덱스
+    portfolioOrderIdx: index("idx_portfolio_rooms_portfolio_order").on(
+      table.portfolioId,
+      table.displayOrder,
+    ),
+  }),
+);
+
+/**
  * portfolioDetails 테이블
  *
  * 포트폴리오의 추가 세부 정보를 저장합니다.
@@ -551,13 +644,18 @@ export const portfolioDetails = pgTable("portfolio_details", {
   // ▪️ 보증 기간
   warrantyMonths: integer("warranty_months"), // A/S 보증 기간 (개월, 최대 120)
 
+  // ▪️ 건물 조건 (검색 필터용)
+  buildingAge: integer("building_age"), // 건물 연식 (경과 연도, 예: 15 = 15년 된 건물)
+  bathroomCount: integer("bathroom_count"), // 욕실 수
+  bedroomCount: integer("bedroom_count"), // 침실 수
+
   // ▪️ 비용 및 기간 (레거시 — 기존 데이터 보존, 신규 폼에서는 미사용)
   budget: text("budget"), // "5,000만원대" (텍스트로 유연성 제공)
   duration: text("duration"), // "3개월" (텍스트로 유연성 제공)
 
   // ▪️ 상세 내용 (레거시 — constructionScope 컬럼으로 대체)
   workDescription: text("work_description"), // 상세 작업 내용
-  materials: text("materials"), // 사용된 자재 (쉼표 구분: "타일, 대리석, 콘크리트")
+  materials: text("materials"), // 사용된 자재 (레거시 자유텍스트. 신규는 portfolioTags.materialId 사용)
 
   // ▪️ 타임스탬프
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -584,6 +682,15 @@ export const portfolioMedia = pgTable(
 
     // ▪️ 이미지 타입 (이미지인 경우만)
     imageType: imageTypeEnum("image_type"), // BEFORE, AFTER, DETAIL, BLUEPRINT
+
+    // ▪️ 방 연결 (선택 — 특정 방에 사진을 귀속시킬 때 사용)
+    // 방 삭제 시 SET NULL (미디어는 보존, 방 귀속만 해제)
+    roomId: uuid("room_id").references(() => portfolioRooms.id, {
+      onDelete: "set null",
+    }),
+
+    // ▪️ 촬영 일시 (EXIF 메타데이터에서 추출, Phase B에서 자동 추출)
+    takenAt: timestamp("taken_at"), // 사진 촬영 시각 (시공 기간 자동 추론에 사용)
 
     // ▪️ 비디오 추가 정보 (비디오인 경우만)
     videoDuration: integer("video_duration"), // 비디오 길이(초)
@@ -619,8 +726,20 @@ export const portfolioTags = pgTable("portfolio_tags", {
     .references(() => portfolios.id, { onDelete: "cascade" })
     .notNull(),
 
-  tagName: text("tag_name").notNull(), // 기술/자재/도구명
+  tagName: text("tag_name").notNull(), // 기술/자재/도구명 (자유텍스트 또는 materials.name과 동기화)
   displayOrder: integer("display_order").notNull(), // 정렬 순서
+
+  // ▪️ 자재 라이브러리 연결 (선택 — 정규화된 자재 ID)
+  // materialId가 있으면 구조화된 자재, 없으면 자유텍스트 태그
+  materialId: uuid("material_id").references(() => materials.id, {
+    onDelete: "set null",
+  }),
+
+  // ▪️ 방 연결 (선택 — 공간별 태그 귀속)
+  // 방 삭제 시 SET NULL
+  roomId: uuid("room_id").references(() => portfolioRooms.id, {
+    onDelete: "set null",
+  }),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

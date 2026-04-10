@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { masterCodes, workerFields, workerAreas } from "../schema";
+import { masterCodes, workerFields, workerAreas, materials } from "../schema";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -1038,6 +1038,128 @@ async function seed() {
     console.log(`  - EXP: ${expCount}`);
     console.log(`  - BIZ: ${bizCount}`);
     console.log(`  - Total: ${result.length}\n`);
+
+    // ─────────────────────────────────────────────────
+    // 자재 라이브러리 시드 데이터
+    // ─────────────────────────────────────────────────
+    const materialsSeedData = [
+      // --- 타일 (20개) ---
+      { name: "포세린 타일", category: "타일", slug: "porcelain-tile" },
+      { name: "세라믹 타일", category: "타일", slug: "ceramic-tile" },
+      { name: "자연석 타일", category: "타일", slug: "natural-stone-tile" },
+      { name: "대리석 타일", category: "타일", slug: "marble-tile" },
+      { name: "모자이크 타일", category: "타일", slug: "mosaic-tile" },
+      { name: "테라코타 타일", category: "타일", slug: "terracotta-tile" },
+      { name: "슬레이트 타일", category: "타일", slug: "slate-tile" },
+      { name: "우드 타일", category: "타일", slug: "wood-tile" },
+      { name: "메탈 타일", category: "타일", slug: "metal-tile" },
+      { name: "유리 타일", category: "타일", slug: "glass-tile" },
+      { name: "대형 포세린 (60×120)", category: "타일", slug: "large-porcelain-60x120" },
+      { name: "헤링본 타일", category: "타일", slug: "herringbone-tile" },
+      { name: "육각 타일", category: "타일", slug: "hexagon-tile" },
+      { name: "줄눈 타일", category: "타일", slug: "grout-tile" },
+      { name: "욕실 바닥 논슬립 타일", category: "타일", slug: "non-slip-floor-tile" },
+      { name: "외벽 타일", category: "타일", slug: "exterior-wall-tile" },
+      { name: "현관 타일", category: "타일", slug: "entrance-tile" },
+      { name: "수영장 타일", category: "타일", slug: "pool-tile" },
+      { name: "인테리어 벽 타일", category: "타일", slug: "interior-wall-tile" },
+      { name: "주방 앞치마 타일", category: "타일", slug: "kitchen-backsplash-tile" },
+
+      // --- 바닥재 (15개) ---
+      { name: "강화마루", category: "바닥재", slug: "laminate-flooring" },
+      { name: "합판마루", category: "바닥재", slug: "plywood-flooring" },
+      { name: "원목마루", category: "바닥재", slug: "solid-wood-flooring" },
+      { name: "PVC 장판", category: "바닥재", slug: "pvc-vinyl-floor" },
+      { name: "LVT 바닥재", category: "바닥재", slug: "lvt-flooring" },
+      { name: "카펫", category: "바닥재", slug: "carpet" },
+      { name: "코르크 바닥재", category: "바닥재", slug: "cork-flooring" },
+      { name: "대나무 마루", category: "바닥재", slug: "bamboo-flooring" },
+      { name: "에폭시 바닥재", category: "바닥재", slug: "epoxy-flooring" },
+      { name: "고무 바닥재", category: "바닥재", slug: "rubber-flooring" },
+      { name: "자기질 바닥 타일", category: "바닥재", slug: "porcelain-floor-tile" },
+      { name: "온돌 마루", category: "바닥재", slug: "ondol-flooring" },
+      { name: "방수 바닥재", category: "바닥재", slug: "waterproof-flooring" },
+      { name: "SPC 바닥재", category: "바닥재", slug: "spc-flooring" },
+      { name: "셀프레벨링 바닥재", category: "바닥재", slug: "self-leveling-floor" },
+
+      // --- 페인트 (10개) ---
+      { name: "수성 페인트", category: "페인트", slug: "water-based-paint" },
+      { name: "유성 페인트", category: "페인트", slug: "oil-based-paint" },
+      { name: "에나멜 페인트", category: "페인트", slug: "enamel-paint" },
+      { name: "탄성 방수 페인트", category: "페인트", slug: "elastic-waterproof-paint" },
+      { name: "실리콘 페인트", category: "페인트", slug: "silicone-paint" },
+      { name: "에폭시 페인트", category: "페인트", slug: "epoxy-paint" },
+      { name: "천장 페인트", category: "페인트", slug: "ceiling-paint" },
+      { name: "외벽 페인트", category: "페인트", slug: "exterior-paint" },
+      { name: "방청 페인트", category: "페인트", slug: "anti-rust-paint" },
+      { name: "내화 페인트", category: "페인트", slug: "fire-resistant-paint" },
+
+      // --- 도배 (10개) ---
+      { name: "합지 벽지", category: "도배", slug: "paper-wallpaper" },
+      { name: "실크 벽지", category: "도배", slug: "silk-wallpaper" },
+      { name: "PVC 벽지", category: "도배", slug: "pvc-wallpaper" },
+      { name: "패브릭 벽지", category: "도배", slug: "fabric-wallpaper" },
+      { name: "천연 소재 벽지", category: "도배", slug: "natural-wallpaper" },
+      { name: "유리섬유 벽지", category: "도배", slug: "fiberglass-wallpaper" },
+      { name: "방음 벽지", category: "도배", slug: "soundproof-wallpaper" },
+      { name: "방습 벽지", category: "도배", slug: "moisture-resistant-wallpaper" },
+      { name: "단열 벽지", category: "도배", slug: "insulating-wallpaper" },
+      { name: "폼 벽지", category: "도배", slug: "foam-wallpaper" },
+
+      // --- 위생도기 (10개) ---
+      { name: "양변기", category: "위생도기", slug: "toilet" },
+      { name: "비데", category: "위생도기", slug: "bidet" },
+      { name: "세면대", category: "위생도기", slug: "washbasin" },
+      { name: "욕조", category: "위생도기", slug: "bathtub" },
+      { name: "샤워부스", category: "위생도기", slug: "shower-booth" },
+      { name: "파우더룸 세면대", category: "위생도기", slug: "powder-room-sink" },
+      { name: "소변기", category: "위생도기", slug: "urinal" },
+      { name: "수전 세트", category: "위생도기", slug: "faucet-set" },
+      { name: "욕실 악세서리 세트", category: "위생도기", slug: "bathroom-accessory-set" },
+      { name: "거울 수납장", category: "위생도기", slug: "mirror-cabinet" },
+
+      // --- 창호 (8개) ---
+      { name: "PVC 창호", category: "창호", slug: "pvc-window" },
+      { name: "알루미늄 창호", category: "창호", slug: "aluminum-window" },
+      { name: "시스템 창호", category: "창호", slug: "system-window" },
+      { name: "이중창", category: "창호", slug: "double-window" },
+      { name: "발코니 샷시", category: "창호", slug: "balcony-sash" },
+      { name: "단열 유리", category: "창호", slug: "insulated-glass" },
+      { name: "로이 유리", category: "창호", slug: "low-e-glass" },
+      { name: "방범창", category: "창호", slug: "security-window" },
+
+      // --- 기타 자재 (7개) ---
+      { name: "줄눈 시공제", category: "줄눈/접착제", slug: "grout-compound" },
+      { name: "타일 접착제", category: "줄눈/접착제", slug: "tile-adhesive" },
+      { name: "방수 시트", category: "기타", slug: "waterproof-sheet" },
+      { name: "단열재 (압출법 보온판)", category: "기타", slug: "xps-insulation" },
+      { name: "석고보드", category: "기타", slug: "gypsum-board" },
+      { name: "OSB 합판", category: "기타", slug: "osb-panel" },
+      { name: "몰딩 (MDF)", category: "기타", slug: "mdf-molding" },
+    ];
+
+    // materials 테이블 시드 (ON CONFLICT DO NOTHING — 재실행 안전)
+    await db
+      .insert(materials)
+      .values(materialsSeedData)
+      .onConflictDoNothing()
+      .execute();
+    console.log(`✓ Inserted ${materialsSeedData.length} materials (upsert-safe)`);
+
+    const materialsResult = await db.select().from(materials).execute();
+    const byCategory = materialsResult.reduce(
+      (acc, m) => {
+        acc[m.category] = (acc[m.category] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    console.log("\n📦 Seeded Materials Summary:");
+    Object.entries(byCategory).forEach(([cat, count]) => {
+      console.log(`  - ${cat}: ${count}`);
+    });
+    console.log(`  - Total: ${materialsResult.length}\n`);
 
     console.log("✅ Seed completed successfully!");
   } catch (error) {
