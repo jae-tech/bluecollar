@@ -99,7 +99,10 @@ describe('PublicService', () => {
           ]),
         ) // areas
         .mockReturnValueOnce(makeSelectChain([mockPortfolio])) // 포트폴리오
-        .mockReturnValueOnce(makeSelectChain(mockMedia)); // 미디어
+        // Promise.all(media, details, tags)
+        .mockReturnValueOnce(makeSelectChain(mockMedia)) // 미디어
+        .mockReturnValueOnce(makeSelectChain([])) // portfolioDetails
+        .mockReturnValueOnce(makeSelectChain([])); // portfolioTags
 
       const result = await publicService.getPublicProfile('kim-tile');
 
@@ -158,7 +161,10 @@ describe('PublicService', () => {
         .mockReturnValueOnce(makeSelectChain([]))
         .mockReturnValueOnce(makeSelectChain([]))
         .mockReturnValueOnce(makeSelectChain([mockPortfolio]))
-        .mockReturnValueOnce(makeSelectChain(mockMedia));
+        // Promise.all(media, details, tags)
+        .mockReturnValueOnce(makeSelectChain(mockMedia))
+        .mockReturnValueOnce(makeSelectChain([]))
+        .mockReturnValueOnce(makeSelectChain([]));
 
       const result = await publicService.getPublicProfile('kim-tile');
 

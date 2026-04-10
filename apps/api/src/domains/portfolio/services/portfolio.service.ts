@@ -13,6 +13,8 @@ import {
   portfolioMedia,
   portfolioDetails,
   portfolioTags,
+  portfolioRooms,
+  materials,
   workerProfiles,
 } from '@repo/database';
 import { CreatePortfolioDto } from '../dtos/create-portfolio.dto';
@@ -33,12 +35,45 @@ export class PortfolioService {
   }
 
   /**
+   * materialId 배열에 대한 사전 유효성 검증
+   *
+   * 존재하지 않는 materialId가 포함되어 있으면 BadRequestException을 던진다.
+   * FK 에러를 잡는 것보다 명확한 에러 메시지 제공이 가능하다.
+   *
+   * @param tx Drizzle 트랜잭션 컨텍스트
+   * @param materialIds 검증할 materialId 배열
+   */
+  private async validateMaterialIds(
+    tx: PostgresJsDatabase<typeof schema>,
+    materialIds: string[],
+  ): Promise<void> {
+    if (materialIds.length === 0) return;
+
+    const found = await tx
+      .select({ id: materials.id })
+      .from(materials)
+      .where(inArray(materials.id, materialIds));
+
+    if (found.length !== materialIds.length) {
+      const foundIds = new Set(found.map((r) => r.id));
+      const missing = materialIds.filter((id) => !foundIds.has(id));
+      throw new BadRequestException(
+        `존재하지 않는 자재 ID입니다: ${missing.join(', ')}`,
+      );
+    }
+  }
+
+  /**
    * 포트폴리오 생성
    *
    * 다음 단계를 트랜잭션으로 처리:
    * 1. 워커 프로필 존재 여부 확인
-   * 2. portfolios 테이블에 포트폴리오 생성
-   * 3. portfolio_media 테이블에 미디어 배열 저장 (displayOrder 자동 부여)
+   * 2. materialId 유효성 사전 검증
+   * 3. portfolios 테이블에 포트폴리오 생성
+   * 4. portfolioDetails INSERT (buildingAge, bathroomCount, bedroomCount 포함)
+   * 5. portfolioRooms INSERT
+   * 6. portfolioTags INSERT (객체 배열, materialId/roomId 바인딩)
+   * 7. portfolioMedia INSERT (roomId 바인딩 포함)
    *
    * @param createPortfolioDto 포트폴리오 생성 요청 데이터
    * @returns 생성된 포트폴리오 및 미디어 정보
@@ -53,6 +88,7 @@ export class PortfolioService {
       spaceType,
       constructionScope,
       details,
+      rooms,
       tags,
       startDate,
       endDate,
@@ -85,10 +121,17 @@ export class PortfolioService {
           throw new BadRequestException('유효하지 않은 워커 프로필 ID입니다');
         }
 
-        // Step 2: portfolios 테이블에 포트폴리오 생성
+        // Step 2: materialId 유효성 사전 검증 (존재 여부 SELECT로 확인)
+        if (tags && tags.length > 0) {
+          const materialIds = tags
+            .map((t) => t.materialId)
+            .filter((id): id is string => !!id);
+          await this.validateMaterialIds(tx, materialIds);
+        }
+
+        // Step 3: portfolios 테이블에 포트폴리오 생성
         this.logger.debug({ title }, '포트폴리오 레코드 생성 중');
 
-        // 필수 필드만 기본으로 설정, 선택사항은 조건부로 추가
         const portfolioValues: any = {
           workerProfileId,
           title,
@@ -96,29 +139,17 @@ export class PortfolioService {
           costVisibility: costVisibility || 'PRIVATE',
         };
 
-        // 선택사항 필드는 값이 있을 때만 추가
         if (location) portfolioValues.location = location;
         if (spaceType) portfolioValues.spaceType = spaceType;
         if (constructionScope)
           portfolioValues.constructionScope = constructionScope;
-        if (startDate) {
-          portfolioValues.startDate = new Date(startDate);
-        }
-        if (endDate) {
-          portfolioValues.endDate = new Date(endDate);
-        }
-        if (difficulty) {
-          portfolioValues.difficulty = difficulty;
-        }
-        if (estimatedCost) {
+        if (startDate) portfolioValues.startDate = new Date(startDate);
+        if (endDate) portfolioValues.endDate = new Date(endDate);
+        if (difficulty) portfolioValues.difficulty = difficulty;
+        if (estimatedCost)
           portfolioValues.estimatedCost = estimatedCost.toString();
-        }
-        if (actualCost) {
-          portfolioValues.actualCost = actualCost.toString();
-        }
-        if (buildingId) {
-          portfolioValues.buildingId = buildingId;
-        }
+        if (actualCost) portfolioValues.actualCost = actualCost.toString();
+        if (buildingId) portfolioValues.buildingId = buildingId;
 
         const [newPortfolio] = await tx
           .insert(portfolios)
@@ -128,7 +159,7 @@ export class PortfolioService {
         const portfolioId = newPortfolio.id;
         this.logger.info({ portfolioId, title }, '포트폴리오 생성 완료');
 
-        // Step 3: portfolioDetails INSERT (area는 numeric → .toString() 변환 필수)
+        // Step 4: portfolioDetails INSERT
         if (details) {
           await tx.insert(portfolioDetails).values({
             portfolioId,
@@ -136,22 +167,40 @@ export class PortfolioService {
             areaUnit: details.areaUnit,
             roomType: details.roomType,
             warrantyMonths: details.warrantyMonths,
+            buildingAge: details.buildingAge,
+            bathroomCount: details.bathroomCount,
+            bedroomCount: details.bedroomCount,
           });
         }
 
-        // Step 4: portfolioTags INSERT (displayOrder는 배열 인덱스 기반)
+        // Step 5: portfolioRooms INSERT — 각 방에 displayOrder 자동 부여
+        // 생성된 room ID 목록은 태그/미디어의 roomId 클라이언트 바인딩에 사용됨
+        // (클라이언트가 요청 시 roomId를 직접 전달하는 구조이므로 여기서는 단순 저장)
+        if (rooms && rooms.length > 0) {
+          await tx.insert(portfolioRooms).values(
+            rooms.map((room, index) => ({
+              portfolioId,
+              roomType: room.roomType,
+              roomLabel: room.roomLabel ?? null,
+              displayOrder: room.displayOrder ?? index,
+            })),
+          );
+        }
+
+        // Step 6: portfolioTags INSERT (객체 배열 — tagName + materialId? + roomId?)
         if (tags && tags.length > 0) {
           await tx.insert(portfolioTags).values(
-            tags.map((tagName, index) => ({
+            tags.map((tag, index) => ({
               portfolioId,
-              tagName,
+              tagName: tag.tagName,
+              materialId: tag.materialId ?? null,
+              roomId: tag.roomId ?? null,
               displayOrder: index + 1,
             })),
           );
         }
 
-        // Step 5: portfolio_media 테이블에 미디어 배열 저장
-        // displayOrder는 배열 순서를 1부터 시작하여 자동 부여
+        // Step 7: portfolioMedia INSERT (roomId 바인딩 포함)
         if (media && media.length > 0) {
           this.logger.debug(
             { count: media.length },
@@ -163,23 +212,17 @@ export class PortfolioService {
               portfolioId,
               mediaUrl: mediaItem.mediaUrl,
               mediaType: mediaItem.mediaType,
-              // displayOrder는 배열의 인덱스를 기반으로 1부터 시작
               displayOrder: index + 1,
             };
 
-            // 선택사항 필드는 조건부로 추가
-            if (mediaItem.imageType) {
-              record.imageType = mediaItem.imageType;
-            }
-            if (mediaItem.videoDuration) {
+            if (mediaItem.imageType) record.imageType = mediaItem.imageType;
+            if (mediaItem.videoDuration)
               record.videoDuration = mediaItem.videoDuration;
-            }
-            if (mediaItem.thumbnailUrl) {
+            if (mediaItem.thumbnailUrl)
               record.thumbnailUrl = mediaItem.thumbnailUrl;
-            }
-            if (mediaItem.description) {
+            if (mediaItem.description)
               record.description = mediaItem.description;
-            }
+            if (mediaItem.roomId) record.roomId = mediaItem.roomId;
 
             return record;
           });
@@ -192,25 +235,30 @@ export class PortfolioService {
           );
         }
 
-        // 생성된 포트폴리오 반환 (미디어 정보 포함)
-        const savedMedia = await tx
-          .select()
-          .from(portfolioMedia)
-          .where(eq(portfolioMedia.portfolioId, portfolioId));
-
-        this.logger.info({ portfolioId }, '포트폴리오 생성 프로세스 완료');
-
-        // 저장된 details/tags 조회
-        const savedDetails = await tx
-          .select()
-          .from(portfolioDetails)
-          .where(eq(portfolioDetails.portfolioId, portfolioId))
-          .limit(1);
-        const savedTags = await tx
-          .select()
-          .from(portfolioTags)
-          .where(eq(portfolioTags.portfolioId, portfolioId))
-          .orderBy((t) => t.displayOrder);
+        // 생성된 데이터 조회 후 반환
+        const [savedMedia, savedDetails, savedTags, savedRooms] =
+          await Promise.all([
+            tx
+              .select()
+              .from(portfolioMedia)
+              .where(eq(portfolioMedia.portfolioId, portfolioId))
+              .orderBy((t) => t.displayOrder),
+            tx
+              .select()
+              .from(portfolioDetails)
+              .where(eq(portfolioDetails.portfolioId, portfolioId))
+              .limit(1),
+            tx
+              .select()
+              .from(portfolioTags)
+              .where(eq(portfolioTags.portfolioId, portfolioId))
+              .orderBy((t) => t.displayOrder),
+            tx
+              .select()
+              .from(portfolioRooms)
+              .where(eq(portfolioRooms.portfolioId, portfolioId))
+              .orderBy((t) => t.displayOrder),
+          ]);
 
         this.logger.info({ portfolioId }, '포트폴리오 생성 프로세스 완료');
 
@@ -227,7 +275,12 @@ export class PortfolioService {
           difficulty: newPortfolio.difficulty,
           costVisibility: newPortfolio.costVisibility,
           details: savedDetails.length > 0 ? savedDetails[0] : null,
-          tags: savedTags.map((t) => t.tagName),
+          rooms: savedRooms,
+          tags: savedTags.map((t) => ({
+            tagName: t.tagName,
+            materialId: t.materialId,
+            roomId: t.roomId,
+          })),
           media: savedMedia.map((m) => ({
             id: m.id,
             mediaUrl: m.mediaUrl,
@@ -235,12 +288,12 @@ export class PortfolioService {
             imageType: m.imageType,
             displayOrder: m.displayOrder,
             description: m.description,
+            roomId: m.roomId,
           })),
         };
       } catch (error) {
-        // HttpException 서브클래스(BadRequestException 등)는 그대로 전파 (BUG-1)
+        // HttpException 서브클래스(BadRequestException 등)는 그대로 전파
         if (error instanceof HttpException) throw error;
-        // 에러 발생 시 Transaction이 자동으로 rollback됨
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         const errorStack = error instanceof Error ? error.stack : undefined;
@@ -259,7 +312,10 @@ export class PortfolioService {
    * 다음 단계를 트랜잭션으로 처리:
    * 1. 포트폴리오 존재 여부 및 소유권 확인
    * 2. portfolios 테이블의 기본 정보 업데이트
-   * 3. 미디어 제공 시 기존 미디어 삭제 후 재삽입
+   * 3. portfolioDetails UPSERT (buildingAge, bathroomCount, bedroomCount 포함)
+   * 4. portfolioRooms 교체 (제공 시 전체 삭제 후 재삽입)
+   * 5. portfolioTags 교체 (객체 배열)
+   * 6. 미디어 업데이트 (제공 시 기존 미디어 전체 교체, roomId 포함)
    *
    * @param portfolioId 포트폴리오 ID
    * @param workerProfileId 요청자의 워커 프로필 ID (소유권 검증용)
@@ -292,7 +348,15 @@ export class PortfolioService {
         throw new ForbiddenException('자신의 포트폴리오만 수정할 수 있습니다');
       }
 
-      // Step 3: 기본 정보 업데이트 (제공된 필드만)
+      // Step 3: materialId 유효성 사전 검증
+      if (updateDto.tags && updateDto.tags.length > 0) {
+        const materialIds = updateDto.tags
+          .map((t) => t.materialId)
+          .filter((id): id is string => !!id);
+        await this.validateMaterialIds(tx, materialIds);
+      }
+
+      // Step 4: 기본 정보 업데이트 (제공된 필드만)
       const updateValues: Record<string, unknown> = {};
       if (updateDto.title !== undefined) updateValues.title = updateDto.title;
       if (updateDto.content !== undefined)
@@ -326,7 +390,7 @@ export class PortfolioService {
         .where(eq(portfolios.id, portfolioId))
         .returning();
 
-      // Step 4: portfolioDetails UPSERT (UNIQUE constraint 기반)
+      // Step 5: portfolioDetails UPSERT (UNIQUE constraint 기반)
       if (updateDto.details !== undefined) {
         const d = updateDto.details;
         await tx
@@ -337,6 +401,9 @@ export class PortfolioService {
             areaUnit: d.areaUnit,
             roomType: d.roomType,
             warrantyMonths: d.warrantyMonths,
+            buildingAge: d.buildingAge,
+            bathroomCount: d.bathroomCount,
+            bedroomCount: d.bedroomCount,
           })
           .onConflictDoUpdate({
             target: portfolioDetails.portfolioId,
@@ -345,40 +412,60 @@ export class PortfolioService {
               areaUnit: d.areaUnit,
               roomType: d.roomType,
               warrantyMonths: d.warrantyMonths,
+              buildingAge: d.buildingAge,
+              bathroomCount: d.bathroomCount,
+              bedroomCount: d.bedroomCount,
               updatedAt: new Date(),
             },
           });
       }
 
-      // Step 5: tags 교체 (undefined = 변경없음, [] = 전체삭제, [...] = 교체)
+      // Step 6: rooms 교체 (undefined = 변경없음, [] = 전체삭제, [...] = 교체)
+      if (updateDto.rooms !== undefined) {
+        await tx
+          .delete(portfolioRooms)
+          .where(eq(portfolioRooms.portfolioId, portfolioId));
+        if (updateDto.rooms.length > 0) {
+          await tx.insert(portfolioRooms).values(
+            updateDto.rooms.map((room, index) => ({
+              portfolioId,
+              roomType: room.roomType,
+              roomLabel: room.roomLabel ?? null,
+              displayOrder: room.displayOrder ?? index,
+            })),
+          );
+        }
+      }
+
+      // Step 7: tags 교체 (undefined = 변경없음, [] = 전체삭제, [...] = 교체)
       if (updateDto.tags !== undefined) {
         await tx
           .delete(portfolioTags)
           .where(eq(portfolioTags.portfolioId, portfolioId));
         if (updateDto.tags.length > 0) {
           await tx.insert(portfolioTags).values(
-            updateDto.tags.map((tagName, index) => ({
+            updateDto.tags.map((tag, index) => ({
               portfolioId,
-              tagName,
+              tagName: tag.tagName,
+              materialId: tag.materialId ?? null,
+              roomId: tag.roomId ?? null,
               displayOrder: index + 1,
             })),
           );
         }
       }
 
-      // Step 6: 미디어 업데이트 (제공 시 기존 미디어 전체 교체)
+      // Step 8: 미디어 업데이트 (제공 시 기존 미디어 전체 교체)
       if (updateDto.media !== undefined) {
         this.logger.debug(
           { portfolioId, mediaCount: updateDto.media.length },
           '포트폴리오 미디어 교체 중',
         );
 
-        // 기존 미디어 삭제
         await tx
           .delete(portfolioMedia)
           .where(eq(portfolioMedia.portfolioId, portfolioId));
 
-        // 새 미디어 삽입
         const mediaRecords = updateDto.media.map((item, index) => {
           const record: any = {
             portfolioId,
@@ -390,36 +477,49 @@ export class PortfolioService {
           if (item.videoDuration) record.videoDuration = item.videoDuration;
           if (item.thumbnailUrl) record.thumbnailUrl = item.thumbnailUrl;
           if (item.description) record.description = item.description;
+          if (item.roomId) record.roomId = item.roomId;
           return record;
         });
 
         await tx.insert(portfolioMedia).values(mediaRecords);
       }
 
-      // 최종 미디어/details/tags 조회
-      const savedMedia = await tx
-        .select()
-        .from(portfolioMedia)
-        .where(eq(portfolioMedia.portfolioId, portfolioId));
-
-      const savedDetails = await tx
-        .select()
-        .from(portfolioDetails)
-        .where(eq(portfolioDetails.portfolioId, portfolioId))
-        .limit(1);
-
-      const savedTags = await tx
-        .select()
-        .from(portfolioTags)
-        .where(eq(portfolioTags.portfolioId, portfolioId))
-        .orderBy((t) => t.displayOrder);
+      // 최종 데이터 조회
+      const [savedMedia, savedDetails, savedTags, savedRooms] =
+        await Promise.all([
+          tx
+            .select()
+            .from(portfolioMedia)
+            .where(eq(portfolioMedia.portfolioId, portfolioId))
+            .orderBy((t) => t.displayOrder),
+          tx
+            .select()
+            .from(portfolioDetails)
+            .where(eq(portfolioDetails.portfolioId, portfolioId))
+            .limit(1),
+          tx
+            .select()
+            .from(portfolioTags)
+            .where(eq(portfolioTags.portfolioId, portfolioId))
+            .orderBy((t) => t.displayOrder),
+          tx
+            .select()
+            .from(portfolioRooms)
+            .where(eq(portfolioRooms.portfolioId, portfolioId))
+            .orderBy((t) => t.displayOrder),
+        ]);
 
       this.logger.info({ portfolioId }, '포트폴리오 수정 완료');
 
       return {
         ...updated,
         details: savedDetails.length > 0 ? savedDetails[0] : null,
-        tags: savedTags.map((t) => t.tagName),
+        rooms: savedRooms,
+        tags: savedTags.map((t) => ({
+          tagName: t.tagName,
+          materialId: t.materialId,
+          roomId: t.roomId,
+        })),
         media: savedMedia.map((m) => ({
           id: m.id,
           mediaUrl: m.mediaUrl,
@@ -427,6 +527,7 @@ export class PortfolioService {
           imageType: m.imageType,
           displayOrder: m.displayOrder,
           description: m.description,
+          roomId: m.roomId,
         })),
       };
     });
@@ -446,7 +547,6 @@ export class PortfolioService {
   ): Promise<void> {
     this.logger.info({ portfolioId, workerProfileId }, '포트폴리오 삭제 시작');
 
-    // 포트폴리오 존재 여부 및 소유권 확인
     const existing = await this.db
       .select()
       .from(portfolios)
@@ -461,7 +561,7 @@ export class PortfolioService {
       throw new ForbiddenException('자신의 포트폴리오만 삭제할 수 있습니다');
     }
 
-    // cascade 설정으로 portfolioMedia도 함께 삭제됨
+    // cascade 설정으로 portfolioMedia, portfolioTags, portfolioRooms도 함께 삭제됨
     await this.db.delete(portfolios).where(eq(portfolios.id, portfolioId));
 
     this.logger.info({ portfolioId }, '포트폴리오 삭제 완료');
@@ -471,7 +571,7 @@ export class PortfolioService {
    * 포트폴리오 조회 (ID 기반)
    *
    * @param portfolioId 포트폴리오 ID
-   * @returns 포트폴리오 상세 정보 (미디어 포함)
+   * @returns 포트폴리오 상세 정보 (미디어, 공간, 태그 포함)
    */
   async getPortfolioById(portfolioId: string) {
     this.logger.debug({ portfolioId }, '포트폴리오 조회 중');
@@ -489,8 +589,8 @@ export class PortfolioService {
 
     const p = portfolio[0];
 
-    // 미디어, details, tags 조회
-    const [media, detailsList, tagsList] = await Promise.all([
+    // 미디어, details, tags, rooms 한 번에 조회 (병렬 처리)
+    const [media, detailsList, tagsList, roomsList] = await Promise.all([
       this.db
         .select()
         .from(portfolioMedia)
@@ -506,6 +606,11 @@ export class PortfolioService {
         .from(portfolioTags)
         .where(eq(portfolioTags.portfolioId, portfolioId))
         .orderBy((t) => t.displayOrder),
+      this.db
+        .select()
+        .from(portfolioRooms)
+        .where(eq(portfolioRooms.portfolioId, portfolioId))
+        .orderBy((t) => t.displayOrder),
     ]);
 
     return {
@@ -513,16 +618,31 @@ export class PortfolioService {
       // SEC-1: costVisibility === 'PRIVATE'이면 actualCost 마스킹
       actualCost: p.costVisibility === 'PRIVATE' ? null : p.actualCost,
       details: detailsList.length > 0 ? detailsList[0] : null,
-      tags: tagsList.map((t) => t.tagName),
-      media,
+      rooms: roomsList,
+      tags: tagsList.map((t) => ({
+        tagName: t.tagName,
+        materialId: t.materialId,
+        roomId: t.roomId,
+      })),
+      media: media.map((m) => ({
+        id: m.id,
+        mediaUrl: m.mediaUrl,
+        mediaType: m.mediaType,
+        imageType: m.imageType,
+        displayOrder: m.displayOrder,
+        description: m.description,
+        roomId: m.roomId,
+      })),
     };
   }
 
   /**
    * 워커의 모든 포트폴리오 조회
    *
+   * N+1 방지: 미디어와 공간(rooms) 모두 inArray로 배치 로드 후 메모리 그룹핑
+   *
    * @param workerProfileId 워커 프로필 ID
-   * @returns 포트폴리오 배열 (미디어 포함)
+   * @returns 포트폴리오 배열 (미디어, 공간 포함)
    */
   async getPortfoliosByWorker(workerProfileId: string) {
     this.logger.debug({ workerProfileId }, '워커 포트폴리오 목록 조회 중');
@@ -533,19 +653,27 @@ export class PortfolioService {
       .where(eq(portfolios.workerProfileId, workerProfileId))
       .orderBy((t) => t.createdAt);
 
-    // 모든 포트폴리오의 미디어를 한 번에 조회 (N+1 쿼리 방지)
     const portfolioIds = workerPortfolios.map((p) => p.id);
-    let allMedia: any[] = [];
 
-    if (portfolioIds.length > 0) {
-      allMedia = await this.db
+    if (portfolioIds.length === 0) {
+      return [];
+    }
+
+    // 미디어 + 공간(rooms) 배치 로드 (N+1 방지)
+    const [allMedia, allRooms] = await Promise.all([
+      this.db
         .select()
         .from(portfolioMedia)
         .where(inArray(portfolioMedia.portfolioId, portfolioIds))
-        .orderBy((t) => t.displayOrder);
-    }
+        .orderBy((t) => t.displayOrder),
+      this.db
+        .select()
+        .from(portfolioRooms)
+        .where(inArray(portfolioRooms.portfolioId, portfolioIds))
+        .orderBy((t) => t.displayOrder),
+    ]);
 
-    // 메모리에서 포트폴리오별로 미디어 그룹핑
+    // 메모리에서 포트폴리오별로 그룹핑
     const mediaByPortfolio = new Map<string, typeof allMedia>();
     allMedia.forEach((media) => {
       if (!mediaByPortfolio.has(media.portfolioId)) {
@@ -554,16 +682,25 @@ export class PortfolioService {
       mediaByPortfolio.get(media.portfolioId)!.push(media);
     });
 
-    const portfoliosWithMedia = workerPortfolios.map((portfolio) => ({
+    const roomsByPortfolio = new Map<string, typeof allRooms>();
+    allRooms.forEach((room) => {
+      if (!roomsByPortfolio.has(room.portfolioId)) {
+        roomsByPortfolio.set(room.portfolioId, []);
+      }
+      roomsByPortfolio.get(room.portfolioId)!.push(room);
+    });
+
+    const portfoliosWithData = workerPortfolios.map((portfolio) => ({
       ...portfolio,
       media: mediaByPortfolio.get(portfolio.id) || [],
+      rooms: roomsByPortfolio.get(portfolio.id) || [],
     }));
 
     this.logger.info(
-      { workerProfileId, count: portfoliosWithMedia.length },
+      { workerProfileId, count: portfoliosWithData.length },
       '워커 포트폴리오 목록 조회 완료',
     );
 
-    return portfoliosWithMedia;
+    return portfoliosWithData;
   }
 }
