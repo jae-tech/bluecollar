@@ -13,7 +13,9 @@ export const COST_OPTIONS = [
   { label: "500~1000만원", estimatedValue: 7_500_000 },
   { label: "1000~2000만원", estimatedValue: 15_000_000 },
   { label: "2000~3000만원", estimatedValue: 25_000_000 },
-  { label: "3000만원 이상", estimatedValue: 30_000_000 },
+  { label: "3000~5000만원", estimatedValue: 40_000_000 },
+  { label: "5000만원~1억", estimatedValue: 75_000_000 },
+  { label: "1억 이상", estimatedValue: 100_000_000 },
 ] as const;
 
 // ── 자재 카테고리 ──────────────────────────────────────────────────────────────
@@ -35,7 +37,7 @@ export const MATERIAL_CATEGORIES = [
 
 // ── 난이도 옵션 ────────────────────────────────────────────────────────────────
 export const DIFFICULTY_OPTIONS = [
-  { label: "간단", value: "EASY" as const },
-  { label: "보통", value: "MEDIUM" as const },
-  { label: "복잡", value: "HARD" as const },
+  { label: "소규모 (1~2개 공간)", value: "EASY" as const },
+  { label: "중규모 (3~5개 공간)", value: "MEDIUM" as const },
+  { label: "대규모 (전체 리모델링)", value: "HARD" as const },
 ];

@@ -59,7 +59,11 @@ async function apiFetch<T = unknown>(
       }
       return parseResponse<T>(retryRes);
     } else {
-      // refresh 실패
+      // refresh 실패 — authState 쿠키 제거 (Navbar가 로그인 상태로 오해하지 않도록)
+      if (typeof window !== "undefined") {
+        document.cookie =
+          "authState=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      }
       if (!skipAutoRedirect && typeof window !== "undefined") {
         window.location.href = "/login";
       }
@@ -269,6 +273,21 @@ export interface PublicProfileMedia {
   thumbnailUrl: string | null;
   displayOrder: number;
   description: string | null;
+  roomId: string | null;
+}
+
+export interface PortfolioTag {
+  tagName: string;
+  materialId: string | null;
+  roomId: string | null;
+}
+
+export interface PortfolioRoom {
+  id: string;
+  portfolioId: string;
+  roomType: string;
+  roomLabel: string | null;
+  displayOrder: number;
 }
 
 export interface PublicProfilePortfolio {
@@ -292,8 +311,12 @@ export interface PublicProfilePortfolio {
     areaUnit: string | null;
     roomType: string | null;
     warrantyMonths: number | null;
+    buildingAge: number | null;
+    bathroomCount: number | null;
+    bedroomCount: number | null;
   } | null;
-  tags: string[];
+  rooms: PortfolioRoom[];
+  tags: PortfolioTag[];
   media: PublicProfileMedia[];
 }
 
@@ -431,6 +454,10 @@ export interface CreatePortfolioMediaPayload {
   description?: string;
 }
 
+export interface CreatePortfolioMediaPayloadWithRoom extends CreatePortfolioMediaPayload {
+  roomId?: string;
+}
+
 export interface CreatePortfolioPayload {
   workerProfileId: string;
   title: string;
@@ -443,15 +470,32 @@ export interface CreatePortfolioPayload {
     areaUnit?: "PYEONG" | "SQMETER";
     roomType?: string;
     warrantyMonths?: number;
+    buildingAge?: number;
+    bathroomCount?: number;
+    bedroomCount?: number;
   };
-  tags?: string[];
+  rooms?: {
+    roomType:
+      | "LIVING"
+      | "BATHROOM"
+      | "KITCHEN"
+      | "BEDROOM"
+      | "BALCONY"
+      | "ENTRANCE"
+      | "UTILITY"
+      | "STUDY"
+      | "OTHER";
+    roomLabel?: string;
+    displayOrder?: number;
+  }[];
+  tags?: { tagName: string; materialId?: string; roomId?: string }[];
   startDate?: string;
   endDate?: string;
   difficulty?: "EASY" | "MEDIUM" | "HARD";
   estimatedCost?: number;
   actualCost?: number;
   costVisibility?: "PUBLIC" | "PRIVATE";
-  media: CreatePortfolioMediaPayload[];
+  media: (CreatePortfolioMediaPayload | CreatePortfolioMediaPayloadWithRoom)[];
 }
 
 export interface GetPortfolioByIdResponse extends PublicProfilePortfolio {
