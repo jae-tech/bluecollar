@@ -44,13 +44,86 @@ export const UpdatePortfolioSchema = z
         areaUnit: z.enum(['PYEONG', 'SQMETER']).optional(),
         roomType: z.string().max(50).optional(),
         warrantyMonths: z.number().int().min(0).max(120).optional(),
+        buildingAge: z
+          .number()
+          .int()
+          .min(0)
+          .max(100)
+          .optional()
+          .describe('건물 연식 (경과 연도)'),
+        bathroomCount: z
+          .number()
+          .int()
+          .min(0)
+          .max(20)
+          .optional()
+          .describe('욕실 수'),
+        bedroomCount: z
+          .number()
+          .int()
+          .min(0)
+          .max(20)
+          .optional()
+          .describe('침실 수'),
       })
       .optional()
       .describe('시공 상세 정보'),
 
+    // rooms: undefined = 변경없음, [] = 전체삭제, [...] = 교체
+    rooms: z
+      .array(
+        z.object({
+          roomType: z
+            .enum([
+              'LIVING',
+              'BATHROOM',
+              'KITCHEN',
+              'BEDROOM',
+              'BALCONY',
+              'ENTRANCE',
+              'UTILITY',
+              'STUDY',
+              'OTHER',
+            ])
+            .describe('방 유형 enum'),
+
+          roomLabel: z
+            .string()
+            .max(100)
+            .optional()
+            .describe('방 레이블 (예: 안방, 작은방)'),
+
+          displayOrder: z
+            .number()
+            .int()
+            .min(0)
+            .optional()
+            .describe('표시 순서'),
+        }),
+      )
+      .max(20)
+      .optional()
+      .describe('공간(방) 배열 (제공 시 전체 교체)'),
+
     // tags: undefined = 변경없음, [] = 전체삭제, [...] = 교체
     tags: z
-      .array(z.string().max(50))
+      .array(
+        z.object({
+          tagName: z.string().max(50).describe('태그 이름'),
+
+          materialId: z
+            .string()
+            .uuid()
+            .optional()
+            .describe('자재 ID (materials 테이블 FK, 선택)'),
+
+          roomId: z
+            .string()
+            .uuid()
+            .optional()
+            .describe('공간 ID (portfolioRooms FK, 선택)'),
+        }),
+      )
       .max(20)
       .optional()
       .describe('자재/기술 태그 배열 (제공 시 전체 교체)'),
@@ -122,6 +195,12 @@ export const UpdatePortfolioSchema = z
             .url()
             .optional()
             .describe('비디오 썸네일 URL'),
+
+          roomId: z
+            .string()
+            .uuid()
+            .optional()
+            .describe('공간 ID (portfolioRooms FK, 선택)'),
         }),
       )
       .min(1, '미디어를 업데이트할 경우 최소 1개 이상이어야 합니다')
