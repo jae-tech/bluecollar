@@ -35,11 +35,25 @@ export default function OnboardingCompletePage() {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(profileUrl);
+      // Clipboard API 지원 환경 (일반 브라우저)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(profileUrl);
+      } else {
+        // 폴백: KakaoTalk 인앱 브라우저, 삼성 인터넷 등 Clipboard API 미지원 환경
+        const textarea = document.createElement("textarea");
+        textarea.value = profileUrl;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // clipboard API 미지원 환경 무시
+      // 폴백도 실패 시 (권한 거부 등) — 조용히 무시
     }
   };
 

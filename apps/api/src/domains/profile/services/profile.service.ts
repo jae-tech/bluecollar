@@ -473,11 +473,8 @@ export class ProfileService {
         };
       } catch (error) {
         // DB 유니크 제약 위반 (TOCTOU 경쟁 조건) → 409로 변환
-        if (
-          error instanceof Error &&
-          error.message.includes('unique') &&
-          error.message.toLowerCase().includes('slug')
-        ) {
+        // pg 에러코드 23505: unique_violation (message 문자열 매칭보다 안정적)
+        if ((error as any).code === '23505') {
           throw new ConflictException('이미 사용 중인 slug입니다');
         }
         const errorMessage =
