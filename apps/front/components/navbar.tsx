@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, LogOut, User } from "lucide-react";
 import { logout } from "@/lib/api";
@@ -9,24 +9,19 @@ interface NavbarProps {
   onSignupClick: () => void;
 }
 
-/** 쿠키에서 authState 여부를 동기적으로 읽는 유틸 */
-function readAuthCookie(): boolean {
-  return document.cookie
-    .split(";")
-    .some((c) => c.trim().startsWith("authState="));
-}
-
 export function Navbar({ onSignupClick }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  // null = 아직 확인 안 됨 (SSR/hydration 전). paint 전에 useLayoutEffect로 설정.
-  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
 
-  // useLayoutEffect: 브라우저 paint 전에 동기 실행 → flash-of-wrong-state 방지
-  // SSR에서는 실행 안 되므로 hydration mismatch 없음
-  useLayoutEffect(() => {
-    setLoggedIn(readAuthCookie());
+  useEffect(() => {
+    // accessToken은 httpOnly라 JS에서 읽을 수 없으므로
+    // 로그인 시 서버가 심는 non-httpOnly authState 쿠키로 상태 판단
+    const isLoggedIn = document.cookie
+      .split(";")
+      .some((c) => c.trim().startsWith("authState="));
+    setLoggedIn(isLoggedIn);
   }, []);
 
   const handleLogout = async () => {
@@ -69,12 +64,9 @@ export function Navbar({ onSignupClick }: NavbarProps) {
           </a>
         </nav>
 
-        {/* Desktop CTA — loggedIn이 null인 동안 숨겨서 flash 방지 */}
-        <div
-          className="hidden md:flex items-center gap-3"
-          suppressHydrationWarning
-        >
-          {loggedIn === null ? null : loggedIn ? (
+        {/* Desktop CTA */}
+        <div className="hidden md:flex items-center gap-3">
+          {loggedIn ? (
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((v) => !v)}
@@ -156,11 +148,8 @@ export function Navbar({ onSignupClick }: NavbarProps) {
           >
             서비스 소개
           </a>
-          <div
-            className="flex items-center gap-3 pt-2 border-t border-border"
-            suppressHydrationWarning
-          >
-            {loggedIn === null ? null : loggedIn ? (
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            {loggedIn ? (
               <>
                 <button
                   onClick={() => {
