@@ -188,14 +188,14 @@ export default function OnboardingSlugPage() {
             {/* 상태 메시지 */}
             {status !== "idle" && (
               <div
-                className={`flex items-center gap-2 p-3 rounded-xl ${
+                className={`flex items-center gap-2 p-3 rounded-md ${
                   status === "available"
-                    ? "bg-green-50 border border-green-300"
+                    ? "bg-primary/10 border border-primary/30"
                     : status === "taken" ||
                         status === "invalid" ||
                         status === "reserved" ||
                         status === "error"
-                      ? "bg-red-50 border border-red-300"
+                      ? "bg-destructive/10 border border-destructive/30"
                       : "bg-secondary border border-border"
                 }`}
               >
@@ -228,9 +228,9 @@ export default function OnboardingSlugPage() {
                   <>
                     <AlertCircle
                       size={18}
-                      className="text-orange-600 flex-shrink-0"
+                      className="text-destructive flex-shrink-0"
                     />
-                    <p className="text-sm text-orange-700">
+                    <p className="text-sm text-destructive">
                       영문 소문자, 숫자, 하이픈(-)만 사용 가능합니다.
                     </p>
                   </>

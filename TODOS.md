@@ -292,27 +292,21 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
-### TODO-022: LCP 이미지 loading="eager" 누락
+### ~~TODO-022: LCP 이미지 loading="eager" 누락~~
 
-**What:** `/worker/[slug]` 페이지의 포트폴리오 첫 번째 이미지(`/images/portfolio-3.jpg`)가 LCP 요소인데 `loading="eager"` 속성 없음.
-**Why:** Next.js가 경고 발생. 페이지 로딩 성능(LCP) 저하 가능성.
-**Context:** `apps/front/app/worker/[slug]/page.tsx` 또는 `ProjectCard` 컴포넌트 내 첫 번째 이미지에 `priority` prop 추가 (Next.js Image는 `priority`가 `loading="eager"` 역할).
-**Effort:** S
-**Priority:** P2
-**Found by:** /qa on main, 2026-04-02
+**확인 완료, 2026-04-15** — `apps/front/app/worker/[slug]/page.tsx:214,355`에 이미 `priority` prop 적용됨. 수정 불필요.
 
 ---
 
 ## 🎨 디자인 토큰 & UX (2026-04-04 /autoplan 발견)
 
-### TODO-023: 온보딩 상태 표시 색상을 디자인 토큰으로 교체
+### ~~TODO-023: 온보딩 상태 표시 색상을 디자인 토큰으로 교체~~
 
-**What:** `onboarding/slug/page.tsx`의 `bg-green-50/border-green-300/text-orange-600` 클래스를 디자인 시스템 토큰으로 교체.
-**Why:** Raw Tailwind 색상이 다크모드에서 깨짐. DESIGN.md 토큰 계층 위반.
-**Fix:** `bg-success/10 border-success text-success`, `bg-warning/10 text-warning` 패턴 사용 (DESIGN.md 참조).
-**Effort:** S
-**Priority:** P2
-**Found by:** /autoplan Design Review, 2026-04-04
+**Fixed on main, 2026-04-15**
+
+- `onboarding/slug/page.tsx`: available → `bg-primary/10 border-primary/30`, error계열 → `bg-destructive/10 border-destructive/30`
+- `text-orange-600/700` (invalid) → `text-destructive`
+- `rounded-xl` → `rounded-md` (DESIGN.md radius 계층 준수)
 
 ---
 
@@ -326,13 +320,12 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
-### TODO-025: 온보딩 진행률 바 개선
+### ~~TODO-025: 온보딩 진행률 바 개선~~
 
-**What:** `h-1` → `h-1.5`, 단계 레이블("2 / 4") 추가.
-**Why:** 현재 진행률 바가 너무 얇고 몇 단계인지 알 수 없음.
-**Effort:** S
-**Priority:** P3
-**Found by:** /autoplan Design Review, 2026-04-04
+**Fixed on main, 2026-04-15**
+
+- `progress-bar.tsx`: `h-1` → `h-1.5`, 단계 레이블("2 / 4") 우측에 추가
+- sticky 배경 `bg-background/95 backdrop-blur-sm`으로 변경, rounded-full 바 스타일
 
 ---
 
@@ -346,37 +339,29 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
-### TODO-027: `step-5-username.tsx` 좀비 컴포넌트 제거
+### ~~TODO-027: `step-5-username.tsx` 좀비 컴포넌트 제거~~
 
-**What:** `apps/front/components/step-5-username.tsx` — mock 검증 로직이 있고 온보딩 플로우에 연결되지 않은 사용되지 않는 컴포넌트.
-**Why:** 코드베이스 노이즈, 향후 혼란 방지.
-**Effort:** XS
-**Priority:** P3
-**Found by:** /autoplan Design Review, 2026-04-04
+**Fixed on main, 2026-04-15**
+
+- `apps/front/components/onboarding/step-5-username.tsx` 삭제
 
 ---
 
-### TODO-028: 클립보드 복사 폴백 (KakaoTalk/삼성 인터넷 인앱 브라우저)
+### ~~TODO-028: 클립보드 복사 폴백 (KakaoTalk/삼성 인터넷 인앱 브라우저)~~
 
-**What:** `/onboarding/complete`의 링크 복사 버튼이 `navigator.clipboard` 미지원 환경에서 조용히 실패.
-**Why:** KakaoTalk 인앱 브라우저, 삼성 인터넷 등에서는 Clipboard API가 제한됨.
-**Fix:** `execCommand('copy')` 폴백 또는 "직접 복사하세요" toast 안내 UI 추가.
-**Effort:** S
-**Priority:** P2
-**Found by:** /autoplan Design Review, 2026-04-04
+**Fixed on main, 2026-04-15**
+
+- `onboarding/complete/page.tsx`: `navigator.clipboard` 미지원 시 textarea + `execCommand('copy')` 폴백 추가
 
 ---
 
 ## 🔧 Eng 품질 (autoplan Eng Review, 2026-04-04)
 
-### TODO-029: TOCTOU catch — pg 에러코드로 교체
+### ~~TODO-029: TOCTOU catch — pg 에러코드로 교체~~
 
-**What:** `apps/api/src/domains/profile/services/profile.service.ts:472` — slug 유니크 위반 catch가 `error.message` 문자열 매치 사용.
-**Why:** pg 드라이버 버전/로케일에 따라 메시지 포맷이 달라질 수 있음. `(error as any).code === '23505'`가 표준.
-**Fix:** `if (error.message.includes('unique') && ...)` → `if ((error as any).code === '23505')`
-**Effort:** XS
-**Priority:** P3
-**Found by:** /autoplan Eng Review, 2026-04-04
+**Fixed on main, 2026-04-15**
+
+- `profile.service.ts:477`: `error.message.includes('unique')` → `(error as any).code === '23505'`
 
 ---
 
