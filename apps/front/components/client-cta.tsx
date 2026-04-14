@@ -10,15 +10,15 @@ interface ClientCTAProps {
 export function ClientCTA({ onSignupClick }: ClientCTAProps) {
   return (
     <section className="px-6 pb-20 border-t border-border pt-20">
-      <div className="max-w-4xl mx-auto bg-foreground rounded-lg px-10 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+      <div className="max-w-3xl mx-auto bg-foreground rounded-lg px-10 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
         <div>
           <p className="text-[11px] font-bold text-primary uppercase tracking-wider mb-3">
             클라이언트용
           </p>
-          <h2 className="text-2xl font-bold text-primary-foreground leading-tight tracking-tight mb-3">
+          <h2 className="text-2xl font-bold text-primary-foreground leading-tight mb-3">
             직접 찾기 어려우셨나요?
           </h2>
-          <p className="text-sm text-primary-foreground/50 leading-relaxed max-w-sm">
+          <p className="text-sm text-primary-foreground/70 leading-relaxed max-w-sm">
             프로젝트를 올리면 조건에 맞는 워커가 먼저 연락합니다.
           </p>
         </div>
@@ -33,7 +33,7 @@ export function ClientCTA({ onSignupClick }: ClientCTAProps) {
           </button>
           <Link
             href="/search?tab=workers"
-            className="text-sm font-medium text-primary-foreground/40 hover:text-primary-foreground/70 transition-colors border border-primary-foreground/15 px-5 py-2.5 rounded-md whitespace-nowrap"
+            className="text-sm font-medium text-primary-foreground/70 hover:text-primary-foreground transition-colors border border-primary-foreground/30 px-5 py-2.5 rounded-md whitespace-nowrap"
           >
             워커 직접 찾기
           </Link>

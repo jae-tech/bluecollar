@@ -12,7 +12,7 @@ import {
   users,
 } from '@repo/database';
 import { validateSlug } from '@/common/validators/slug.validator';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql, desc } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
 
@@ -87,7 +87,7 @@ export class PublicService {
       .select()
       .from(portfolios)
       .where(eq(portfolios.workerProfileId, workerProfileId))
-      .orderBy((t) => t.createdAt);
+      .orderBy(desc(portfolios.createdAt));
 
     // Step 6: 모든 포트폴리오의 미디어/details/tags를 한 번에 조회 (N+1 쿼리 최적화)
     const portfolioIds = portfoliosList.map((p) => p.id);

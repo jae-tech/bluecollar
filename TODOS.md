@@ -380,25 +380,20 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
-### TODO-030: `areaCodes: []` 서비스 지역 미삭제 버그
+### ~~TODO-030: `areaCodes: []` 서비스 지역 미삭제 버그~~
 
-**What:** `apps/api/src/domains/profile/services/profile.service.ts:430` — `areaCodes` 빈 배열 전달 시 지역이 삭제되지 않음 (fieldCodes는 항상 재삽입).
-**Why:** `if (areaCodes && areaCodes.length > 0)` 조건 때문에 빈 배열은 무시됨. fieldCodes와 비대칭.
-**Fix:** 빈 배열도 허용하여 기존 지역 전체 삭제하도록 수정, 또는 의도적 비대칭임을 주석으로 명시.
-**Effort:** XS
-**Priority:** P2
-**Found by:** /autoplan Eng Review, 2026-04-04
+**Fixed by /plan-eng-review on main, 2026-04-13**
+
+- `profile.service.ts:430`: `if (areaCodes && areaCodes.length > 0)` → `if (areaCodes !== undefined)` + 내부에서 length 체크 분리
+- 빈 배열 전달 시 기존 지역 전체 삭제 후 재삽입 없이 완료 (fieldCodes와 동일 패턴)
 
 ---
 
-### TODO-031: 온보딩 4단계 실패 시 slug 페이지로 redirect 누락
+### ~~TODO-031: 온보딩 4단계 실패 시 slug 페이지로 redirect 누락~~
 
-**What:** `apps/front/app/onboarding/page.tsx:44-62` — `getMyWorkerProfile()` 실패 시 오류 표시만 하고 `/onboarding/slug`로 redirect하지 않음.
-**Why:** 이 경우 `existing` = undefined → slug=undefined → 백엔드 400. 사용자가 stuck 상태.
-**Fix:** catch block에서 BadRequest(400) 수신 시 `router.replace('/onboarding/slug')` 추가.
-**Effort:** XS
-**Priority:** P2
-**Found by:** /autoplan Eng Review, 2026-04-04
+**Fixed on main, 2026-04-15**
+
+- `onboarding/page.tsx` catch block에서 `ApiError && status === 400` 감지 시 `router.replace('/onboarding/slug')` 추가
 
 ---
 
@@ -415,14 +410,12 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ## 📦 포트폴리오 스키마 확장 (portfolio-schema-expansion PR defer, 2026-04-09)
 
-### TODO-033: portfolios orderBy ASC 버그
+### ~~TODO-033: portfolios orderBy ASC 버그~~
 
-**What:** `apps/api/src/domains/public/services/public.service.ts:88` — `.orderBy((t) => t.createdAt)` 가 ASC 정렬로 오래된 포트폴리오가 먼저 표시됨.
-**Why:** 공개 프로필에서 최신 시공 사례가 상단에 와야 함. DESC가 맞음.
-**Fix:** `.orderBy(desc(portfolios.createdAt))` — `desc` import from drizzle-orm 필요.
-**Effort:** XS
-**Priority:** P2
-**Found by:** /plan-eng-review, 2026-04-09
+**Fixed by /autoplan on main, 2026-04-13**
+
+- `public.service.ts`: `.orderBy((t) => t.createdAt)` → `.orderBy(desc(portfolios.createdAt))`
+- `desc` drizzle-orm import 추가
 
 ---
 
@@ -445,3 +438,202 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 **Priority:** P3
 **Depends on:** TODO-034 (필터 API 먼저 구현)
 **Found by:** /plan-ceo-review, 2026-04-09
+
+---
+
+## 🏠 랜딩 페이지 리디자인 후속 (autoplan CEO Review, 2026-04-13)
+
+### TODO-036: 마퀴에 실제 포트폴리오 데이터 연결 (Hybrid ISR)
+
+**What:** `PortfolioStrip`에 ISR 빌드타임 fetch 추가. `GET /public/portfolios` → top 8 최신 포트폴리오. 실제 데이터 없으면 현재 mock 배열 fallback.
+**Why:** 현재 마퀴는 mock 이미지만 표시. 실제 워커가 늘어나면 신뢰도 위해 real data가 필요.
+**Fix:** `portfolio-strip.tsx`에 `getStaticProps`(또는 RSC + `revalidate`) 추가. 빌드 시 `GET /public/portfolios` 호출. 0건이면 mock으로 대체.
+**Effort:** M
+**Priority:** P2
+**Found by:** /autoplan CEO Review, 2026-04-13
+
+---
+
+### TODO-037: 히어로 섹션에 워커 수 소셜 프루프
+
+**What:** `HeroSection`에 "현재 N명의 전문 기술자가 블루칼라에 있습니다" 카운트 표시.
+**Why:** 신뢰 신호. 신규 방문 클라이언트가 "실제 서비스인지" 판단하는 핵심 지표.
+**Fix:** `/public/stats` (또는 `/public/workers/count`) 엔드포인트 추가. ISR 또는 서버 컴포넌트로 빌드타임 주입. 0명이면 숨김.
+**Effort:** S
+**Priority:** P2
+**Found by:** /autoplan CEO Review, 2026-04-13
+
+---
+
+### ~~TODO-038: JSON-LD 구조화 데이터 (Organization + WebSite)~~
+
+**Fixed on main, 2026-04-15**
+
+- `apps/front/app/layout.tsx` `<head>`에 `Organization` JSON-LD 스크립트 추가 (`name`, `url`, `description`)
+
+---
+
+### TODO-039: Canonical URL + subdomain SEO 전략
+
+**What:** `bluecollar.cv`와 `slug.bluecollar.cv` 간 link equity 분산 방지 전략 수립.
+**Why:** 서브도메인 방식은 각 서브도메인이 별도 도메인으로 취급됨 → `bluecollar.cv`의 SEO 신호가 `slug.bluecollar.cv`로 전파 안 됨. 반대도 마찬가지.
+**Fix:** 옵션 A: `bluecollar.cv/w/[slug]` 경로 방식으로 전환. 옵션 B: 서브도메인 유지 + canonical 태그로 각 워커 페이지가 `bluecollar.cv`를 canonical로 지정.
+**Note:** 아키텍처 결정 필요 — 팀과 논의 후 진행.
+**Effort:** M~L (전략 방향에 따라)
+**Priority:** P2
+**Found by:** /autoplan CEO Review, 2026-04-13
+
+---
+
+### TODO-040: 랜딩 페이지 전환율 트래킹 (Analytics)
+
+**What:** 랜딩 CTR 트래킹 — "지금 시작하기", "기술자 찾기", 마퀴 클릭 등 주요 이벤트 측정.
+**Why:** 현재 analytics 없음 → 어떤 CTA가 전환을 만드는지 알 수 없음. A/B 테스트 전제 조건.
+**Fix:** Google Analytics 4 또는 Plausible (GDPR friendly) 연동. 핵심 이벤트: `cta_click`, `signup_open`, `portfolio_view`.
+**Effort:** M (analytics infra 설정 포함)
+**Priority:** P2
+**Depends on:** analytics 인프라 선택 결정
+**Found by:** /autoplan CEO Review, 2026-04-13
+
+---
+
+### TODO-041: 클라이언트용 "기술자 찾기" CTA 추가
+
+**What:** 랜딩 페이지에 클라이언트(발주자)를 위한 명시적 CTA 추가. "기술자를 찾고 계신가요?" 섹션 또는 히어로 서브헤드에 클라이언트 링크.
+**Why:** 현재 랜딩 전체가 워커 리크루팅 중심 — 클라이언트가 도착하면 "이게 나를 위한 서비스인가?" 알 수 없음.
+**Fix:** HeroSection 하단 또는 ClientCTA에 "시공업체 찾기" 방향 링크 추가. `/search` 또는 `/explore` (아직 없으면 disabled + "출시 예정" 뱃지).
+**Effort:** S
+**Priority:** P2
+**Found by:** /autoplan CEO Review, 2026-04-13
+
+---
+
+### ~~TODO-042: roomId NULL 버그 — 포트폴리오 rooms 기능 비활성 (P1)~~
+
+**Fixed by /autoplan on main, 2026-04-13**
+
+- `create-portfolio.dto.ts`: media 항목에 `roomIndex?: number` 필드 추가
+- `portfolio.service.ts` Step 5: `.returning({ id: portfolioRooms.id })`로 삽입된 room ID 캡처
+- `portfolio.service.ts` Step 7: `roomIndex` 기반으로 `insertedRooms[mediaItem.roomIndex].id` 매핑
+- `portfolio-form.tsx`: `rooms.flatMap((r, rIdx) => ...)` — `roomIndex: rIdx` 전달
+- `api.ts`: `CreatePortfolioMediaPayloadWithRoom`에 `roomIndex?: number` 추가
+
+---
+
+### TODO-042-original (archived)
+
+**What:** 모든 `portfolioMedia` 행의 `roomId`가 NULL. `portfolio.service.ts` Step 4에서 rooms를 insert하지만 `.returning()`으로 ID를 받아오지 않고, 프론트엔드도 roomId를 보내지 않음.
+**Why:** 공간별 사진 그룹핑 기능 전체가 비동작. b86539b 커밋 이후 생성된 모든 포트폴리오가 영향받음.
+**Fix:**
+1. `CreatePortfolioMediaPayload`에 `roomIndex?: number` 필드 추가
+2. 프론트: `rooms.flatMap((r, rIdx) => r.images.map(img => ({ ...img, roomIndex: rIdx })))`
+3. 백: Step 4에 `.returning({ id: portfolioRooms.id })` 추가
+4. 백: Step 5에서 `insertedRooms[mediaItem.roomIndex]?.id` → roomId 매핑
+**Effort:** S (~2h 구현 + ~30min 테스트)
+**Priority:** P1
+**Found by:** /autoplan CEO + Eng Review, 2026-04-13
+
+---
+
+## 🔐 보안 (autoplan Eng Review, 2026-04-13)
+
+### TODO-043: IDOR — workerProfileId를 JWT subject에서 파생
+
+**What:** `portfolio.service.ts`에서 `workerProfileId`를 클라이언트 request body에서 받음. 인증된 워커가 타인의 workerProfileId를 전달하면 타인 명의 포트폴리오 생성 가능.
+**Why:** IDOR (Insecure Direct Object Reference) 취약점. 퍼블릭 런치 전 반드시 수정.
+**Fix:** controller에서 `@CurrentUser()` 데코레이터로 JWT subject에서 userId 추출 → service에서 `workerProfileId`를 DB lookup으로 확인 (userId → workerProfile). DTO에서 `workerProfileId` 필드 제거.
+**Effort:** XS (~30min)
+**Priority:** P1 (Security)
+**Found by:** /autoplan Eng Review, 2026-04-13
+
+---
+
+## 🧩 디자인 시스템 컴플라이언스 (autoplan Design Review, 2026-04-13)
+
+### ~~TODO-044: hero-section.tsx — tracking-tight 제거 (Critical DESIGN.md 위반)~~
+
+**Fixed by /autoplan on main, 2026-04-13** — `hero-section.tsx:23`에서 `tracking-tight` 제거.
+
+---
+
+### TODO-044-original (archived)
+
+**What:** `apps/front/components/hero-section.tsx:23` — 한글 헤드라인에 `tracking-tight` 클래스 사용.
+**Why:** DESIGN.md 명시적 규칙: 한글에는 letter-spacing 클래스 사용 금지. 한글은 자간 조정이 가독성을 저해함.
+**Fix:** `tracking-tight` 제거. 폰트 크기(`text-5xl md:text-6xl lg:text-7xl`)는 유지.
+**Effort:** XS
+**Priority:** P1 (DESIGN.md 위반)
+**Found by:** /autoplan Design Review, 2026-04-13
+
+---
+
+### ~~TODO-045: how-it-works.tsx — tracking-tight 제거 (Critical DESIGN.md 위반)~~
+
+**Fixed by /autoplan on main, 2026-04-13** — `how-it-works.tsx:26`에서 `tracking-tight` 제거.
+
+---
+
+### TODO-045-original (archived)
+
+**What:** `apps/front/components/how-it-works.tsx:27` — 한글 h2에 `tracking-tight` 클래스 사용.
+**Why:** TODO-044와 동일.
+**Fix:** `tracking-tight` 제거.
+**Effort:** XS
+**Priority:** P1 (DESIGN.md 위반)
+**Found by:** /autoplan Design Review, 2026-04-13
+
+---
+
+### ~~TODO-046: client-cta.tsx — 텍스트 대비 WCAG AA 수정~~
+
+**Fixed on main, 2026-04-15**
+
+- `client-cta.tsx`: `text-primary-foreground/50` → `/70`, `text-primary-foreground/40` → `/70`, `border-primary-foreground/15` → `/30`
+
+---
+
+### ~~TODO-047: client-cta.tsx — max-w-4xl → max-w-3xl (DESIGN.md 768px 제한)~~
+
+**Fixed on main, 2026-04-15**
+
+- `client-cta.tsx:13`: `max-w-4xl` → `max-w-3xl`
+
+---
+
+### ~~TODO-048: portfolio-strip.tsx — bg-foreground/60 토큰 수정~~
+
+**Fixed on main, 2026-04-15**
+
+- `portfolio-strip.tsx:47`: `bg-foreground/60 text-primary-foreground` → `bg-neutral-800/70 text-white`
+
+---
+
+### ~~TODO-049: hero-section.tsx, how-it-works.tsx — badge rounded → rounded-sm~~
+
+**Fixed on main, 2026-04-15**
+
+- `hero-section.tsx:18`, `how-it-works.tsx:49`: `rounded` → `rounded-sm`
+
+---
+
+## 🔢 Eng 품질 — rooms 스프린트 (autoplan Eng Review, 2026-04-13)
+
+### ~~TODO-050: RoomType enum — frontend 로컬 타입 → @repo/constants에서 import~~
+
+**Fixed on main, 2026-04-15**
+
+- `packages/constants/src/room-types.ts` 신규 생성 (9개 enum 값 — ENTRANCE, UTILITY, STUDY 포함)
+- `packages/constants/src/index.ts`에 re-export 추가
+- `portfolio-form.tsx`: 로컬 `RoomType` 타입 제거, `@repo/constants`에서 `ROOM_TYPE_VALUES`, `RoomType` import
+- `ROOM_TYPE_LABELS`에 ENTRANCE/UTILITY/STUDY 한글 레이블 추가
+
+---
+
+### TODO-051: 서버사이드 media 수량 제한 추가
+
+**What:** `portfolio.service.ts`에 포트폴리오당 총 media 수(`MAX_TOTAL = 50`) 및 room당 수(`MAX_PER_ROOM = 10`) 가드 추가.
+**Why:** 현재 `portfolio-form.tsx`의 `MAX_IMAGES_PER_ROOM`, `MAX_TOTAL_IMAGES`는 클라이언트 전용. API 직접 호출 시 무제한 업로드 가능 → DB 비용 및 S3 비용.
+**Fix:** service insert 전 `media.length > 50` 체크. `CustomException` throw (400 Bad Request).
+**Effort:** S (~1h)
+**Priority:** P2
+**Found by:** /autoplan Eng Review, 2026-04-13

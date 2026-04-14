@@ -20,6 +20,19 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "BlueCollar CV",
+              url: "https://bluecollar.cv",
+              description:
+                "흩어져 있던 시공 기록을 세련된 디지털 프로필 사이트로 만드는 현장 전문가 포트폴리오 플랫폼",
+            }),
+          }}
+        />
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
         {children}

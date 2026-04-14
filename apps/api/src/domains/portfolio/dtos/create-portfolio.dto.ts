@@ -218,6 +218,14 @@ export const CreatePortfolioSchema = z.object({
           .describe(
             '공간 ID (portfolioRooms FK, 선택 — rooms 배열 기반 바인딩)',
           ),
+
+        // roomIndex: 프론트에서 rooms 배열 인덱스를 전달, 백엔드가 삽입된 room ID로 변환
+        roomIndex: z
+          .number()
+          .int()
+          .min(0)
+          .optional()
+          .describe('rooms 배열 인덱스 (0-based). roomId 대신 사용 가능.'),
       }),
     )
     .min(1, '최소 1개 이상의 미디어가 필요합니다')

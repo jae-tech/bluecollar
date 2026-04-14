@@ -44,7 +44,7 @@ export function PortfolioStrip() {
                 className="object-cover"
                 loading={i < 4 ? "eager" : "lazy"}
               />
-              <span className="absolute bottom-1.5 left-1.5 text-[10px] font-semibold bg-foreground/60 text-primary-foreground px-1.5 py-0.5 rounded">
+              <span className="absolute bottom-1.5 left-1.5 text-[10px] font-semibold bg-neutral-800/70 text-white px-1.5 py-0.5 rounded-sm">
                 {project.category}
               </span>
             </div>
