@@ -105,6 +105,25 @@ export class PortfolioService {
       media,
     } = createPortfolioDto;
 
+    // 서버사이드 media 수량 제한 — 클라이언트 제한은 우회 가능하므로 여기서도 검증
+    const MAX_TOTAL_MEDIA = 50;
+    const MAX_MEDIA_PER_ROOM = 10;
+    if (media && media.length > MAX_TOTAL_MEDIA) {
+      throw new BadRequestException(
+        `포트폴리오당 최대 ${MAX_TOTAL_MEDIA}개의 미디어만 등록 가능합니다`,
+      );
+    }
+    if (rooms && media) {
+      for (let i = 0; i < rooms.length; i++) {
+        const roomMedia = media.filter((m) => m.roomIndex === i);
+        if (roomMedia.length > MAX_MEDIA_PER_ROOM) {
+          throw new BadRequestException(
+            `공간당 최대 ${MAX_MEDIA_PER_ROOM}개의 미디어만 등록 가능합니다`,
+          );
+        }
+      }
+    }
+
     this.logger.info(
       { workerProfileId, title },
       '포트폴리오 생성 프로세스 시작',

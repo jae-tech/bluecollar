@@ -613,11 +613,8 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
-### TODO-051: 서버사이드 media 수량 제한 추가
+### ~~TODO-051: 서버사이드 media 수량 제한 추가~~
 
-**What:** `portfolio.service.ts`에 포트폴리오당 총 media 수(`MAX_TOTAL = 50`) 및 room당 수(`MAX_PER_ROOM = 10`) 가드 추가.
-**Why:** 현재 `portfolio-form.tsx`의 `MAX_IMAGES_PER_ROOM`, `MAX_TOTAL_IMAGES`는 클라이언트 전용. API 직접 호출 시 무제한 업로드 가능 → DB 비용 및 S3 비용.
-**Fix:** service insert 전 `media.length > 50` 체크. `CustomException` throw (400 Bad Request).
-**Effort:** S (~1h)
-**Priority:** P2
-**Found by:** /autoplan Eng Review, 2026-04-13
+**Fixed on main, 2026-04-15**
+
+- `portfolio.service.ts`: `MAX_TOTAL_MEDIA = 50`, `MAX_MEDIA_PER_ROOM = 10` 가드 추가 (트랜잭션 시작 전 검증)
