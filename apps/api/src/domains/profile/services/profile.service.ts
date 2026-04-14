@@ -426,18 +426,20 @@ export class ProfileService {
           '전문 분야 업데이트 완료',
         );
 
-        // 서비스 지역 업데이트: areaCodes가 제공된 경우만 처리
-        if (areaCodes && areaCodes.length > 0) {
+        // 서비스 지역 업데이트: areaCodes가 제공된 경우 삭제 후 재삽입 (빈 배열이면 전체 삭제)
+        if (areaCodes !== undefined) {
           await tx
             .delete(workerAreas)
             .where(eq(workerAreas.workerProfileId, workerProfileId));
 
-          await tx.insert(workerAreas).values(
-            areaCodes.map((areaCode) => ({
-              workerProfileId,
-              areaCode,
-            })),
-          );
+          if (areaCodes.length > 0) {
+            await tx.insert(workerAreas).values(
+              areaCodes.map((areaCode) => ({
+                workerProfileId,
+                areaCode,
+              })),
+            );
+          }
 
           this.logger.debug(
             { workerProfileId, count: areaCodes.length },

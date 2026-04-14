@@ -173,18 +173,20 @@ export class PortfolioService {
           });
         }
 
-        // Step 5: portfolioRooms INSERT — 각 방에 displayOrder 자동 부여
-        // 생성된 room ID 목록은 태그/미디어의 roomId 클라이언트 바인딩에 사용됨
-        // (클라이언트가 요청 시 roomId를 직접 전달하는 구조이므로 여기서는 단순 저장)
+        // Step 5: portfolioRooms INSERT — 삽입된 ID를 반환받아 media roomIndex 매핑에 사용
+        let insertedRooms: { id: string }[] = [];
         if (rooms && rooms.length > 0) {
-          await tx.insert(portfolioRooms).values(
-            rooms.map((room, index) => ({
-              portfolioId,
-              roomType: room.roomType,
-              roomLabel: room.roomLabel ?? null,
-              displayOrder: room.displayOrder ?? index,
-            })),
-          );
+          insertedRooms = await tx
+            .insert(portfolioRooms)
+            .values(
+              rooms.map((room, index) => ({
+                portfolioId,
+                roomType: room.roomType,
+                roomLabel: room.roomLabel ?? null,
+                displayOrder: room.displayOrder ?? index,
+              })),
+            )
+            .returning({ id: portfolioRooms.id });
         }
 
         // Step 6: portfolioTags INSERT (객체 배열 — tagName + materialId? + roomId?)
@@ -222,7 +224,15 @@ export class PortfolioService {
               record.thumbnailUrl = mediaItem.thumbnailUrl;
             if (mediaItem.description)
               record.description = mediaItem.description;
-            if (mediaItem.roomId) record.roomId = mediaItem.roomId;
+            // roomIndex 우선: 삽입된 room ID로 변환. roomId는 레거시 직접 바인딩 지원용
+            if (
+              mediaItem.roomIndex !== undefined &&
+              insertedRooms[mediaItem.roomIndex]
+            ) {
+              record.roomId = insertedRooms[mediaItem.roomIndex].id;
+            } else if (mediaItem.roomId) {
+              record.roomId = mediaItem.roomId;
+            }
 
             return record;
           });

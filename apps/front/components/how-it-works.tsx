@@ -23,7 +23,7 @@ export function HowItWorks() {
   return (
     <section id="about" className="py-20 border-t border-border">
       <div className="max-w-2xl mx-auto px-6">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight mb-2">
+        <h2 className="text-2xl font-bold text-foreground mb-2">
           3분이면 생깁니다
         </h2>
         <p className="text-sm text-muted-foreground mb-12">
@@ -46,7 +46,7 @@ export function HowItWorks() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {step.desc}
                 </p>
-                <span className="inline-block mt-3 text-[11px] font-semibold bg-primary/10 text-primary px-2 py-1 rounded">
+                <span className="inline-block mt-3 text-[11px] font-semibold bg-primary/10 text-primary px-2 py-1 rounded-sm">
                   {step.tag}
                 </span>
               </div>

@@ -15,12 +15,12 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
     <section className="min-h-[90vh] flex flex-col justify-center pt-28 pb-16 px-6">
       <div className="max-w-3xl mx-auto w-full">
         {/* 배지 */}
-        <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded text-xs font-semibold mb-8 w-fit">
+        <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-sm text-xs font-semibold mb-8 w-fit">
           ✦ 현장 기술자를 위한 포트폴리오
         </div>
 
         {/* 헤드라인 */}
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight text-foreground mb-6">
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.08] text-foreground mb-6">
           일한 만큼
           <br />
           <span className="text-primary">증명하세요.</span>

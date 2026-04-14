@@ -456,6 +456,8 @@ export interface CreatePortfolioMediaPayload {
 
 export interface CreatePortfolioMediaPayloadWithRoom extends CreatePortfolioMediaPayload {
   roomId?: string;
+  // roomIndex: 백엔드가 rooms 배열 삽입 후 실제 ID로 변환. roomId 대신 사용.
+  roomIndex?: number;
 }
 
 export interface CreatePortfolioPayload {

@@ -26,6 +26,7 @@ import {
   MATERIAL_CATEGORIES,
   DIFFICULTY_OPTIONS,
 } from "@/lib/constants";
+import { ROOM_TYPE_VALUES, type RoomType } from "@repo/constants";
 
 // ── 타입 ───────────────────────────────────────────────────────────────────────
 interface UploadedImage {
@@ -37,13 +38,7 @@ interface UploadedImage {
   imageType: "BEFORE" | "AFTER" | "DETAIL" | null;
 }
 
-type RoomType =
-  | "LIVING"
-  | "BATHROOM"
-  | "KITCHEN"
-  | "BEDROOM"
-  | "BALCONY"
-  | "OTHER";
+// RoomType은 @repo/constants에서 import — DB schema의 roomTypeEnum과 동기화됨
 
 const ROOM_TYPE_LABELS: Record<RoomType, string> = {
   LIVING: "거실",
@@ -51,17 +46,13 @@ const ROOM_TYPE_LABELS: Record<RoomType, string> = {
   KITCHEN: "주방",
   BEDROOM: "침실",
   BALCONY: "발코니",
+  ENTRANCE: "현관",
+  UTILITY: "다용도실",
+  STUDY: "서재",
   OTHER: "기타",
 };
 
-const ROOM_TYPES: RoomType[] = [
-  "LIVING",
-  "BATHROOM",
-  "KITCHEN",
-  "BEDROOM",
-  "BALCONY",
-  "OTHER",
-];
+const ROOM_TYPES: RoomType[] = [...ROOM_TYPE_VALUES];
 
 interface RoomGroup {
   tempId: string;
@@ -435,13 +426,15 @@ export function PortfolioForm({
 
       if (!isEditMode) {
         roomsPayload = rooms.map((r) => ({ roomType: r.roomType }));
-        media = rooms.flatMap((r) =>
+        // roomIndex: 백엔드가 삽입된 room ID로 변환 (roomId NULL 문제 해결)
+        media = rooms.flatMap((r, rIdx) =>
           r.images
             .filter((img) => img.uploadedUrl)
             .map((img) => ({
               mediaUrl: img.uploadedUrl!,
               mediaType: "IMAGE" as const,
               imageType: img.imageType ?? undefined,
+              roomIndex: rIdx,
             })),
         );
       } else {

@@ -52,6 +52,11 @@ export default function OnboardingPage() {
         });
         router.push(`/onboarding/complete`);
       } catch (err) {
+        if (err instanceof ApiError && err.status === 400) {
+          // slug 미설정 상태에서 400이 발생하면 slug 설정 페이지로 이동
+          router.replace("/onboarding/slug");
+          return;
+        }
         if (err instanceof ApiError) {
           setSubmitError(err.message);
         } else {
