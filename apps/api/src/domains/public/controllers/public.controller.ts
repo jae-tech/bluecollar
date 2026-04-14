@@ -45,6 +45,47 @@ export class PublicController {
    * @returns 워커 프로필, 전문 분야, 활동 지역, 포트폴리오 정보
    */
   /**
+   * 플랫폼 통계 조회 (소셜 프루프용)
+   *
+   * 랜딩 히어로 섹션에서 워커 수 소셜 프루프 표시용.
+   */
+  @Get('stats')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '플랫폼 통계 조회',
+    description:
+      '워커 수 등 공개 통계를 반환합니다. 랜딩 페이지 소셜 프루프용.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '통계 조회 성공',
+    schema: { example: { workerCount: 42 } },
+  })
+  async getStats() {
+    return this.publicService.getStats();
+  }
+
+  /**
+   * 최신 포트폴리오 목록 조회 (랜딩 마퀴용)
+   */
+  @Get('portfolios')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '최신 포트폴리오 목록 조회',
+    description:
+      '랜딩 페이지 마퀴(PortfolioStrip)에 표시할 최신 포트폴리오 목록을 반환합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '포트폴리오 목록 조회 성공',
+  })
+  async getLatestPortfolios() {
+    return this.publicService.getLatestPortfolios(8);
+  }
+
+  /**
    * Slug 사용 가능 여부 확인
    *
    * 예약어 + DB 중복을 체크합니다. 조회수 증가 없음.
