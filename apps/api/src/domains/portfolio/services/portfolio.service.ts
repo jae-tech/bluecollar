@@ -76,12 +76,17 @@ export class PortfolioService {
    * 7. portfolioMedia INSERT (roomId 바인딩 포함)
    *
    * @param createPortfolioDto 포트폴리오 생성 요청 데이터
+   * @param callerWorkerProfileId JWT에서 파생된 워커 프로필 ID (IDOR 방지)
    * @returns 생성된 포트폴리오 및 미디어 정보
    * @throws BadRequestException - 워커 프로필 없음 또는 유효하지 않은 입력
    */
-  async createPortfolio(createPortfolioDto: CreatePortfolioDto) {
+  async createPortfolio(
+    createPortfolioDto: CreatePortfolioDto,
+    callerWorkerProfileId: string,
+  ) {
+    // IDOR 방지: DTO의 workerProfileId를 무시하고 JWT에서 파생된 ID 사용
+    const workerProfileId = callerWorkerProfileId;
     const {
-      workerProfileId,
       title,
       content,
       location,

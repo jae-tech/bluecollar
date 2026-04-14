@@ -11,10 +11,12 @@ import { z } from 'zod';
  */
 export const CreatePortfolioSchema = z.object({
   // 기본 정보
+  // workerProfileId는 서버가 JWT에서 파생 — 클라이언트 전송값은 무시됨 (IDOR 방지)
   workerProfileId: z
     .string()
     .uuid({ message: 'Invalid worker profile ID' })
-    .describe('워커 프로필 ID (UUID)'),
+    .optional()
+    .describe('워커 프로필 ID (하위 호환용 — 서버에서 JWT로 오버라이드됨)'),
 
   title: z
     .string()
