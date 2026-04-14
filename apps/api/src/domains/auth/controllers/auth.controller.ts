@@ -359,10 +359,12 @@ export class AuthController {
       await this.tokenService.revokeRefreshToken(refreshToken);
     }
 
-    // 쿠키 삭제
-    res.clearCookie('accessToken', { path: '/' });
-    res.clearCookie('refreshToken', { path: '/' });
-    res.clearCookie('authState', { path: '/' });
+    // 쿠키 삭제 — 설정 시와 동일한 domain 옵션 전달해야 삭제됨
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = isProduction ? '.bluecollar.cv' : undefined;
+    res.clearCookie('accessToken', { path: '/', domain: cookieDomain });
+    res.clearCookie('refreshToken', { path: '/', domain: cookieDomain });
+    res.clearCookie('authState', { path: '/', domain: cookieDomain });
 
     return res
       .status(HttpStatus.OK)

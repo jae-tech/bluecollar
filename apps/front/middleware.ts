@@ -38,9 +38,13 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // accessToken 쿠키 존재 여부 확인
-  const accessToken = request.cookies.get("accessToken")?.value;
-  const isAuthenticated = !!accessToken;
+  // refreshToken 쿠키 존재 여부로 인증 판단.
+  // accessToken(15분)이 아닌 refreshToken(30일)을 사용하는 이유:
+  // accessToken 만료 후 대시보드 접근 시 미들웨어가 먼저 막아버리면
+  // apiFetch의 자동 갱신 로직이 실행될 기회가 없음.
+  // refreshToken이 있으면 실제 API 호출 시 accessToken이 자동 갱신됨.
+  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const isAuthenticated = !!refreshToken;
 
   // 인증 필요 경로 → 미인증 시 /login 리다이렉트
   const isProtected = PROTECTED_PATHS.some((path) => pathname.startsWith(path));
