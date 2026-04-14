@@ -1,12 +1,52 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PROJECTS } from "@/lib/data";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+interface PortfolioItem {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+  workerName: string;
+  category: string;
+}
+
+function toStripItem(p: PortfolioItem) {
+  return {
+    id: p.id,
+    img: p.thumbnailUrl ?? PROJECTS[0]?.img ?? "",
+    title: p.title,
+    worker: p.workerName,
+    category: p.category,
+  };
+}
+
 export function PortfolioStrip() {
+  const [apiItems, setApiItems] = useState<PortfolioItem[] | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_URL}/public/profiles/portfolios`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setApiItems(data);
+      })
+      .catch(() => {
+        // API 실패 시 mock fallback — 조용히 무시
+      });
+  }, []);
+
+  // 실제 데이터 있으면 사용, 없으면 mock fallback
+  const source =
+    apiItems && apiItems.length > 0
+      ? apiItems.map(toStripItem)
+      : PROJECTS.slice(0, 8);
+
   // 카드 배열을 두 번 복제해서 이음매 없는 무한 루프 구현
-  const items = PROJECTS.slice(0, 8);
+  const items = source.slice(0, 8);
   const doubled = [...items, ...items];
 
   return (

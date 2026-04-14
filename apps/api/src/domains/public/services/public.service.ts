@@ -261,6 +261,96 @@ export class PublicService {
   }
 
   /**
+   * 최신 포트폴리오 목록 조회 (랜딩 마퀴용)
+   *
+   * 최신 포트폴리오 중 대표 이미지가 있는 것 우선, 최대 limit개 반환.
+   * 랜딩 페이지 PortfolioStrip에서 사용.
+   *
+   * @param limit 최대 반환 수 (기본 8)
+   * @returns 포트폴리오 배열 (id, title, 대표 이미지 URL, 워커 이름)
+   */
+  async getLatestPortfolios(limit = 8): Promise<
+    Array<{
+      id: string;
+      title: string;
+      thumbnailUrl: string | null;
+      workerName: string;
+      category: string;
+    }>
+  > {
+    // 최신 포트폴리오 + 워커 이름 조인
+    const rows = await this.db
+      .select({
+        id: portfolios.id,
+        title: portfolios.title,
+        businessName: workerProfiles.businessName,
+        spaceType: portfolios.spaceType,
+      })
+      .from(portfolios)
+      .innerJoin(
+        workerProfiles,
+        eq(portfolios.workerProfileId, workerProfiles.id),
+      )
+      .orderBy(desc(portfolios.createdAt))
+      .limit(limit * 2); // 이미지 없는 것 필터링 감안해 더 많이 조회
+
+    if (rows.length === 0) return [];
+
+    const portfolioIds = rows.map((r) => r.id);
+
+    // 각 포트폴리오의 첫 번째 이미지 조회
+    const mediaRows = await this.db
+      .select({
+        portfolioId: portfolioMedia.portfolioId,
+        mediaUrl: portfolioMedia.mediaUrl,
+      })
+      .from(portfolioMedia)
+      .where(inArray(portfolioMedia.portfolioId, portfolioIds))
+      .orderBy(portfolioMedia.displayOrder);
+
+    // portfolioId → 첫 번째 이미지 URL 매핑
+    const thumbnailMap = new Map<string, string>();
+    for (const m of mediaRows) {
+      if (!thumbnailMap.has(m.portfolioId)) {
+        thumbnailMap.set(m.portfolioId, m.mediaUrl);
+      }
+    }
+
+    const SPACE_TYPE_LABELS: Record<string, string> = {
+      RESIDENTIAL: '주거',
+      COMMERCIAL: '상업',
+      OTHER: '기타',
+    };
+
+    return rows
+      .filter((r) => thumbnailMap.has(r.id))
+      .slice(0, limit)
+      .map((r) => ({
+        id: r.id,
+        title: r.title,
+        thumbnailUrl: thumbnailMap.get(r.id) ?? null,
+        workerName: r.businessName ?? '블루칼라 기술자',
+        category: SPACE_TYPE_LABELS[r.spaceType ?? ''] ?? r.spaceType ?? '시공',
+      }));
+  }
+
+  /**
+   * 플랫폼 통계 조회 (소셜 프루프용)
+   *
+   * 랜딩 페이지 히어로 섹션에서 사용하는 워커 수를 반환합니다.
+   * 데이터가 없으면 0을 반환 — 프론트에서 0이면 숨김 처리.
+   *
+   * @returns 활성 워커 수
+   */
+  async getStats(): Promise<{ workerCount: number }> {
+    const result = await this.db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(workerProfiles);
+
+    return { workerCount: result[0]?.count ?? 0 };
+  }
+
+  /**
    * 포트폴리오 조회수 증가 (공개 프로필 조회 시 호출)
    *
    * 포트폴리오 조회수(viewCount)를 1 증가시킵니다.

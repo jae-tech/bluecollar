@@ -382,14 +382,14 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
-### TODO-032: 프론트 `isValidFormat()` 단위 테스트 및 추출
+### ~~TODO-032: 프론트 `isValidFormat()` 단위 테스트 및 추출~~
 
-**What:** `apps/front/app/onboarding/slug/page.tsx`의 `isValidFormat()` 함수가 백엔드 `validateSlug()`와 동일 로직이지만 테스트 없음.
-**Why:** 백엔드 규칙 변경 시 프론트 복사본이 silent하게 불일치 발생.
-**Fix:** `apps/front/lib/slug-format.ts`로 추출 후 `apps/front/lib/slug-format.test.ts` 작성.
-**Effort:** S
-**Priority:** P3
-**Found by:** /autoplan Eng Review, 2026-04-04
+**Fixed by /plan-eng-review on main, 2026-04-15**
+
+- `apps/front/lib/slug-format.ts` 추출 (16개 규칙 동일)
+- `apps/front/lib/slug-format.test.ts` 작성 (16 tests, all pass)
+- `onboarding/slug/page.tsx`에서 로컬 `isValidFormat()` 제거 → import 교체
+- `apps/front/package.json`에 `"test": "vitest run"` 스크립트 + vitest devDependency 추가
 
 ---
 
@@ -428,25 +428,23 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ## 🏠 랜딩 페이지 리디자인 후속 (autoplan CEO Review, 2026-04-13)
 
-### TODO-036: 마퀴에 실제 포트폴리오 데이터 연결 (Hybrid ISR)
+### ~~TODO-036: 마퀴에 실제 포트폴리오 데이터 연결 (Hybrid ISR)~~
 
-**What:** `PortfolioStrip`에 ISR 빌드타임 fetch 추가. `GET /public/portfolios` → top 8 최신 포트폴리오. 실제 데이터 없으면 현재 mock 배열 fallback.
-**Why:** 현재 마퀴는 mock 이미지만 표시. 실제 워커가 늘어나면 신뢰도 위해 real data가 필요.
-**Fix:** `portfolio-strip.tsx`에 `getStaticProps`(또는 RSC + `revalidate`) 추가. 빌드 시 `GET /public/portfolios` 호출. 0건이면 mock으로 대체.
-**Effort:** M
-**Priority:** P2
-**Found by:** /autoplan CEO Review, 2026-04-13
+**Fixed by /plan-eng-review on main, 2026-04-15**
+
+- `portfolio-strip.tsx`: `useEffect`로 `GET /public/profiles/portfolios` fetch
+- 실제 데이터 있으면 사용, 없거나 오류면 mock PROJECTS fallback
+- 백엔드: `public.service.ts`에 `getLatestPortfolios(limit)` 메서드 + `GET /public/profiles/portfolios` 엔드포인트 추가
 
 ---
 
-### TODO-037: 히어로 섹션에 워커 수 소셜 프루프
+### ~~TODO-037: 히어로 섹션에 워커 수 소셜 프루프~~
 
-**What:** `HeroSection`에 "현재 N명의 전문 기술자가 블루칼라에 있습니다" 카운트 표시.
-**Why:** 신뢰 신호. 신규 방문 클라이언트가 "실제 서비스인지" 판단하는 핵심 지표.
-**Fix:** `/public/stats` (또는 `/public/workers/count`) 엔드포인트 추가. ISR 또는 서버 컴포넌트로 빌드타임 주입. 0명이면 숨김.
-**Effort:** S
-**Priority:** P2
-**Found by:** /autoplan CEO Review, 2026-04-13
+**Fixed by /plan-eng-review on main, 2026-04-15**
+
+- `hero-section.tsx`: `useEffect`로 `GET /public/profiles/stats` fetch → `workerCount` state
+- "현재 N명의 전문 기술자가 블루칼라에 있습니다" 표시 (null이면 숨김)
+- 백엔드: `public.service.ts`에 `getStats()` + `GET /public/profiles/stats` 엔드포인트 추가
 
 ---
 
@@ -482,14 +480,11 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ---
 
-### TODO-041: 클라이언트용 "기술자 찾기" CTA 추가
+### ~~TODO-041: 클라이언트용 "기술자 찾기" CTA 추가~~
 
-**What:** 랜딩 페이지에 클라이언트(발주자)를 위한 명시적 CTA 추가. "기술자를 찾고 계신가요?" 섹션 또는 히어로 서브헤드에 클라이언트 링크.
-**Why:** 현재 랜딩 전체가 워커 리크루팅 중심 — 클라이언트가 도착하면 "이게 나를 위한 서비스인가?" 알 수 없음.
-**Fix:** HeroSection 하단 또는 ClientCTA에 "시공업체 찾기" 방향 링크 추가. `/search` 또는 `/explore` (아직 없으면 disabled + "출시 예정" 뱃지).
-**Effort:** S
-**Priority:** P2
-**Found by:** /autoplan CEO Review, 2026-04-13
+**Fixed by /plan-eng-review on main, 2026-04-15**
+
+- `hero-section.tsx`: CTA 버튼 아래 "시공업체를 찾고 계신가요? 전문가 검색하기 →" 링크 추가 (`/search` 이동)
 
 ---
 
@@ -510,13 +505,14 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 **What:** 모든 `portfolioMedia` 행의 `roomId`가 NULL. `portfolio.service.ts` Step 4에서 rooms를 insert하지만 `.returning()`으로 ID를 받아오지 않고, 프론트엔드도 roomId를 보내지 않음.
 **Why:** 공간별 사진 그룹핑 기능 전체가 비동작. b86539b 커밋 이후 생성된 모든 포트폴리오가 영향받음.
 **Fix:**
+
 1. `CreatePortfolioMediaPayload`에 `roomIndex?: number` 필드 추가
 2. 프론트: `rooms.flatMap((r, rIdx) => r.images.map(img => ({ ...img, roomIndex: rIdx })))`
 3. 백: Step 4에 `.returning({ id: portfolioRooms.id })` 추가
 4. 백: Step 5에서 `insertedRooms[mediaItem.roomIndex]?.id` → roomId 매핑
-**Effort:** S (~2h 구현 + ~30min 테스트)
-**Priority:** P1
-**Found by:** /autoplan CEO + Eng Review, 2026-04-13
+   **Effort:** S (~2h 구현 + ~30min 테스트)
+   **Priority:** P1
+   **Found by:** /autoplan CEO + Eng Review, 2026-04-13
 
 ---
 
