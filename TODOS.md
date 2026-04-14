@@ -537,14 +537,13 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 ## 🔐 보안 (autoplan Eng Review, 2026-04-13)
 
-### TODO-043: IDOR — workerProfileId를 JWT subject에서 파생
+### ~~TODO-043: IDOR — workerProfileId를 JWT subject에서 파생~~
 
-**What:** `portfolio.service.ts`에서 `workerProfileId`를 클라이언트 request body에서 받음. 인증된 워커가 타인의 workerProfileId를 전달하면 타인 명의 포트폴리오 생성 가능.
-**Why:** IDOR (Insecure Direct Object Reference) 취약점. 퍼블릭 런치 전 반드시 수정.
-**Fix:** controller에서 `@CurrentUser()` 데코레이터로 JWT subject에서 userId 추출 → service에서 `workerProfileId`를 DB lookup으로 확인 (userId → workerProfile). DTO에서 `workerProfileId` 필드 제거.
-**Effort:** XS (~30min)
-**Priority:** P1 (Security)
-**Found by:** /autoplan Eng Review, 2026-04-13
+**Fixed on main, 2026-04-15**
+
+- `portfolio.controller.ts`: DTO의 `workerProfileId` 무시, `user.workerProfileId`(JWT)를 service에 직접 전달
+- `portfolio.service.ts`: `createPortfolio(dto, callerWorkerProfileId)` 시그니처 추가, DTO 값 오버라이드
+- `create-portfolio.dto.ts`: `workerProfileId` → optional (하위 호환 유지, 서버에서 JWT로 오버라이드됨)
 
 ---
 

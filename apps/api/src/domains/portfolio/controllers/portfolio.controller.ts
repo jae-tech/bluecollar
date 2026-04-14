@@ -100,22 +100,21 @@ export class PortfolioController {
     @Body(new ZodValidationPipe(CreatePortfolioSchema))
     createPortfolioDto: CreatePortfolioDto,
   ) {
-    this.logger.info(
-      { workerProfileId: createPortfolioDto.workerProfileId },
-      '포트폴리오 생성 요청 수신',
-    );
+    // JWT에서 workerProfileId 파생 — IDOR 방지 (DTO의 workerProfileId 무시)
+    const workerProfileId = user.workerProfileId;
 
-    // ADMIN이 아닌 경우, 자신의 workerProfileId로만 생성 가능
-    if (
-      user.role !== 'ADMIN' &&
-      user.workerProfileId !== createPortfolioDto.workerProfileId
-    ) {
+    if (!workerProfileId) {
       throw new ForbiddenException(
-        '자신의 프로필에만 포트폴리오를 등록할 수 있습니다',
+        '워커 프로필이 없습니다. 온보딩을 완료해주세요',
       );
     }
 
-    return await this.portfolioService.createPortfolio(createPortfolioDto);
+    this.logger.info({ workerProfileId }, '포트폴리오 생성 요청 수신');
+
+    return await this.portfolioService.createPortfolio(
+      createPortfolioDto,
+      workerProfileId,
+    );
   }
 
   /**
