@@ -109,10 +109,37 @@ export function PortfolioForm({
   const isEditMode = mode === "edit";
 
   // ── 공통 상태 ──────────────────────────────────────────────────────────────
+
+  // Edit 모드 초기 rooms: initialData.rooms + 각 room에 해당 media 바인딩
+  const buildInitialRooms = (): RoomGroup[] => {
+    if (!initialData || !initialData.rooms?.length) return [];
+    return [...initialData.rooms]
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((room) => ({
+        tempId: room.id, // 기존 room ID를 tempId로 사용
+        roomType: room.roomType as RoomType,
+        images: initialData.media
+          .filter((m) => m.roomId === room.id && m.mediaType === "IMAGE")
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map((m) => ({
+            file: new File([], m.mediaUrl.split("/").pop() ?? "image"),
+            previewUrl: m.mediaUrl,
+            uploadedUrl: m.mediaUrl,
+            uploading: false,
+            error: null,
+            imageType:
+              (m.imageType as "BEFORE" | "AFTER" | "DETAIL" | null) ?? null,
+          })),
+      }));
+  };
+
+  // Edit 모드에서도 rooms state 사용 (Create와 동일 구조)
   const buildInitialImages = (): UploadedImage[] => {
     if (!initialData) return [];
+    // rooms에 속하지 않은 미디어만 flat images로
+    const roomIds = new Set(initialData.rooms?.map((r) => r.id) ?? []);
     return initialData.media
-      .filter((m) => m.mediaType === "IMAGE")
+      .filter((m) => m.mediaType === "IMAGE" && !roomIds.has(m.roomId ?? ""))
       .map((m) => ({
         file: new File([], m.mediaUrl.split("/").pop() ?? "image"),
         previewUrl: m.mediaUrl,
@@ -193,8 +220,10 @@ export function PortfolioForm({
   // ── Create 전용 상태 ────────────────────────────────────────────────────────
   const [createStep, setCreateStep] = useState<CreateStep>(1);
 
-  // Create 모드: 공간별 사진 그룹
-  const [rooms, setRooms] = useState<RoomGroup[]>([]);
+  // Create/Edit 공통: 공간별 사진 그룹 (Edit 모드는 initialData.rooms로 초기화)
+  const [rooms, setRooms] = useState<RoomGroup[]>(() =>
+    isEditMode ? buildInitialRooms() : [],
+  );
   const [showRoomPicker, setShowRoomPicker] = useState(false);
   // 공간별 파일 input ref (roomId → ref)
   const roomFileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -407,26 +436,25 @@ export function PortfolioForm({
 
   // ── 제출 ─────────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (isEditMode) {
-      if (!title.trim() || images.length === 0) return;
-      const uploadedImages = images.filter((i) => i.uploadedUrl);
-      if (uploadedImages.length === 0) return;
-    } else {
-      if (!title.trim() || totalRoomImages === 0) return;
-    }
+    const totalRoomImagesForSubmit = rooms.reduce(
+      (sum, r) => sum + r.images.length,
+      0,
+    );
+    if (!title.trim()) return;
+    if (totalRoomImagesForSubmit === 0 && images.length === 0) return;
 
     setSubmitting(true);
     setError(null);
 
     try {
-      // Create 모드: rooms 기반 media 구성. roomId 바인딩은 추후 2-phase API 지원 후 추가.
-      // Edit 모드: 기존 flat images 구조 유지.
+      // Create/Edit 공통: rooms 기반 media 구성 (roomIndex로 룸 바인딩)
+      // rooms가 있으면 rooms 우선, 없으면 flat images 사용
       let media: CreatePortfolioMediaPayload[];
       let roomsPayload: { roomType: string }[] | undefined;
 
-      if (!isEditMode) {
+      if (rooms.length > 0) {
+        // 룸별 사진이 있는 경우 (Create/Edit 공통)
         roomsPayload = rooms.map((r) => ({ roomType: r.roomType }));
-        // roomIndex: 백엔드가 삽입된 room ID로 변환 (roomId NULL 문제 해결)
         media = rooms.flatMap((r, rIdx) =>
           r.images
             .filter((img) => img.uploadedUrl)
@@ -438,6 +466,7 @@ export function PortfolioForm({
             })),
         );
       } else {
+        // 룸 없는 경우: flat images (Edit 레거시 데이터 또는 룸 없이 저장)
         const uploadedImages = images.filter((i) => i.uploadedUrl);
         media = uploadedImages.map((img) => ({
           mediaUrl: img.uploadedUrl!,
@@ -545,6 +574,15 @@ export function PortfolioForm({
           handleFileSelect,
           handleDrop,
           fileInputRef,
+          rooms,
+          showRoomPicker,
+          setShowRoomPicker,
+          addRoom,
+          removeRoom,
+          handleRoomFileSelect,
+          removeRoomImage,
+          setRoomImageType,
+          roomFileInputRefs,
           tags,
           toggleTag,
           warrantyMonths,
@@ -570,7 +608,7 @@ export function PortfolioForm({
       rooms.length > 0 &&
       rooms.every((r) => r.images.length > 0) &&
       rooms.every((r) => r.images.every((i) => !i.uploading)),
-    6: title.trim().length >= 2,
+    6: title.trim().length >= 5,
   };
 
   const goNext = () => {
@@ -1397,6 +1435,23 @@ interface EditFormProps {
   handleFileSelect: (files: FileList | null) => void;
   handleDrop: (e: React.DragEvent) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
+  // 룸별 사진 (Edit 모드에서도 사용)
+  rooms: RoomGroup[];
+  showRoomPicker: boolean;
+  setShowRoomPicker: (v: boolean) => void;
+  addRoom: (roomType: RoomType) => void;
+  removeRoom: (tempId: string) => void;
+  handleRoomFileSelect: (
+    tempId: string,
+    files: FileList | null,
+  ) => Promise<void>;
+  removeRoomImage: (tempId: string, imgIdx: number) => void;
+  setRoomImageType: (
+    tempId: string,
+    imgIdx: number,
+    type: "BEFORE" | "AFTER" | "DETAIL" | null,
+  ) => void;
+  roomFileInputRefs: React.RefObject<Record<string, HTMLInputElement | null>>;
   tags: string[];
   toggleTag: (tag: string) => void;
   warrantyMonths: string;
@@ -1440,6 +1495,15 @@ function EditForm({
   handleFileSelect,
   handleDrop,
   fileInputRef,
+  rooms,
+  showRoomPicker,
+  setShowRoomPicker,
+  addRoom,
+  removeRoom,
+  handleRoomFileSelect,
+  removeRoomImage,
+  setRoomImageType,
+  roomFileInputRefs,
   tags,
   toggleTag,
   warrantyMonths,
@@ -1451,6 +1515,7 @@ function EditForm({
   onCancel,
   handleSubmit,
 }: EditFormProps) {
+  const totalRoomImages = rooms.reduce((sum, r) => sum + r.images.length, 0);
   return (
     <div className="flex flex-col gap-8">
       {/* ── 섹션 1: 기본 정보 ── */}

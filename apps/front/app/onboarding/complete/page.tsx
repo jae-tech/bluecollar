@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Copy, Check, ArrowRight } from "lucide-react";
 import { getMyWorkerProfile } from "@/lib/api";
 import type { WorkerProfile } from "@/lib/api";
-
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "bluecollar.cv";
+import { getProfileUrl } from "@/lib/profile-url";
 
 export default function OnboardingCompletePage() {
   const router = useRouter();
@@ -31,7 +30,7 @@ export default function OnboardingCompletePage() {
       });
   }, [router]);
 
-  const profileUrl = profile ? `${profile.slug}.${BASE_URL}` : "";
+  const profileUrl = profile ? getProfileUrl(profile.slug) : "";
 
   const handleCopy = async () => {
     try {
