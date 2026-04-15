@@ -77,7 +77,7 @@ type CreateStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 const CREATE_STEP_LABELS: Record<CreateStep, string> = {
   1: "시공 위치",
-  2: "공간 유형",
+  2: "건물 유형",
   3: "세부 정보",
   4: "기간 & 비용",
   5: "시공 사진",
@@ -568,12 +568,6 @@ export function PortfolioForm({
           setCostRangeIdx,
           difficulty,
           setDifficulty,
-          images,
-          removeImage,
-          setImageType,
-          handleFileSelect,
-          handleDrop,
-          fileInputRef,
           rooms,
           showRoomPicker,
           setShowRoomPicker,
@@ -672,15 +666,15 @@ export function PortfolioForm({
         </div>
       )}
 
-      {/* ── Step 2: 공간 유형 ── */}
+      {/* ── Step 2: 건물 유형 ── */}
       {createStep === 2 && (
         <div className="flex flex-col gap-4">
           <div>
             <h2 className="text-xl font-bold text-foreground mb-1">
-              어떤 공간이었나요?
+              어떤 건물이었나요?
             </h2>
             <p className="text-sm text-muted-foreground">
-              공간 유형을 선택하면 맞춤 정보를 입력할 수 있어요.
+              건물 유형을 선택하면 맞춤 정보를 입력할 수 있어요.
             </p>
           </div>
           <div className="flex flex-col gap-3">
@@ -1426,16 +1420,7 @@ interface EditFormProps {
           prev: "EASY" | "MEDIUM" | "HARD" | "",
         ) => "EASY" | "MEDIUM" | "HARD" | ""),
   ) => void;
-  images: UploadedImage[];
-  removeImage: (idx: number) => void;
-  setImageType: (
-    idx: number,
-    type: "BEFORE" | "AFTER" | "DETAIL" | null,
-  ) => void;
-  handleFileSelect: (files: FileList | null) => void;
-  handleDrop: (e: React.DragEvent) => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  // 룸별 사진 (Edit 모드에서도 사용)
+  // 룸별 사진
   rooms: RoomGroup[];
   showRoomPicker: boolean;
   setShowRoomPicker: (v: boolean) => void;
@@ -1489,12 +1474,6 @@ function EditForm({
   setCostRangeIdx,
   difficulty,
   setDifficulty,
-  images,
-  removeImage,
-  setImageType,
-  handleFileSelect,
-  handleDrop,
-  fileInputRef,
   rooms,
   showRoomPicker,
   setShowRoomPicker,
@@ -1554,7 +1533,7 @@ function EditForm({
 
         <div>
           <p className="text-xs font-semibold text-muted-foreground mb-2">
-            공간 유형
+            건물 유형
           </p>
           <div className="flex gap-2">
             {(["RESIDENTIAL", "COMMERCIAL", "OTHER"] as const).map((type) => (
@@ -1778,121 +1757,180 @@ function EditForm({
 
       <div className="h-px bg-border" />
 
-      {/* ── 섹션 4: 사진 ── */}
+      {/* ── 섹션 4: 시공 사진 (공간별 모음집) ── */}
       <section className="flex flex-col gap-4">
         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           시공 사진
         </h3>
 
-        {images.length < 10 && (
+        <p className="text-xs text-muted-foreground">
+          공간을 추가하고 각 공간의 시공 사진을 넣어주세요. 공간당 최대{" "}
+          {MAX_IMAGES_PER_ROOM}장, 총 {totalRoomImages}/{MAX_TOTAL_IMAGES}장.
+        </p>
+
+        {/* 공간 목록 */}
+        {rooms.map((room) => (
           <div
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-border rounded-md p-8 flex flex-col items-center gap-3 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
+            key={room.tempId}
+            className="border border-border rounded-md overflow-hidden"
           >
-            <Upload size={24} />
-            <span className="text-sm font-medium">
-              사진을 드래그하거나 클릭해서 선택
-            </span>
-            <span className="text-xs">({images.length}/10)</span>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFileSelect(e.target.files)}
-            />
+            {/* 공간 헤더 */}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-secondary">
+              <span className="text-sm font-semibold text-foreground">
+                {ROOM_TYPE_LABELS[room.roomType]}
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {room.images.length}/{MAX_IMAGES_PER_ROOM}장
+                </span>
+              </span>
+              <button
+                onClick={() => removeRoom(room.tempId)}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* 사진 그리드 */}
+            <div className="p-3 flex flex-col gap-3">
+              <div className="grid grid-cols-3 gap-2">
+                {room.images.map((img, imgIdx) => (
+                  <div
+                    key={img.previewUrl}
+                    className="relative aspect-square rounded-md overflow-hidden border border-border bg-secondary"
+                  >
+                    <Image
+                      src={img.previewUrl}
+                      alt={`${ROOM_TYPE_LABELS[room.roomType]} 사진 ${imgIdx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    {img.uploading && (
+                      <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
+                        <Loader2
+                          size={16}
+                          className="text-primary-foreground animate-spin"
+                        />
+                      </div>
+                    )}
+                    {!img.uploading && (
+                      <button
+                        onClick={() => removeRoomImage(room.tempId, imgIdx)}
+                        className="absolute top-1 right-1 w-5 h-5 bg-foreground/70 rounded-full flex items-center justify-center text-primary-foreground hover:bg-destructive transition-colors"
+                      >
+                        <X size={10} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {/* 사진 추가 버튼 */}
+                {room.images.length < MAX_IMAGES_PER_ROOM &&
+                  totalRoomImages < MAX_TOTAL_IMAGES && (
+                    <button
+                      onClick={() =>
+                        roomFileInputRefs.current[room.tempId]?.click()
+                      }
+                      className="aspect-square rounded-md border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                    >
+                      <Upload size={16} />
+                      <span className="text-xs">추가</span>
+                    </button>
+                  )}
+                <input
+                  ref={(el) => {
+                    roomFileInputRefs.current[room.tempId] = el;
+                  }}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={(e) =>
+                    handleRoomFileSelect(room.tempId, e.target.files)
+                  }
+                />
+              </div>
+
+              {/* 비포/애프터 태그 */}
+              {room.images.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  {room.images.map((img, imgIdx) => (
+                    <div
+                      key={img.previewUrl}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="w-8 h-8 rounded-md overflow-hidden border border-border flex-shrink-0">
+                        <Image
+                          src={img.previewUrl}
+                          alt={`사진 ${imgIdx + 1}`}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 flex-1">
+                        {(
+                          [
+                            { label: "비포", value: "BEFORE" as const },
+                            { label: "애프터", value: "AFTER" as const },
+                            { label: "일반", value: "DETAIL" as const },
+                          ] as const
+                        ).map(({ label, value }) => (
+                          <button
+                            key={value}
+                            onClick={() =>
+                              setRoomImageType(
+                                room.tempId,
+                                imgIdx,
+                                img.imageType === value ? null : value,
+                              )
+                            }
+                            className={`px-2 py-0.5 text-xs rounded-md border transition-colors ${
+                              img.imageType === value
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-card text-muted-foreground border-border hover:border-primary/50"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* 공간 추가 */}
+        {totalRoomImages < MAX_TOTAL_IMAGES && (
+          <div className="relative">
+            <button
+              onClick={() => setShowRoomPicker((v) => !v)}
+              className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-md py-3 text-sm font-medium text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+            >
+              <Upload size={16} />
+              공간 추가
+            </button>
+            {showRoomPicker && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-10 p-2 grid grid-cols-3 gap-1">
+                {ROOM_TYPES.map((rt) => (
+                  <button
+                    key={rt}
+                    onClick={() => addRoom(rt)}
+                    className="px-3 py-2 text-xs font-medium text-foreground rounded-md hover:bg-secondary transition-colors text-center"
+                  >
+                    {ROOM_TYPE_LABELS[rt]}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {images.length > 0 && (
-          <>
-            <div className="grid grid-cols-3 gap-2">
-              {images.map((img, idx) => (
-                <div
-                  key={img.previewUrl}
-                  className="relative aspect-square rounded-md overflow-hidden border border-border bg-secondary"
-                >
-                  <Image
-                    src={img.previewUrl}
-                    alt={`사진 ${idx + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                  {img.uploading && (
-                    <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
-                      <Loader2
-                        size={20}
-                        className="text-primary-foreground animate-spin"
-                      />
-                    </div>
-                  )}
-                  {!img.uploading && !img.error && (
-                    <button
-                      onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 w-5 h-5 bg-foreground/70 rounded-full flex items-center justify-center text-primary-foreground hover:bg-destructive transition-colors"
-                    >
-                      <X size={10} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">
-                비포/애프터 지정
-              </p>
-              <div className="flex flex-col gap-2">
-                {images.slice(0, 6).map((img, idx) => (
-                  <div key={img.previewUrl} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md overflow-hidden border border-border flex-shrink-0">
-                      <Image
-                        src={img.previewUrl}
-                        alt={`사진 ${idx + 1}`}
-                        width={40}
-                        height={40}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-1">
-                      {(
-                        [
-                          { label: "비포", value: "BEFORE" as const },
-                          { label: "애프터", value: "AFTER" as const },
-                          { label: "일반", value: "DETAIL" as const },
-                        ] as const
-                      ).map(({ label, value }) => (
-                        <button
-                          key={value}
-                          onClick={() =>
-                            setImageType(
-                              idx,
-                              img.imageType === value ? null : value,
-                            )
-                          }
-                          className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${
-                            img.imageType === value
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-card text-muted-foreground border-border hover:border-primary/50"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {images.length > 6 && (
-                  <p className="text-xs text-muted-foreground">
-                    +{images.length - 6}장은 상세 사진으로 자동 처리됩니다.
-                  </p>
-                )}
-              </div>
-            </div>
-          </>
+        {rooms.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-2">
+            위 버튼을 눌러 공간을 추가하세요.
+          </p>
         )}
       </section>
 
