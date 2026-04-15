@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { logout } from "@/lib/api";
 
 interface NavbarProps {
@@ -11,21 +11,21 @@ interface NavbarProps {
 
 export function Navbar({ onSignupClick }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  // mounted: SSR HTML과 클라이언트 첫 렌더를 일치시키기 위해
+  // mount 전까지 CTA 영역을 렌더하지 않음 (hydration mismatch 방지)
+  const [mounted, setMounted] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // accessToken은 httpOnly라 JS에서 읽을 수 없으므로
-    // 로그인 시 서버가 심는 non-httpOnly authState 쿠키로 상태 판단
-    const isLoggedIn = document.cookie
-      .split(";")
-      .some((c) => c.trim().startsWith("authState="));
-    setLoggedIn(isLoggedIn);
+    setLoggedIn(document.body.dataset.auth === "1");
+    setMounted(true);
   }, []);
 
   const handleLogout = async () => {
     await logout();
+    document.body.dataset.auth = "0";
     setLoggedIn(false);
     setUserMenuOpen(false);
     router.push("/");
@@ -64,52 +64,54 @@ export function Navbar({ onSignupClick }: NavbarProps) {
           </a>
         </nav>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          {loggedIn ? (
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen((v) => !v)}
-                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-              >
-                <User size={16} />내 계정
-              </button>
-              {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-card border border-border rounded-md py-1 z-50">
-                  <button
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      router.push("/dashboard");
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <User size={14} />
-                    대시보드
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <LogOut size={14} />
-                    로그아웃
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
+        {/* Desktop CTA — mount 전에는 빈 공간 유지 (SSR과 일치) */}
+        <div className="hidden md:flex items-center gap-3 min-w-[140px] justify-end">
+          {mounted && (
             <>
-              <button
-                onClick={() => router.push("/login")}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                로그인
-              </button>
-              <button
-                onClick={onSignupClick}
-                className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-md hover:bg-primary/90 transition-colors"
-              >
-                회원가입
-              </button>
+              {loggedIn ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen((v) => !v)}
+                    className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                  >
+                    내 계정
+                  </button>
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-card border border-border rounded-md py-1 z-50">
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          router.push("/dashboard");
+                        }}
+                        className="w-full px-4 py-2 text-sm text-left text-foreground hover:bg-secondary transition-colors"
+                      >
+                        대시보드
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-sm text-left text-foreground hover:bg-secondary transition-colors"
+                      >
+                        로그아웃
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    로그인
+                  </button>
+                  <button
+                    onClick={onSignupClick}
+                    className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    회원가입
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
@@ -149,46 +151,48 @@ export function Navbar({ onSignupClick }: NavbarProps) {
             서비스 소개
           </a>
           <div className="flex items-center gap-3 pt-2 border-t border-border">
-            {loggedIn ? (
+            {mounted && (
               <>
-                <button
-                  onClick={() => {
-                    setMobileOpen(false);
-                    router.push("/dashboard");
-                  }}
-                  className="flex items-center gap-2 text-sm font-medium text-foreground"
-                >
-                  <User size={14} />
-                  대시보드
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                >
-                  <LogOut size={14} />
-                  로그아웃
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => {
-                    setMobileOpen(false);
-                    router.push("/login");
-                  }}
-                  className="text-sm font-medium text-muted-foreground"
-                >
-                  로그인
-                </button>
-                <button
-                  onClick={() => {
-                    setMobileOpen(false);
-                    onSignupClick();
-                  }}
-                  className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-md"
-                >
-                  회원가입
-                </button>
+                {loggedIn ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        router.push("/dashboard");
+                      }}
+                      className="text-sm font-medium text-foreground"
+                    >
+                      대시보드
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm font-medium text-muted-foreground"
+                    >
+                      로그아웃
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        router.push("/login");
+                      }}
+                      className="text-sm font-medium text-muted-foreground"
+                    >
+                      로그인
+                    </button>
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        onSignupClick();
+                      }}
+                      className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-md"
+                    >
+                      회원가입
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>

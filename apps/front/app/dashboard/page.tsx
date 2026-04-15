@@ -3,20 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  ExternalLink,
-  User,
-  Briefcase,
-  Settings,
-  LogOut,
-  CheckCircle2,
-  ChevronRight,
-  Camera,
-  Search,
-} from "lucide-react";
+import { Plus, Trash2, User, ChevronRight, Camera } from "lucide-react";
+import { getProfileUrl } from "@/lib/profile-url";
 import {
   getMyWorkerProfile,
   getPublicProfile,
@@ -30,9 +18,9 @@ import type {
   PublicProfilePortfolio,
   MasterCode,
 } from "@/lib/api";
+import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "bluecollar.cv";
 
 // ── 로그아웃 ──────────────────────────────────────────────────────────────────
 async function logout() {
@@ -53,6 +41,8 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>("portfolio");
   const [loading, setLoading] = useState(true);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [selectedPortfolio, setSelectedPortfolio] =
+    useState<PublicProfilePortfolio | null>(null);
 
   // 포트폴리오 목록 새로고침
   const refreshPortfolios = async (slug: string) => {
@@ -98,24 +88,22 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <a
               href="/search"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="hidden sm:flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Search size={13} />
               워커 검색
             </a>
             <a
               href={`/worker/${profile?.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="hidden sm:flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ExternalLink size={13} />내 프로필 보기
+              내 프로필 보기
             </a>
             <button
               onClick={logout}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              <LogOut size={13} />
               로그아웃
             </button>
           </div>
@@ -139,14 +127,11 @@ export default function DashboardPage() {
                 {profile?.businessName ?? profile?.slug}
               </p>
               {profile?.slug && (
-                <span className="flex items-center gap-0.5 text-xs text-primary font-medium">
-                  <CheckCircle2 size={11} />
-                  인증됨
-                </span>
+                <span className="text-xs text-primary font-medium">인증됨</span>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {profile?.slug}.{BASE_URL}
+              {profile?.slug ? getProfileUrl(profile.slug) : ""}
             </p>
           </div>
 
@@ -155,9 +140,9 @@ export default function DashboardPage() {
             href={`/worker/${profile?.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="sm:hidden flex-shrink-0 p-2 rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
+            className="sm:hidden flex-shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ExternalLink size={15} />
+            내 프로필
           </a>
         </div>
 
@@ -165,21 +150,20 @@ export default function DashboardPage() {
         <div className="flex items-center gap-1 bg-secondary rounded-md p-1 border border-border mb-6 w-fit">
           {(
             [
-              { id: "portfolio", label: "포트폴리오", icon: Briefcase },
-              { id: "profile", label: "프로필 편집", icon: User },
-              { id: "settings", label: "설정", icon: Settings },
-            ] as { id: Tab; label: string; icon: React.ElementType }[]
-          ).map(({ id, label, icon: Icon }) => (
+              { id: "portfolio", label: "포트폴리오" },
+              { id: "profile", label: "프로필 편집" },
+              { id: "settings", label: "설정" },
+            ] as { id: Tab; label: string }[]
+          ).map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === id
                   ? "bg-card text-foreground border border-border"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon size={14} />
               {label}
             </button>
           ))}
@@ -196,6 +180,7 @@ export default function DashboardPage() {
             portfolios={portfolios}
             profile={profile}
             onAdd={() => router.push("/dashboard/portfolio/new")}
+            onView={(p) => setSelectedPortfolio(p)}
             onEdit={(p) => router.push(`/dashboard/portfolio/${p.id}/edit`)}
             onDelete={async (id) => {
               if (
@@ -221,6 +206,18 @@ export default function DashboardPage() {
         )}
         {activeTab === "settings" && <SettingsTab />}
       </div>
+
+      {/* ── 포트폴리오 상세 모달 ───────────────────────────────────────────── */}
+      <PortfolioDetailModal
+        portfolio={selectedPortfolio}
+        workerName={profile?.businessName ?? profile?.slug ?? ""}
+        mode="edit"
+        onEdit={() => {
+          if (selectedPortfolio)
+            router.push(`/dashboard/portfolio/${selectedPortfolio.id}/edit`);
+        }}
+        onClose={() => setSelectedPortfolio(null)}
+      />
     </div>
   );
 }
@@ -231,12 +228,14 @@ function PortfolioTab({
   portfolios,
   profile,
   onAdd,
+  onView,
   onEdit,
   onDelete,
 }: {
   portfolios: PublicProfilePortfolio[];
   profile: WorkerProfile | null;
   onAdd: () => void;
+  onView: (p: PublicProfilePortfolio) => void;
   onEdit: (p: PublicProfilePortfolio) => void;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -266,6 +265,7 @@ function PortfolioTab({
             <PortfolioCard
               key={p.id}
               portfolio={p}
+              onView={onView}
               onEdit={onEdit}
               onDelete={onDelete}
             />
@@ -301,10 +301,12 @@ function EmptyPortfolio({ onAdd }: { onAdd: () => void }) {
 
 function PortfolioCard({
   portfolio,
+  onView,
   onEdit,
   onDelete,
 }: {
   portfolio: PublicProfilePortfolio;
+  onView: (p: PublicProfilePortfolio) => void;
   onEdit: (p: PublicProfilePortfolio) => void;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -315,8 +317,12 @@ function PortfolioCard({
 
   return (
     <div className="group rounded-md border border-border bg-card overflow-hidden hover:border-primary/40 transition-colors">
-      {/* 썸네일 */}
-      <div className="aspect-video bg-secondary relative overflow-hidden">
+      {/* 썸네일 — 클릭 시 상세 모달 오픈 */}
+      <button
+        onClick={() => onView(portfolio)}
+        className="w-full aspect-video bg-secondary relative overflow-hidden cursor-pointer block"
+        aria-label={`${portfolio.title} 상세보기`}
+      >
         {thumb ? (
           <Image
             src={thumb}
@@ -329,7 +335,13 @@ function PortfolioCard({
             <Camera size={24} className="text-muted-foreground" />
           </div>
         )}
-      </div>
+        {/* 호버 오버레이 */}
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors duration-200 flex items-center justify-center">
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 px-3 py-1.5 rounded-md bg-card/90 backdrop-blur-sm text-xs font-semibold text-foreground">
+            상세보기
+          </span>
+        </div>
+      </button>
 
       {/* 내용 */}
       <div className="p-3.5">
@@ -347,16 +359,14 @@ function PortfolioCard({
       <div className="px-3.5 pb-3.5 flex items-center gap-2">
         <button
           onClick={() => onEdit(portfolio)}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          <Pencil size={12} />
           편집
         </button>
         <button
           onClick={() => onDelete(portfolio.id)}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto"
+          className="text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto"
         >
-          <Trash2 size={12} />
           삭제
         </button>
       </div>
@@ -532,17 +542,16 @@ function ProfileTab({
 
       <div className="flex flex-col gap-4">
         {/* 기본 정보 */}
-        <div className="bg-card border border-border rounded-md p-4">
+        <div className="bg-card border border-border rounded-md p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted-foreground">
+            <p className="text-sm font-semibold text-muted-foreground">
               기본 정보
             </p>
             {editingSection !== "info" && (
               <button
                 onClick={openInfoEdit}
-                className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
-                <Pencil size={11} />
                 편집
               </button>
             )}
@@ -644,17 +653,16 @@ function ProfileTab({
         </div>
 
         {/* 업장 정보 */}
-        <div className="bg-card border border-border rounded-md p-4">
+        <div className="bg-card border border-border rounded-md p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted-foreground">
+            <p className="text-sm font-semibold text-muted-foreground">
               업장 정보
             </p>
             {editingSection !== "location" && (
               <button
                 onClick={openLocationEdit}
-                className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
-                <Pencil size={11} />
                 편집
               </button>
             )}
@@ -768,17 +776,16 @@ function ProfileTab({
         </div>
 
         {/* 전문 분야 */}
-        <div className="bg-card border border-border rounded-md p-4">
+        <div className="bg-card border border-border rounded-md p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted-foreground">
+            <p className="text-sm font-semibold text-muted-foreground">
               전문 분야
             </p>
             {editingSection !== "fields" && (
               <button
                 onClick={openFieldsEdit}
-                className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
-                <Pencil size={11} />
                 편집
               </button>
             )}
@@ -851,9 +858,9 @@ function ProfileTab({
         </div>
 
         {/* 슬러그 / 공개 URL — 한번 정하면 변경 불가 */}
-        <div className="bg-card border border-border rounded-md p-4">
+        <div className="bg-card border border-border rounded-md p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted-foreground">
+            <p className="text-sm font-semibold text-muted-foreground">
               공개 주소
             </p>
             <span className="text-xs text-muted-foreground">변경 불가</span>
@@ -884,12 +891,11 @@ function SectionCard({
   return (
     <div className="bg-card border border-border rounded-md p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold text-muted-foreground">{title}</p>
+        <p className="text-sm font-semibold text-muted-foreground">{title}</p>
         <button
           onClick={() => alert("편집 기능은 준비 중입니다.")}
-          className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          <Pencil size={11} />
           편집
         </button>
       </div>
@@ -962,9 +968,8 @@ function SettingsTab() {
       <div className="mt-8 pt-6 border-t border-border">
         <button
           onClick={logout}
-          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-destructive transition-colors"
+          className="text-sm font-medium text-muted-foreground hover:text-destructive transition-colors"
         >
-          <LogOut size={15} />
           로그아웃
         </button>
       </div>

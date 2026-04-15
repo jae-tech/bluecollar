@@ -614,3 +614,28 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 **Fixed on main, 2026-04-15**
 
 - `portfolio.service.ts`: `MAX_TOTAL_MEDIA = 50`, `MAX_MEDIA_PER_ROOM = 10` 가드 추가 (트랜잭션 시작 전 검증)
+
+---
+
+## 🖼️ 대시보드 UX 개선 (2026-04-16)
+
+### ~~TODO-052: 대시보드 포트폴리오 카드 클릭 → 상세 미리보기 모달~~
+
+**Fixed on main, 2026-04-16**
+
+- `portfolio-detail-modal.tsx`: `mode?: "view" | "edit"` + `onEdit?` prop 추가. mode="edit" 시 CTA → "편집하기" 버튼
+- `dashboard/page.tsx`: `selectedPortfolio` state + 카드 클릭 → `PortfolioDetailModal` (mode="edit") 렌더
+
+### ~~TODO-053: Navbar auth flash 방지 — data-auth 방식~~
+
+**Fixed on main, 2026-04-16**
+
+- `layout.tsx`: 서버에서 `authState` 쿠키 읽어 `<body data-auth="1|0">` 주입
+- `navbar.tsx`: `mounted` state 추가 (SSR 일치), `document.body.dataset.auth`로 초기 로그인 상태 판단, 쿠키 문자열 파싱 제거
+
+### ~~TODO-054: 포트폴리오 Edit 모드에서 기존 rooms 구조 로드~~
+
+**Fixed on main, 2026-04-16**
+
+- `portfolio-form.tsx`: `buildInitialRooms()` 추가 — Edit 모드 진입 시 `initialData.rooms`를 RoomGroup 구조로 변환하여 rooms state 초기화
+- `handleSubmit`: `isEditMode` 분기 제거, rooms 유무로만 media 구성 경로 결정 (Create/Edit 통합)

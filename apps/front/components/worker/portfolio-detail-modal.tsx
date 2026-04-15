@@ -11,14 +11,22 @@ import {
   Calendar,
   DollarSign,
   Wrench,
+  Pencil,
 } from "lucide-react";
-import type { PublicProfilePortfolio, PublicProfileMedia } from "@/lib/api";
+import type {
+  PublicProfilePortfolio,
+  PublicProfileMedia,
+  PortfolioRoom,
+} from "@/lib/api";
 
 interface Props {
   portfolio: PublicProfilePortfolio | null;
   workerName: string;
   phone?: string;
   onClose: () => void;
+  /** "edit" 모드에서는 하단 CTA가 편집 버튼으로 교체됨 */
+  mode?: "view" | "edit";
+  onEdit?: () => void;
 }
 
 // 이미지 타입 표시명
@@ -36,6 +44,23 @@ function formatCost(amount: number | null) {
   if (man >= 10000) return `${(man / 10000).toFixed(1)}억원`;
   if (man >= 1000) return `${(man / 1000).toFixed(1)}천만원`;
   return `${man}만원`;
+}
+
+// 룸 타입 표시명
+const ROOM_TYPE_LABELS: Record<string, string> = {
+  LIVING: "거실",
+  BATHROOM: "욕실",
+  KITCHEN: "주방",
+  BEDROOM: "침실",
+  BALCONY: "발코니",
+  ENTRANCE: "현관",
+  UTILITY: "다용도실",
+  STUDY: "서재",
+  OTHER: "기타",
+};
+
+function roomLabel(room: PortfolioRoom): string {
+  return room.roomLabel || ROOM_TYPE_LABELS[room.roomType] || room.roomType;
 }
 
 // 난이도 표시
@@ -77,7 +102,7 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
             <button
               onClick={() => setIdx((i) => Math.max(i - 1, 0))}
               disabled={idx === 0}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
               aria-label="이전 사진"
             >
               <ChevronLeft size={17} className="text-foreground" />
@@ -85,7 +110,7 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
             <button
               onClick={() => setIdx((i) => Math.min(i + 1, images.length - 1))}
               disabled={idx === images.length - 1}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
               aria-label="다음 사진"
             >
               <ChevronRight size={17} className="text-foreground" />
@@ -105,7 +130,7 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
             <button
               key={i}
               onClick={() => setIdx(i)}
-              className={`relative flex-shrink-0 w-16 h-10 rounded-md overflow-hidden border-2 transition-all ${
+              className={`relative flex-shrink-0 w-16 h-11 rounded-md overflow-hidden border-2 transition-all ${
                 i === idx
                   ? "border-primary"
                   : "border-transparent opacity-60 hover:opacity-90"
@@ -140,6 +165,8 @@ export function PortfolioDetailModal({
   workerName,
   phone,
   onClose,
+  mode = "view",
+  onEdit,
 }: Props) {
   useEffect(() => {
     if (portfolio) {
@@ -162,6 +189,7 @@ export function PortfolioDetailModal({
 
   const {
     media,
+    rooms,
     title,
     content,
     startDate,
@@ -171,10 +199,24 @@ export function PortfolioDetailModal({
     actualCost,
   } = portfolio;
 
-  // 비포/애프터/일반 분리
-  const beforeImages = media.filter((m) => m.imageType === "BEFORE");
-  const afterImages = media.filter((m) => m.imageType === "AFTER");
-  const detailImages = media.filter(
+  // 룸별로 사진 그룹핑 (roomId 있는 미디어)
+  const roomGroups: { room: PortfolioRoom; images: PublicProfileMedia[] }[] = (
+    rooms ?? []
+  )
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((room) => ({
+      room,
+      images: media
+        .filter((m) => m.roomId === room.id)
+        .sort((a, b) => a.displayOrder - b.displayOrder),
+    }))
+    .filter((g) => g.images.length > 0);
+
+  // 룸에 속하지 않은 사진 (비포/애프터/일반)
+  const roomlessMedia = media.filter((m) => !m.roomId);
+  const beforeImages = roomlessMedia.filter((m) => m.imageType === "BEFORE");
+  const afterImages = roomlessMedia.filter((m) => m.imageType === "AFTER");
+  const detailImages = roomlessMedia.filter(
     (m) =>
       m.imageType === "DETAIL" || m.imageType === "BLUEPRINT" || !m.imageType,
   );
@@ -188,11 +230,12 @@ export function PortfolioDetailModal({
         .filter(Boolean)
     : [];
 
+  const hasRooms = roomGroups.length > 0;
   const hasBefore = beforeImages.length > 0;
   const hasAfter = afterImages.length > 0;
 
-  // 비포/애프터 없으면 전체 사진을 하나로 보여줌
-  const allImages = hasBefore || hasAfter ? [] : media;
+  // 룸도 없고 비포/애프터도 없으면 전체 미디어를 하나로
+  const allImages = hasRooms || hasBefore || hasAfter ? [] : media;
 
   const costDisplay = (() => {
     const est = formatCost(estimatedCost);
@@ -233,8 +276,24 @@ export function PortfolioDetailModal({
 
         {/* 스크롤 바디 */}
         <div className="overflow-y-auto flex-1 min-h-0">
-          {/* 비포/애프터 있는 경우: 각각 섹션으로 표시 */}
-          {hasBefore || hasAfter ? (
+          {/* 룸별 사진 섹션 */}
+          {hasRooms && (
+            <div>
+              {roomGroups.map(({ room, images }) => (
+                <div key={room.id}>
+                  <div className="px-5 py-3 bg-secondary border-b border-border">
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      {roomLabel(room)}
+                    </span>
+                  </div>
+                  <ImageCarousel images={images} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 룸에 속하지 않은 비포/애프터/일반 사진 */}
+          {(hasBefore || hasAfter) && (
             <div>
               {hasBefore && (
                 <div>
@@ -267,19 +326,21 @@ export function PortfolioDetailModal({
                 </div>
               )}
             </div>
-          ) : (
-            /* 비포/애프터 없는 경우: 전체 이미지 슬라이더 */
-            allImages.length > 0 && <ImageCarousel images={allImages} />
+          )}
+
+          {/* 룸도 비포/애프터도 없는 경우: 전체 이미지 슬라이더 */}
+          {!hasRooms && !hasBefore && !hasAfter && allImages.length > 0 && (
+            <ImageCarousel images={allImages} />
           )}
 
           {/* 내용 */}
           <div className="p-5 flex flex-col gap-5">
             {/* 제목 */}
-            <h2 className="text-lg font-bold text-foreground leading-tight">
+            <h2 className="text-xl font-bold text-foreground leading-tight">
               {title}
             </h2>
 
-            {/* 메타 정보 */}
+            {/* 메타 정보 — 비용은 강조, 날짜/난이도는 보조 */}
             <div className="flex flex-wrap gap-2">
               {startDate && (
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
@@ -297,8 +358,8 @@ export function PortfolioDetailModal({
                 </span>
               )}
               {costDisplay && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
-                  <DollarSign size={11} />
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-md">
+                  <DollarSign size={13} />
                   {costDisplay}
                 </span>
               )}
@@ -323,17 +384,16 @@ export function PortfolioDetailModal({
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                   사용 자재
                 </h3>
-                <ul className="flex flex-col gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {materials.map((m, i) => (
-                    <li
+                    <span
                       key={i}
-                      className="flex items-center gap-2.5 text-sm text-foreground"
+                      className="inline-flex items-center px-2.5 py-1 bg-secondary border border-border rounded-sm text-xs font-medium text-foreground"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                       {m}
-                    </li>
+                    </span>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>
@@ -341,28 +401,55 @@ export function PortfolioDetailModal({
 
         {/* 하단 CTA */}
         <div className="flex items-center gap-2 px-5 py-4 border-t border-border bg-card flex-shrink-0">
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground">
-              이 시공이 마음에 드세요?
-            </p>
-            <p className="text-sm font-bold text-foreground">{workerName}</p>
-          </div>
-          {phone ? (
-            <a
-              href={`tel:${phone}`}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
-            >
-              <Phone size={14} />
-              의뢰하기
-            </a>
+          {mode === "edit" ? (
+            /* 대시보드 맥락: 편집 버튼만 표시 */
+            <>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">
+                  고객에게 보이는 화면입니다
+                </p>
+                <p className="text-sm font-bold text-foreground">{title}</p>
+              </div>
+              <button
+                onClick={() => {
+                  onEdit?.();
+                  onClose();
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
+              >
+                <Pencil size={14} />
+                편집하기
+              </button>
+            </>
           ) : (
-            <button
-              disabled
-              className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
-            >
-              <MessageCircle size={14} />
-              문의하기
-            </button>
+            /* 공개 프로필 맥락: 의뢰하기/문의하기 버튼 */
+            <>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">
+                  이 시공이 마음에 드세요?
+                </p>
+                <p className="text-sm font-bold text-foreground">
+                  {workerName}
+                </p>
+              </div>
+              {phone ? (
+                <a
+                  href={`tel:${phone}`}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
+                >
+                  <Phone size={14} />
+                  의뢰하기
+                </a>
+              ) : (
+                <button
+                  disabled
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
+                >
+                  <MessageCircle size={14} />
+                  문의하기
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

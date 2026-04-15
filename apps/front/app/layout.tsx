@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,11 +9,16 @@ export const metadata: Metadata = {
   generator: "v0.app",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 서버에서 authState 쿠키를 읽어 body data attribute로 심음
+  // Navbar가 이 값을 초기값으로 사용해 hydration flash를 방지
+  const cookieStore = await cookies();
+  const isLoggedIn = cookieStore.has("authState");
+
   return (
     <html lang="ko">
       <head>
@@ -34,7 +40,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body
+        className="font-sans antialiased bg-background text-foreground"
+        data-auth={isLoggedIn ? "1" : "0"}
+      >
         {children}
       </body>
     </html>
