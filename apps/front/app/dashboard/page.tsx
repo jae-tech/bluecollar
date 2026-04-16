@@ -31,6 +31,25 @@ async function logout() {
   window.location.href = "/login";
 }
 
+// ── 업종 코드 → 한글 표시명 ────────────────────────────────────────────────────
+const FIELD_LABEL: Record<string, string> = {
+  TILE: "타일",
+  WALLPAPER: "도배",
+  PAINTING: "페인트",
+  FLOORING: "바닥재",
+  PLUMBING: "배관",
+  ELECTRICAL: "전기",
+  CARPENTRY: "목공",
+  MASONRY: "조적",
+  WATERPROOFING: "방수",
+  INSULATION: "단열",
+  GLASS: "유리",
+  METAL: "금속",
+  HVAC: "냉난방",
+  DEMOLITION: "철거",
+  GENERAL: "종합",
+};
+
 // ── 탭 타입 ───────────────────────────────────────────────────────────────────
 type Tab = "portfolio" | "profile" | "settings";
 
@@ -145,7 +164,8 @@ export default function DashboardPage() {
               )}
               {profile?.fields && profile.fields.length > 0 && (
                 <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1 rounded-md">
-                  {profile.fields[0].fieldCode}
+                  {FIELD_LABEL[profile.fields[0].fieldCode] ??
+                    profile.fields[0].fieldCode}
                   {profile.fields.length > 1
                     ? ` 외 ${profile.fields.length - 1}`
                     : ""}
@@ -156,7 +176,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── 탭 ───────────────────────────────────────────────────────────── */}
-        <div className="flex border-b border-border mb-6">
+        <div className="flex mb-6">
           {(
             [
               { id: "portfolio", label: "포트폴리오" },
@@ -167,10 +187,10 @@ export default function DashboardPage() {
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 ${
                 activeTab === id
-                  ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-foreground after:-mb-px"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-foreground border-foreground"
+                  : "text-muted-foreground border-transparent hover:text-foreground"
               }`}
             >
               {label}

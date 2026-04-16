@@ -87,7 +87,7 @@ export default function OnboardingCompletePage() {
         </p>
 
         {/* 프로필 URL 박스 */}
-        <div className="bg-secondary rounded-xl border border-border p-4 mb-4 flex items-center gap-3">
+        <div className="bg-secondary rounded-md border border-border p-4 mb-4 flex items-center gap-3">
           <p className="flex-1 text-sm font-medium text-foreground break-all text-left">
             {profileUrl}
           </p>

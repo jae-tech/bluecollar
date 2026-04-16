@@ -100,7 +100,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
   };
 
   const inputClass = (hasError?: boolean) =>
-    `w-full px-4 py-3 rounded-xl border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
+    `w-full px-4 py-3 rounded-md border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
       hasError
         ? "border-red-500 focus:border-red-500"
         : "border-border focus:border-primary"
@@ -116,7 +116,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
       aria-modal="true"
       aria-label="회원가입"
     >
-      <div className="relative bg-card rounded-2xl border border-border shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-card rounded-lg border border-border w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}
@@ -129,7 +129,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
         <div className="px-8 py-8">
           {/* 헤더 */}
           <div className="flex flex-col gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-md bg-brand/10 flex items-center justify-center">
               <svg
                 width="24"
                 height="24"
@@ -176,7 +176,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
 
           {/* 공통 에러 */}
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            <div className="mb-4 px-4 py-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
               {error}
             </div>
           )}
@@ -335,7 +335,7 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-primary-foreground text-sm font-bold py-3.5 rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+              className="w-full bg-primary text-primary-foreground text-sm font-bold py-3.5 rounded-md hover:bg-primary/90 active:scale-[0.98] transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-1"
             >
               {loading ? "처리 중..." : "워커로 가입하기"}
             </button>
