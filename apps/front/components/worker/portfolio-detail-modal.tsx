@@ -43,7 +43,7 @@ function imageTypeLabel(type: string | null) {
 
 // 비용 표시 (원 단위 → 만원)
 function formatCost(amount: number | null) {
-  if (!amount) return null;
+  if (amount == null) return null;
   const man = Math.round(amount / 10000);
   if (man >= 10000) return `${(man / 10000).toFixed(1)}억원`;
   if (man >= 1000) return `${(man / 1000).toFixed(1)}천만원`;
@@ -208,7 +208,7 @@ function BeforeAfterTabs({
         <div className="flex border-b border-border">
           <button
             onClick={() => setTab("before")}
-            className={`flex-1 py-2.5 text-xs font-bold tracking-wider uppercase transition-colors relative ${
+            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors relative ${
               tab === "before"
                 ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-foreground after:-mb-px"
                 : "text-muted-foreground hover:text-foreground"
@@ -218,7 +218,7 @@ function BeforeAfterTabs({
           </button>
           <button
             onClick={() => setTab("after")}
-            className={`flex-1 py-2.5 text-xs font-bold tracking-wider uppercase transition-colors relative ${
+            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors relative ${
               tab === "after"
                 ? "text-primary after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:-mb-px"
                 : "text-muted-foreground hover:text-foreground"
@@ -240,7 +240,7 @@ function BeforeAfterTabs({
       {/* 탭이 하나뿐일 때 레이블 */}
       {!hasBoth && (
         <div className="px-5 pt-3 pb-1">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          <span className="text-xs font-bold text-muted-foreground uppercase">
             {beforeImages.length > 0 ? "시공 전" : "시공 후"}
           </span>
         </div>
@@ -277,7 +277,7 @@ export function PortfolioDetailModal({
   if (!portfolio) return null;
 
   const {
-    media,
+    media: rawMedia,
     rooms,
     title,
     content,
@@ -292,6 +292,8 @@ export function PortfolioDetailModal({
     details,
     tags,
   } = portfolio;
+
+  const media = rawMedia ?? [];
 
   // 룸별로 사진 그룹핑 (roomId 있는 미디어)
   const roomGroups: { room: PortfolioRoom; images: PublicProfileMedia[] }[] = (
@@ -392,7 +394,7 @@ export function PortfolioDetailModal({
             {detailImages.length > 0 && (
               <div className="border-t border-border">
                 <div className="px-5 pt-4 pb-2">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="text-xs font-bold text-muted-foreground uppercase">
                     시공 과정
                   </span>
                 </div>
@@ -465,7 +467,7 @@ export function PortfolioDetailModal({
                   {tags.map((tag, i) => (
                     <span
                       key={`${tag.tagName}-${i}`}
-                      className="flex items-center gap-1 text-xs text-primary bg-primary/8 border border-primary/20 px-2 py-1 rounded-md"
+                      className="flex items-center gap-1 text-xs text-accent-foreground bg-accent border border-border px-2 py-1 rounded-md"
                     >
                       <Tag size={9} />
                       {tag.tagName}
@@ -481,7 +483,7 @@ export function PortfolioDetailModal({
               details?.bathroomCount ||
               constructionScope) && (
               <div className="px-5 py-5 border-b border-border">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase mb-3">
                   시공 정보
                 </h3>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -538,7 +540,7 @@ export function PortfolioDetailModal({
             {/* 시공 내용 텍스트 */}
             {content && (
               <div className="px-5 py-5 border-b border-border">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase mb-3">
                   시공 내용
                 </h3>
                 <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
@@ -594,7 +596,7 @@ export function PortfolioDetailModal({
                       {workerName}
                     </p>
                   </div>
-                  {phone ? (
+                  {phone && /^\+?[\d\s\-()+]+$/.test(phone) ? (
                     <a
                       href={`tel:${phone}`}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
@@ -606,6 +608,7 @@ export function PortfolioDetailModal({
                     <button
                       disabled
                       className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
+                      title="전화번호 미등록"
                     >
                       <MessageCircle size={14} />
                       문의하기
@@ -639,7 +642,7 @@ function RoomTabGallery({
     <div>
       {/* 섹션 라벨 */}
       <div className="px-5 pt-4 pb-0">
-        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+        <span className="text-xs font-bold text-muted-foreground uppercase">
           공간별 사진
         </span>
       </div>

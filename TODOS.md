@@ -4,6 +4,7 @@ Generated from `/plan-design-review` on 2026-03-30.
 Updated from `/plan-eng-review` on 2026-03-31.
 Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
+Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 
 ---
 
@@ -639,3 +640,191 @@ Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 
 - `portfolio-form.tsx`: `buildInitialRooms()` 추가 — Edit 모드 진입 시 `initialData.rooms`를 RoomGroup 구조로 변환하여 rooms state 초기화
 - `handleSubmit`: `isEditMode` 분기 제거, rooms 유무로만 media 구성 경로 결정 (Create/Edit 통합)
+
+---
+
+## 🔒 보안 & 버그 수정 (autoplan 2026-04-16)
+
+### ~~TODO-058: tel: href phone validation — portfolio-detail-modal~~
+
+**Fixed on main, 2026-04-16** (autoplan E2-001)
+
+- `portfolio-detail-modal.tsx:599`: `phone ?` → `phone && /^\+?[\d\s\-()+]+$/.test(phone)` 조건으로 변경
+- malformed phone 값이 저장된 경우 disabled 버튼 fallback. `title="전화번호 미등록"` 추가.
+
+---
+
+### ~~TODO-059: formatCost(0) — 0원 비용 null 반환 버그~~
+
+**Fixed on main, 2026-04-16** (autoplan E2-003)
+
+- `portfolio-detail-modal.tsx:46`: `if (!amount)` → `if (amount == null)` (0 허용)
+
+---
+
+### ~~TODO-060: media null guard — portfolio destructuring~~
+
+**Fixed on main, 2026-04-16** (autoplan E2-006)
+
+- `portfolio-detail-modal.tsx:294`: `media` → `rawMedia`, `const media = rawMedia ?? []` 추가
+
+---
+
+### ~~TODO-061: tracking-wider on Korean labels — portfolio-detail-modal~~
+
+**Fixed on main, 2026-04-16** (autoplan D2-001)
+
+- 6개 위치에서 `tracking-wider` 제거: lines 211, 221, 243, 395, 484, 543 (before fix), 641
+- 한글 텍스트에 letter-spacing 적용 금지 (DESIGN.md 명시 규칙)
+- BeforeAfterTabs 탭 버튼도 동일 처리
+
+---
+
+### ~~TODO-062: bg-primary/8 tag badge → bg-accent~~
+
+**Fixed on main, 2026-04-16** (autoplan D2-002)
+
+- `portfolio-detail-modal.tsx:470`: `text-primary bg-primary/8 border-primary/20` → `text-accent-foreground bg-accent border-border`
+- DESIGN.md 정의 토큰 사용, 다크모드 정상 작동
+
+---
+
+## 🎨 디자인 시스템 — 모달 스프린트 (autoplan 2026-04-16, 잔여)
+
+### TODO-063: close button rounded-full → rounded-md
+
+**What:** `portfolio-detail-modal.tsx:359` 닫기 버튼 `rounded-full` → `rounded-md`
+**Why:** DESIGN.md radius 계층 — 버튼은 `--radius-sm` (rounded-md). `rounded-full`은 아바타/아이콘 전용.
+**Effort:** XS
+
+---
+
+### TODO-064: Desktop left panel empty state — md:hidden 제거
+
+**What:** `portfolio-detail-modal.tsx:403-410` 빈 상태 div의 `md:hidden` 제거
+**Why:** 데스크탑에서 사진 없는 포트폴리오 열면 좌측 패널이 완전히 빈 흰색 void
+**Effort:** XS
+
+---
+
+### TODO-065: 비활성 의뢰하기 버튼 — 이유 표시
+
+**What:** `portfolio-detail-modal.tsx:608-614` phone 없을 때 disabled 버튼에 "전화번호 미등록" 텍스트 또는 인라인 레이블 추가
+**Why:** 고객이 버튼이 비활성인 이유를 모름
+**Effort:** XS (title 속성으로 임시 처리 완료, 인라인 레이블로 개선 권장)
+
+---
+
+### TODO-066: constructionScopeLabel — 영어 → 한글 매핑
+
+**What:** `portfolio-detail-modal.tsx:86-93` `constructionScopeLabel()` 함수가 영어 enum을 title-case로 출력
+**Why:** 한국어 UI에 "Full Renovation" 같은 영어 출력 — UX 일관성 파괴
+**Fix:** `ROOM_TYPE_LABELS`처럼 한국어 매핑 테이블 추가
+**Effort:** S
+
+---
+
+### TODO-067: 비용 표시 — 예상/실제 분리 표시
+
+**What:** `portfolio-detail-modal.tsx:326-333` estimatedCost와 actualCost를 range로 표시 ("500만원 ~ 700만원") → 별도 레이블로 분리
+**Why:** 두 값은 범위가 아닌 견적vs실제. 고객에게 의미 혼동.
+**Effort:** S
+
+---
+
+### TODO-068: 날짜 포맷 — endDate 앞 공백 누락
+
+**What:** `portfolio-detail-modal.tsx:439` `~ ${endDate...}` 앞에 공백 누락
+**Effort:** XS
+
+---
+
+### TODO-069: 인라인 keyframes → globals.css 이전
+
+**What:** `portfolio-detail-modal.tsx:621-624` fadeIn/slideUp `<style>` 태그 → `globals.css`로 이전
+**Why:** React 매 렌더마다 style 태그 재주입
+**Effort:** XS
+
+---
+
+## 🦾 엔지니어링 — 모달 스프린트 (autoplan 2026-04-16, 잔여)
+
+### TODO-070: roomIndex OOB — BadRequestException 가드
+
+**What:** `portfolio.service.ts:520` roomIndex가 insertedRooms 배열 범위 밖이면 silent data loss → BadRequestException 추가
+**Why:** 동시 편집 시 stale roomIndex로 미디어가 룸 없이 저장됨
+**Effort:** S
+
+---
+
+### TODO-071: body overflow lock 스택 처리
+
+**What:** `portfolio-detail-modal.tsx:262` `document.body.style.overflow = "hidden"` → class 기반 counter로 교체
+**Why:** 두 모달이 동시에 마운트/언마운트되면 두 번째 모달의 스크롤 잠금이 풀림
+**Effort:** S
+
+---
+
+### TODO-072: ImageCarousel priority prop — 최상위 캐러셀만
+
+**What:** `portfolio-detail-modal.tsx:119` `priority` prop → 최상위 캐러셀에만 전달, 나머지 false
+**Why:** 여러 캐러셀 동시 렌더 시 모두 high-priority 이미지 preload → LCP 경합
+**Effort:** S
+
+---
+
+### TODO-073: roomGroups useMemo
+
+**What:** `portfolio-detail-modal.tsx:297-316` roomGroups/roomlessMedia 계산 → `useMemo([media, rooms])` 적용
+**Why:** 렌더마다 O(n\*m) 필터 재실행
+**Effort:** XS
+
+---
+
+## 🎯 제품 개선 — 모달 스프린트 CEO 리뷰 (autoplan 2026-04-16)
+
+### TODO-074: 포트폴리오 deep link — ?portfolio=[id] 쿼리 파라미터
+
+**What:** 모달 열릴 때 URL에 `?portfolio=[id]` pushState → 클라이언트 공유 가능
+**Why:** 고객이 특정 시공 사례를 카카오톡 등으로 공유하고 싶을 때 링크가 없음
+**Effort:** S
+
+---
+
+### TODO-075: 캐러셀 키보드 방향키 네비게이션
+
+**What:** `ImageCarousel`에 좌우 방향키로 이미지 전환 추가
+**Why:** 접근성 + 데스크탑 UX
+**Effort:** XS
+
+---
+
+### TODO-076: 모바일 스와이프 제스처
+
+**What:** `ImageCarousel`에 touchstart/touchend 핸들러 또는 CSS `scroll-snap` 적용
+**Why:** 모바일에서 손가락 스와이프로 이미지 전환 기대
+**Effort:** S
+
+---
+
+### TODO-077: 모달에서 워커 프로필 링크
+
+**What:** view 모드 CTA 영역에 "프로필 전체 보기" 텍스트 링크 추가
+**Why:** 클라이언트가 포트폴리오 하나만 보고 워커 전체 프로필로 이동하고 싶을 때 경로 없음
+**Effort:** XS
+
+---
+
+### TODO-078: 가이드 업로드 wizard — "before 사진 추가하기"
+
+**What:** 포트폴리오 생성 후 "시공 전 사진이 없어요 — 지금 추가하면 신뢰도 2배!" 넛지 추가
+**Why:** before/after 탭이 있어도 실제 before 사진이 없으면 UX가 작동 안 함. 콘텐츠 품질이 bottleneck.
+**Effort:** M (별도 스프린트)
+
+---
+
+### TODO-079: DB room 데이터 품질 체크
+
+**What:** `SELECT COUNT(*) FROM portfolioMedia WHERE roomId IS NOT NULL` 비율 확인
+**Why:** RoomTabGallery가 실제로 몇 %의 포트폴리오에서 렌더되는지 불명. UX 가정 검증 필요.
+**Effort:** XS (DB 쿼리 1개)
