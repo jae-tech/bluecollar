@@ -85,7 +85,7 @@ export default function OnboardingPage() {
       case 2:
         return !data.experienceLevel;
       case 3:
-        return data.skills?.length === 0;
+        return !data.skills?.length;
       case 4:
         return false; // Portfolio is optional (can skip)
       default:
