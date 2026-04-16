@@ -350,7 +350,7 @@ export function PortfolioDetailModal({
 
       {/* 패널 */}
       <div
-        className="relative z-10 w-full md:max-w-2xl bg-card rounded-t-lg md:rounded-lg border border-border overflow-hidden max-h-[96dvh] md:max-h-[90dvh] flex flex-col"
+        className="relative z-10 w-full md:max-w-4xl bg-card rounded-t-lg md:rounded-lg border border-border overflow-hidden max-h-[96dvh] md:max-h-[90dvh] flex flex-col"
         style={{ animation: "slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)" }}
       >
         {/* 닫기 버튼 */}
@@ -362,270 +362,273 @@ export function PortfolioDetailModal({
           <X size={15} className="text-foreground" />
         </button>
 
-        {/* 스크롤 바디 */}
-        <div className="overflow-y-auto flex-1 min-h-0">
-          {/* ─────────────────────────────────
-              1. 상단: 제목 + 메타 정보
-              ───────────────────────────────── */}
-          <div className="px-5 pt-6 pb-4 pr-14 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground leading-snug mb-3">
-              {title}
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {spaceType && SPACE_TYPE_LABELS[spaceType] && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
-                  <Home size={11} />
-                  {SPACE_TYPE_LABELS[spaceType]}
-                </span>
-              )}
-              {location && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
-                  <MapPin size={11} />
-                  {location}
-                </span>
-              )}
-              {startDate && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
-                  <Calendar size={11} />
-                  {startDate.slice(0, 7).replace("-", "년 ")}월
-                  {endDate &&
-                    endDate !== startDate &&
-                    ` ~ ${endDate.slice(0, 7).replace("-", "년 ")}월`}
-                </span>
-              )}
-              {diffLabel && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
-                  <Wrench size={11} />
-                  {diffLabel}
-                </span>
-              )}
-              {details?.area && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
-                  <Ruler size={11} />
-                  {details.area}
-                  {details.areaUnit === "PYEONG" ? "평" : "㎡"}
-                </span>
-              )}
-              {costDisplay && (
-                <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-md">
-                  <span className="text-xs">₩</span>
-                  {costDisplay}
-                </span>
-              )}
-            </div>
-            {/* 태그 */}
-            {tags && tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {tags.map((tag, i) => (
-                  <span
-                    key={`${tag.tagName}-${i}`}
-                    className="flex items-center gap-1 text-xs text-primary bg-primary/8 border border-primary/20 px-2 py-1 rounded-md"
-                  >
-                    <Tag size={9} />
-                    {tag.tagName}
+        {/* ─────────────────────────────────────────────────────────
+            본문 레이아웃
+            모바일: 단일 컬럼 스크롤
+            데스크탑(md+): 좌(이미지) | 우(정보) 2컬럼 분할
+            ───────────────────────────────────────────────────────── */}
+        <div className="flex-1 min-h-0 md:grid md:grid-cols-[3fr_2fr] overflow-hidden">
+          {/* ── 왼쪽 패널: 이미지 영역 ── */}
+          <div className="overflow-y-auto md:border-r md:border-border">
+            {/* 시공 전/후 (탭) */}
+            {hasBeforeAfter && (
+              <BeforeAfterTabs
+                beforeImages={beforeImages}
+                afterImages={afterImages}
+              />
+            )}
+
+            {/* 공간별 사진 */}
+            {hasRooms && (
+              <div className={hasBeforeAfter ? "border-t border-border" : ""}>
+                <div className="px-5 pt-4 pb-2">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    공간별 사진
                   </span>
-                ))}
+                </div>
+                <div className="grid grid-cols-2 gap-0">
+                  {roomGroups.map(({ room, images }, gi) => (
+                    <RoomThumbCard
+                      key={room.id}
+                      room={room}
+                      images={images}
+                      index={gi}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 룸도 비포/애프터도 없으면 전체 이미지 슬라이더 */}
+            {allImages.length > 0 && <ImageCarousel images={allImages} />}
+
+            {/* 도면 / 시공 과정 이미지 */}
+            {detailImages.length > 0 && (
+              <div className="border-t border-border">
+                <div className="px-5 pt-4 pb-2">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    시공 과정
+                  </span>
+                </div>
+                <ImageCarousel images={detailImages} />
+              </div>
+            )}
+
+            {/* 사진 없을 때 빈 상태 (모바일 전용 — 데스크탑은 오른쪽 패널에서 처리) */}
+            {media.length === 0 && (
+              <div className="md:hidden px-5 py-10 text-center">
+                <p className="text-sm text-muted-foreground">
+                  아직 시공 사진이 없습니다.
+                </p>
               </div>
             )}
           </div>
 
-          {/* ─────────────────────────────────
-              2. 시공 전/후 비교 (탭 전환)
-              ───────────────────────────────── */}
-          {hasBeforeAfter && (
-            <BeforeAfterTabs
-              beforeImages={beforeImages}
-              afterImages={afterImages}
-            />
-          )}
-
-          {/* ─────────────────────────────────
-              3. 공간별 사진 섹션
-              ───────────────────────────────── */}
-          {hasRooms && (
-            <div className={hasBeforeAfter ? "border-t border-border" : ""}>
-              {/* 섹션 라벨 */}
-              <div className="px-5 pt-4 pb-2">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  공간별 사진
-                </span>
+          {/* ── 오른쪽 패널: 시공 정보 영역 ── */}
+          <div className="overflow-y-auto flex flex-col">
+            {/* 제목 + 메타 배지 */}
+            <div className="px-5 pt-6 pb-4 pr-14 border-b border-border">
+              <h2 className="text-lg font-bold text-foreground leading-snug mb-3">
+                {title}
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {spaceType && SPACE_TYPE_LABELS[spaceType] && (
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                    <Home size={11} />
+                    {SPACE_TYPE_LABELS[spaceType]}
+                  </span>
+                )}
+                {location && (
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                    <MapPin size={11} />
+                    {location}
+                  </span>
+                )}
+                {startDate && (
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                    <Calendar size={11} />
+                    {startDate.slice(0, 7).replace("-", "년 ")}월
+                    {endDate &&
+                      endDate !== startDate &&
+                      ` ~ ${endDate.slice(0, 7).replace("-", "년 ")}월`}
+                  </span>
+                )}
+                {diffLabel && (
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                    <Wrench size={11} />
+                    {diffLabel}
+                  </span>
+                )}
+                {details?.area && (
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                    <Ruler size={11} />
+                    {details.area}
+                    {details.areaUnit === "PYEONG" ? "평" : "㎡"}
+                  </span>
+                )}
+                {costDisplay && (
+                  <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-md">
+                    <span className="text-xs">₩</span>
+                    {costDisplay}
+                  </span>
+                )}
               </div>
-              {/* 공간 카드 그리드 (2열) */}
-              <div className="grid grid-cols-2 gap-0">
-                {roomGroups.map(({ room, images }, gi) => (
-                  <RoomThumbCard
-                    key={room.id}
-                    room={room}
-                    images={images}
-                    index={gi}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 룸도 비포/애프터도 없는 경우: 전체 이미지 슬라이더 */}
-          {allImages.length > 0 && <ImageCarousel images={allImages} />}
-
-          {/* ─────────────────────────────────
-              4. 도면 / 시공 과정 이미지
-              ───────────────────────────────── */}
-          {detailImages.length > 0 && (
-            <div className="border-t border-border">
-              <div className="px-5 pt-4 pb-2">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  시공 과정
-                </span>
-              </div>
-              <ImageCarousel images={detailImages} />
-            </div>
-          )}
-
-          {/* ─────────────────────────────────
-              5. 시공 내용 텍스트
-              ───────────────────────────────── */}
-          {content && (
-            <div className="px-5 py-5 border-t border-border">
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                시공 내용
-              </h3>
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                {content}
-              </p>
-            </div>
-          )}
-
-          {/* ─────────────────────────────────
-              6. 추가 상세 정보 (보증, 시공범위 등)
-              ───────────────────────────────── */}
-          {(details?.warrantyMonths ||
-            details?.bedroomCount ||
-            details?.bathroomCount ||
-            constructionScope) && (
-            <div className="px-5 py-5 border-t border-border">
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                시공 정보
-              </h3>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                {[
-                  constructionScope
-                    ? {
-                        key: "scope",
-                        label: "시공 범위",
-                        value: constructionScopeLabel(constructionScope),
-                        icon: null,
-                      }
-                    : null,
-                  details?.warrantyMonths
-                    ? {
-                        key: "warranty",
-                        label: "하자보증",
-                        value: `${details.warrantyMonths}개월`,
-                        icon: <ShieldCheck size={10} />,
-                      }
-                    : null,
-                  details?.bedroomCount
-                    ? {
-                        key: "bedroom",
-                        label: "침실 수",
-                        value: `${details.bedroomCount}개`,
-                        icon: null,
-                      }
-                    : null,
-                  details?.bathroomCount
-                    ? {
-                        key: "bathroom",
-                        label: "욕실 수",
-                        value: `${details.bathroomCount}개`,
-                        icon: null,
-                      }
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .map((item) => (
-                    <div key={item!.key}>
-                      <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1">
-                        {item!.icon}
-                        {item!.label}
-                      </p>
-                      <p className="text-sm text-foreground">{item!.value}</p>
-                    </div>
+              {/* 태그 */}
+              {tags && tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {tags.map((tag, i) => (
+                    <span
+                      key={`${tag.tagName}-${i}`}
+                      className="flex items-center gap-1 text-xs text-primary bg-primary/8 border border-primary/20 px-2 py-1 rounded-md"
+                    >
+                      <Tag size={9} />
+                      {tag.tagName}
+                    </span>
                   ))}
-              </div>
-            </div>
-          )}
-
-          {/* ─────────────────────────────────
-              빈 상태: 사진도 텍스트도 없을 때
-              ───────────────────────────────── */}
-          {media.length === 0 && !content && !hasBeforeAfter && !hasRooms && (
-            <div className="px-5 py-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                아직 시공 사진이나 상세 내용이 없습니다.
-              </p>
-              {mode === "edit" && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  편집하기를 눌러 사진과 내용을 추가해보세요.
-                </p>
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* 하단 CTA */}
-        <div className="flex items-center gap-2 px-5 py-4 border-t border-border bg-card flex-shrink-0">
-          {mode === "edit" ? (
-            /* 대시보드 맥락: 편집 버튼만 표시 */
-            <>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">
-                  고객에게 보이는 화면입니다
-                </p>
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {title}
+            {/* 추가 상세 정보 (보증, 시공범위, 침실/욕실 수) */}
+            {(details?.warrantyMonths ||
+              details?.bedroomCount ||
+              details?.bathroomCount ||
+              constructionScope) && (
+              <div className="px-5 py-5 border-b border-border">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                  시공 정보
+                </h3>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {[
+                    constructionScope
+                      ? {
+                          key: "scope",
+                          label: "시공 범위",
+                          value: constructionScopeLabel(constructionScope),
+                          icon: null,
+                        }
+                      : null,
+                    details?.warrantyMonths
+                      ? {
+                          key: "warranty",
+                          label: "하자보증",
+                          value: `${details.warrantyMonths}개월`,
+                          icon: <ShieldCheck size={10} />,
+                        }
+                      : null,
+                    details?.bedroomCount
+                      ? {
+                          key: "bedroom",
+                          label: "침실 수",
+                          value: `${details.bedroomCount}개`,
+                          icon: null,
+                        }
+                      : null,
+                    details?.bathroomCount
+                      ? {
+                          key: "bathroom",
+                          label: "욕실 수",
+                          value: `${details.bathroomCount}개`,
+                          icon: null,
+                        }
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .map((item) => (
+                      <div key={item!.key}>
+                        <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1">
+                          {item!.icon}
+                          {item!.label}
+                        </p>
+                        <p className="text-sm font-medium text-foreground">
+                          {item!.value}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* 시공 내용 텍스트 */}
+            {content && (
+              <div className="px-5 py-5 border-b border-border">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                  시공 내용
+                </h3>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  {content}
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  onEdit?.();
-                  onClose();
-                }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
-              >
-                <Pencil size={14} />
-                편집하기
-              </button>
-            </>
-          ) : (
-            /* 공개 프로필 맥락: 의뢰하기/문의하기 버튼 */
-            <>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">
-                  이 시공이 마음에 드세요?
+            )}
+
+            {/* 사진/내용 모두 없을 때 빈 상태 */}
+            {media.length === 0 && !content && !hasBeforeAfter && !hasRooms && (
+              <div className="px-5 py-10 text-center flex-1 flex flex-col items-center justify-center">
+                <p className="text-sm text-muted-foreground">
+                  아직 시공 사진이나 상세 내용이 없습니다.
                 </p>
-                <p className="text-sm font-bold text-foreground">
-                  {workerName}
-                </p>
+                {mode === "edit" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    편집하기를 눌러 사진과 내용을 추가해보세요.
+                  </p>
+                )}
               </div>
-              {phone ? (
-                <a
-                  href={`tel:${phone}`}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
-                >
-                  <Phone size={14} />
-                  의뢰하기
-                </a>
+            )}
+
+            {/* 하단 CTA — 오른쪽 패널 하단에 고정 */}
+            <div className="mt-auto flex items-center gap-2 px-5 py-4 border-t border-border bg-card flex-shrink-0">
+              {mode === "edit" ? (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">
+                      고객에게 보이는 화면입니다
+                    </p>
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {title}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onEdit?.();
+                      onClose();
+                    }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
+                  >
+                    <Pencil size={14} />
+                    편집하기
+                  </button>
+                </>
               ) : (
-                <button
-                  disabled
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
-                >
-                  <MessageCircle size={14} />
-                  문의하기
-                </button>
+                <>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">
+                      이 시공이 마음에 드세요?
+                    </p>
+                    <p className="text-sm font-bold text-foreground truncate">
+                      {workerName}
+                    </p>
+                  </div>
+                  {phone ? (
+                    <a
+                      href={`tel:${phone}`}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
+                    >
+                      <Phone size={14} />
+                      의뢰하기
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
+                    >
+                      <MessageCircle size={14} />
+                      문의하기
+                    </button>
+                  )}
+                </>
               )}
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </div>
 
