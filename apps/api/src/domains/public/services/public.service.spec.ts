@@ -99,10 +99,11 @@ describe('PublicService', () => {
           ]),
         ) // areas
         .mockReturnValueOnce(makeSelectChain([mockPortfolio])) // 포트폴리오
-        // Promise.all(media, details, tags)
+        // Promise.all(media, details, tags, rooms)
         .mockReturnValueOnce(makeSelectChain(mockMedia)) // 미디어
         .mockReturnValueOnce(makeSelectChain([])) // portfolioDetails
-        .mockReturnValueOnce(makeSelectChain([])); // portfolioTags
+        .mockReturnValueOnce(makeSelectChain([])) // portfolioTags
+        .mockReturnValueOnce(makeSelectChain([])); // portfolioRooms (추가)
 
       const result = await publicService.getPublicProfile('kim-tile');
 
@@ -161,10 +162,11 @@ describe('PublicService', () => {
         .mockReturnValueOnce(makeSelectChain([]))
         .mockReturnValueOnce(makeSelectChain([]))
         .mockReturnValueOnce(makeSelectChain([mockPortfolio]))
-        // Promise.all(media, details, tags)
+        // Promise.all(media, details, tags, rooms)
         .mockReturnValueOnce(makeSelectChain(mockMedia))
         .mockReturnValueOnce(makeSelectChain([]))
-        .mockReturnValueOnce(makeSelectChain([]));
+        .mockReturnValueOnce(makeSelectChain([]))
+        .mockReturnValueOnce(makeSelectChain([])); // portfolioRooms (추가)
 
       const result = await publicService.getPublicProfile('kim-tile');
 
