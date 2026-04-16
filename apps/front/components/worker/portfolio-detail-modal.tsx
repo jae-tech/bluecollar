@@ -381,21 +381,7 @@ export function PortfolioDetailModal({
             {/* 공간별 사진 */}
             {hasRooms && (
               <div className={hasBeforeAfter ? "border-t border-border" : ""}>
-                <div className="px-5 pt-4 pb-2">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    공간별 사진
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-0">
-                  {roomGroups.map(({ room, images }, gi) => (
-                    <RoomThumbCard
-                      key={room.id}
-                      room={room}
-                      images={images}
-                      index={gi}
-                    />
-                  ))}
-                </div>
+                <RoomTabGallery groups={roomGroups} />
               </div>
             )}
 
@@ -640,66 +626,56 @@ export function PortfolioDetailModal({
   );
 }
 
-/** 공간별 사진 썸네일 카드 (그리드 2열용) */
-function RoomThumbCard({
-  room,
-  images,
-  index,
+/** 공간별 사진 — 수평 탭 + 캐러셀 */
+function RoomTabGallery({
+  groups,
 }: {
-  room: PortfolioRoom;
-  images: PublicProfileMedia[];
-  index: number;
+  groups: { room: PortfolioRoom; images: PublicProfileMedia[] }[];
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const cover = images[0];
-
-  if (expanded) {
-    return (
-      <div className="col-span-2 border-t border-border">
-        <div className="flex items-center justify-between px-5 py-2.5 bg-secondary border-b border-border">
-          <span className="text-xs font-bold text-foreground">
-            {roomLabel(room)}
-          </span>
-          <button
-            onClick={() => setExpanded(false)}
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            접기
-          </button>
-        </div>
-        <ImageCarousel images={images} />
-      </div>
-    );
-  }
+  const [activeIdx, setActiveIdx] = useState(0);
+  const active = groups[activeIdx];
 
   return (
-    <button
-      onClick={() => setExpanded(true)}
-      className={`relative overflow-hidden group border-border ${
-        index % 2 === 0 ? "border-r" : ""
-      } border-b`}
-      style={{ aspectRatio: "4/3" }}
-    >
-      {cover && (
-        <Image
-          src={cover.mediaUrl}
-          alt={roomLabel(room)}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-      )}
-      {/* 어두운 오버레이 + 레이블 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between">
-        <span className="text-sm font-semibold text-background">
-          {roomLabel(room)}
+    <div>
+      {/* 섹션 라벨 */}
+      <div className="px-5 pt-4 pb-0">
+        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          공간별 사진
         </span>
-        {images.length > 1 && (
-          <span className="text-xs text-background/70 bg-foreground/30 px-1.5 py-0.5 rounded-sm">
-            {images.length}장
-          </span>
+      </div>
+
+      {/* 공간 탭 스크롤 */}
+      <div className="flex gap-2 px-5 pt-3 pb-0 overflow-x-auto scrollbar-hide">
+        {groups.map(({ room, images }, i) => (
+          <button
+            key={room.id}
+            onClick={() => setActiveIdx(i)}
+            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border ${
+              i === activeIdx
+                ? "bg-foreground text-background border-foreground"
+                : "bg-card text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground"
+            }`}
+          >
+            {roomLabel(room)}
+            {images.length > 1 && (
+              <span
+                className={`text-[10px] ${
+                  i === activeIdx ? "opacity-60" : "opacity-50"
+                }`}
+              >
+                {images.length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* 선택된 공간 캐러셀 */}
+      <div className="mt-3">
+        {active && (
+          <ImageCarousel key={active.room.id} images={active.images} />
         )}
       </div>
-    </button>
+    </div>
   );
 }
