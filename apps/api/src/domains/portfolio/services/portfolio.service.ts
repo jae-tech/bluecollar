@@ -382,6 +382,25 @@ export class PortfolioService {
         throw new ForbiddenException('자신의 포트폴리오만 수정할 수 있습니다');
       }
 
+      // Step 2.5: 미디어/rooms 수량 검증 (createPortfolio와 동일 기준)
+      const MAX_TOTAL_MEDIA = 50;
+      const MAX_MEDIA_PER_ROOM = 10;
+      if (updateDto.media && updateDto.media.length > MAX_TOTAL_MEDIA) {
+        throw new BadRequestException(
+          `포트폴리오당 최대 ${MAX_TOTAL_MEDIA}개의 미디어만 등록 가능합니다`,
+        );
+      }
+      if (updateDto.rooms && updateDto.media) {
+        for (let i = 0; i < updateDto.rooms.length; i++) {
+          const roomMedia = updateDto.media.filter((m) => m.roomIndex === i);
+          if (roomMedia.length > MAX_MEDIA_PER_ROOM) {
+            throw new BadRequestException(
+              `공간당 최대 ${MAX_MEDIA_PER_ROOM}개의 미디어만 등록 가능합니다`,
+            );
+          }
+        }
+      }
+
       // Step 3: materialId 유효성 사전 검증
       if (updateDto.tags && updateDto.tags.length > 0) {
         const materialIds = updateDto.tags
@@ -474,6 +493,17 @@ export class PortfolioService {
             )
             .returning({ id: portfolioRooms.id });
         }
+      } else if (
+        updateDto.media !== undefined &&
+        updateDto.media.some((m) => m.roomIndex !== undefined)
+      ) {
+        // rooms를 변경하지 않지만 미디어에 roomIndex가 있는 경우:
+        // 기존 room 순서(displayOrder 기준)를 로드하여 roomIndex→roomId 매핑에 사용
+        insertedRooms = await tx
+          .select({ id: portfolioRooms.id })
+          .from(portfolioRooms)
+          .where(eq(portfolioRooms.portfolioId, portfolioId))
+          .orderBy(portfolioRooms.displayOrder);
       }
 
       // Step 7: tags 교체 (undefined = 변경없음, [] = 전체삭제, [...] = 교체)
