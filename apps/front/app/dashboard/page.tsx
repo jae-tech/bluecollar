@@ -33,21 +33,24 @@ async function logout() {
 
 // ── 업종 코드 → 한글 표시명 ────────────────────────────────────────────────────
 const FIELD_LABEL: Record<string, string> = {
-  TILE: "타일",
-  WALLPAPER: "도배",
-  PAINTING: "페인트",
-  FLOORING: "바닥재",
-  PLUMBING: "배관",
-  ELECTRICAL: "전기",
-  CARPENTRY: "목공",
-  MASONRY: "조적",
-  WATERPROOFING: "방수",
-  INSULATION: "단열",
-  GLASS: "유리",
-  METAL: "금속",
-  HVAC: "냉난방",
-  DEMOLITION: "철거",
-  GENERAL: "종합",
+  FLD_TILE: "타일",
+  FLD_WALLPAPER: "도배",
+  FLD_PAINTING: "도장/페인팅",
+  FLD_FLOORING: "장판/마루",
+  FLD_PLUMBING: "설비/배관",
+  FLD_ELECTRIC: "전기",
+  FLD_CARPENTRY: "목공",
+  FLD_WATERPROOF: "방수",
+  FLD_GLAZING: "유리",
+  FLD_DEMOLITION: "철거",
+  FLD_WINDOW: "샷시/창호",
+  FLD_FILM: "필름",
+  FLD_KITCHEN: "주방/싱크대",
+  FLD_ELASTIC_COAT: "탄성코트",
+  FLD_BATHROOM: "욕실",
+  FLD_CLEANING: "입주청소",
+  FLD_WELDING: "용접",
+  FLD_MACHINING: "기계가공",
 };
 
 // ── 탭 타입 ───────────────────────────────────────────────────────────────────
@@ -870,7 +873,7 @@ function ProfileTab({
                       key={f.fieldCode}
                       className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border"
                     >
-                      {f.fieldCode}
+                      {FIELD_LABEL[f.fieldCode] ?? f.fieldCode}
                     </span>
                   ))}
                 </div>
