@@ -9,7 +9,6 @@ import {
   Phone,
   MessageCircle,
   Calendar,
-  DollarSign,
   Wrench,
   Pencil,
 } from "lucide-react";
@@ -71,7 +70,13 @@ function difficultyLabel(d: string | null) {
   return null;
 }
 
-function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
+function ImageCarousel({
+  images,
+  compact,
+}: {
+  images: PublicProfileMedia[];
+  compact?: boolean;
+}) {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => setIdx(0), [images]);
@@ -79,11 +84,12 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
   if (images.length === 0) return null;
 
   const current = images[idx];
+  const ratio = compact ? "4/3" : "16/9";
 
   return (
     <div>
       {/* 메인 이미지 */}
-      <div className="relative bg-secondary" style={{ aspectRatio: "16/9" }}>
+      <div className="relative bg-secondary" style={{ aspectRatio: ratio }}>
         <Image
           src={current.mediaUrl}
           alt={current.description ?? `사진 ${idx + 1}`}
@@ -125,7 +131,7 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
 
       {/* 썸네일 스트립 */}
       {images.length > 1 && (
-        <div className="flex gap-2 px-4 py-3 border-b border-border overflow-x-auto">
+        <div className="flex gap-2 px-4 py-3 overflow-x-auto">
           {images.map((img, i) => (
             <button
               key={i}
@@ -154,6 +160,68 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
               )}
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 시공 전/후 비교 탭 컴포넌트 */
+function BeforeAfterTabs({
+  beforeImages,
+  afterImages,
+}: {
+  beforeImages: PublicProfileMedia[];
+  afterImages: PublicProfileMedia[];
+}) {
+  const [tab, setTab] = useState<"before" | "after">(
+    afterImages.length > 0 ? "after" : "before",
+  );
+
+  const hasBoth = beforeImages.length > 0 && afterImages.length > 0;
+
+  return (
+    <div>
+      {/* 탭 헤더 (둘 다 있을 때만) */}
+      {hasBoth && (
+        <div className="flex border-b border-border">
+          <button
+            onClick={() => setTab("before")}
+            className={`flex-1 py-2.5 text-xs font-bold tracking-wider uppercase transition-colors relative ${
+              tab === "before"
+                ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-foreground after:-mb-px"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            시공 전
+          </button>
+          <button
+            onClick={() => setTab("after")}
+            className={`flex-1 py-2.5 text-xs font-bold tracking-wider uppercase transition-colors relative ${
+              tab === "after"
+                ? "text-primary after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:-mb-px"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            시공 후
+          </button>
+        </div>
+      )}
+
+      {/* 이미지 */}
+      {tab === "before" && beforeImages.length > 0 && (
+        <ImageCarousel images={beforeImages} />
+      )}
+      {tab === "after" && afterImages.length > 0 && (
+        <ImageCarousel images={afterImages} />
+      )}
+
+      {/* 탭이 하나뿐일 때 레이블 */}
+      {!hasBoth && (
+        <div className="px-5 pt-3 pb-1">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            {beforeImages.length > 0 ? "시공 전" : "시공 후"}
+          </span>
         </div>
       )}
     </div>
@@ -212,7 +280,7 @@ export function PortfolioDetailModal({
     }))
     .filter((g) => g.images.length > 0);
 
-  // 룸에 속하지 않은 사진 (비포/애프터/일반)
+  // 룸에 속하지 않은 사진 분류
   const roomlessMedia = media.filter((m) => !m.roomId);
   const beforeImages = roomlessMedia.filter((m) => m.imageType === "BEFORE");
   const afterImages = roomlessMedia.filter((m) => m.imageType === "AFTER");
@@ -221,21 +289,13 @@ export function PortfolioDetailModal({
       m.imageType === "DETAIL" || m.imageType === "BLUEPRINT" || !m.imageType,
   );
 
-  // 자재 정보: media[0].description에 "카테고리: 제품명, ..." 형태로 저장됨
-  const materialsRaw = media[0]?.description;
-  const materials = materialsRaw
-    ? materialsRaw
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
-
   const hasRooms = roomGroups.length > 0;
   const hasBefore = beforeImages.length > 0;
   const hasAfter = afterImages.length > 0;
+  const hasBeforeAfter = hasBefore || hasAfter;
 
-  // 룸도 없고 비포/애프터도 없으면 전체 미디어를 하나로
-  const allImages = hasRooms || hasBefore || hasAfter ? [] : media;
+  // 룸도 비포/애프터도 없으면 전체 미디어를 하나로
+  const allImages = !hasRooms && !hasBeforeAfter ? media : [];
 
   const costDisplay = (() => {
     const est = formatCost(estimatedCost);
@@ -245,6 +305,8 @@ export function PortfolioDetailModal({
     if (est) return est;
     return null;
   })();
+
+  const diffLabel = difficultyLabel(difficulty);
 
   return (
     <div
@@ -276,71 +338,13 @@ export function PortfolioDetailModal({
 
         {/* 스크롤 바디 */}
         <div className="overflow-y-auto flex-1 min-h-0">
-          {/* 룸별 사진 섹션 */}
-          {hasRooms && (
-            <div>
-              {roomGroups.map(({ room, images }) => (
-                <div key={room.id}>
-                  <div className="px-5 py-3 bg-secondary border-b border-border">
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      {roomLabel(room)}
-                    </span>
-                  </div>
-                  <ImageCarousel images={images} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 룸에 속하지 않은 비포/애프터/일반 사진 */}
-          {(hasBefore || hasAfter) && (
-            <div>
-              {hasBefore && (
-                <div>
-                  <div className="px-5 py-3 bg-secondary border-b border-border">
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      시공 전 (Before)
-                    </span>
-                  </div>
-                  <ImageCarousel images={beforeImages} />
-                </div>
-              )}
-              {hasAfter && (
-                <div>
-                  <div className="px-5 py-3 bg-secondary border-b border-border">
-                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                      시공 후 (After)
-                    </span>
-                  </div>
-                  <ImageCarousel images={afterImages} />
-                </div>
-              )}
-              {detailImages.length > 0 && (
-                <div>
-                  <div className="px-5 py-3 bg-secondary border-b border-border">
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      시공 과정
-                    </span>
-                  </div>
-                  <ImageCarousel images={detailImages} />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 룸도 비포/애프터도 없는 경우: 전체 이미지 슬라이더 */}
-          {!hasRooms && !hasBefore && !hasAfter && allImages.length > 0 && (
-            <ImageCarousel images={allImages} />
-          )}
-
-          {/* 내용 */}
-          <div className="p-5 flex flex-col gap-5">
-            {/* 제목 */}
-            <h2 className="text-xl font-bold text-foreground leading-tight">
+          {/* ─────────────────────────────────
+              1. 상단: 제목 + 메타 정보
+              ───────────────────────────────── */}
+          <div className="px-5 pt-6 pb-4 pr-14 border-b border-border">
+            <h2 className="text-lg font-bold text-foreground leading-snug mb-3">
               {title}
             </h2>
-
-            {/* 메타 정보 — 비용은 강조, 날짜/난이도는 보조 */}
             <div className="flex flex-wrap gap-2">
               {startDate && (
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
@@ -351,52 +355,86 @@ export function PortfolioDetailModal({
                     ` ~ ${endDate.slice(0, 7).replace("-", "년 ")}월`}
                 </span>
               )}
-              {difficultyLabel(difficulty) && (
+              {diffLabel && (
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
                   <Wrench size={11} />
-                  {difficultyLabel(difficulty)}
+                  {diffLabel}
                 </span>
               )}
               {costDisplay && (
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-md">
-                  <DollarSign size={13} />
+                <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-md">
+                  <span className="text-xs">₩</span>
                   {costDisplay}
                 </span>
               )}
             </div>
-
-            {/* 시공 설명 */}
-            {content && (
-              <div>
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                  시공 내용
-                </h3>
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {content}
-                </p>
-              </div>
-            )}
-
-            {/* 사용 자재 */}
-            {materials.length > 0 && (
-              <div>
-                <div className="h-px bg-border mb-4" />
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                  사용 자재
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {materials.map((m, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center px-2.5 py-1 bg-secondary border border-border rounded-sm text-xs font-medium text-foreground"
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* ─────────────────────────────────
+              2. 시공 전/후 비교 (탭 전환)
+              ───────────────────────────────── */}
+          {hasBeforeAfter && (
+            <BeforeAfterTabs
+              beforeImages={beforeImages}
+              afterImages={afterImages}
+            />
+          )}
+
+          {/* ─────────────────────────────────
+              3. 공간별 사진 섹션
+              ───────────────────────────────── */}
+          {hasRooms && (
+            <div className={hasBeforeAfter ? "border-t border-border" : ""}>
+              {/* 섹션 라벨 */}
+              <div className="px-5 pt-4 pb-2">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  공간별 사진
+                </span>
+              </div>
+              {/* 공간 카드 그리드 (2열) */}
+              <div className="grid grid-cols-2 gap-0">
+                {roomGroups.map(({ room, images }, gi) => (
+                  <RoomThumbCard
+                    key={room.id}
+                    room={room}
+                    images={images}
+                    index={gi}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 룸도 비포/애프터도 없는 경우: 전체 이미지 슬라이더 */}
+          {allImages.length > 0 && <ImageCarousel images={allImages} />}
+
+          {/* ─────────────────────────────────
+              4. 도면 / 시공 과정 이미지
+              ───────────────────────────────── */}
+          {detailImages.length > 0 && (
+            <div className="border-t border-border">
+              <div className="px-5 pt-4 pb-2">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  시공 과정
+                </span>
+              </div>
+              <ImageCarousel images={detailImages} />
+            </div>
+          )}
+
+          {/* ─────────────────────────────────
+              5. 시공 내용 텍스트
+              ───────────────────────────────── */}
+          {content && (
+            <div className="px-5 py-5 border-t border-border">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                시공 내용
+              </h3>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                {content}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* 하단 CTA */}
@@ -408,7 +446,9 @@ export function PortfolioDetailModal({
                 <p className="text-xs text-muted-foreground">
                   고객에게 보이는 화면입니다
                 </p>
-                <p className="text-sm font-bold text-foreground">{title}</p>
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {title}
+                </p>
               </div>
               <button
                 onClick={() => {
@@ -459,5 +499,69 @@ export function PortfolioDetailModal({
         @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
       `}</style>
     </div>
+  );
+}
+
+/** 공간별 사진 썸네일 카드 (그리드 2열용) */
+function RoomThumbCard({
+  room,
+  images,
+  index,
+}: {
+  room: PortfolioRoom;
+  images: PublicProfileMedia[];
+  index: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const cover = images[0];
+
+  if (expanded) {
+    return (
+      <div className="col-span-2 border-t border-border">
+        <div className="flex items-center justify-between px-5 py-2.5 bg-secondary border-b border-border">
+          <span className="text-xs font-bold text-foreground">
+            {roomLabel(room)}
+          </span>
+          <button
+            onClick={() => setExpanded(false)}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            접기
+          </button>
+        </div>
+        <ImageCarousel images={images} />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setExpanded(true)}
+      className={`relative overflow-hidden group border-border ${
+        index % 2 === 0 ? "border-r" : ""
+      } border-b`}
+      style={{ aspectRatio: "4/3" }}
+    >
+      {cover && (
+        <Image
+          src={cover.mediaUrl}
+          alt={roomLabel(room)}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+      )}
+      {/* 어두운 오버레이 + 레이블 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between">
+        <span className="text-sm font-semibold text-background">
+          {roomLabel(room)}
+        </span>
+        {images.length > 1 && (
+          <span className="text-xs text-background/70 bg-foreground/30 px-1.5 py-0.5 rounded-sm">
+            {images.length}장
+          </span>
+        )}
+      </div>
+    </button>
   );
 }
