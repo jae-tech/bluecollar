@@ -11,6 +11,11 @@ import {
   Calendar,
   Wrench,
   Pencil,
+  MapPin,
+  Ruler,
+  Tag,
+  Home,
+  ShieldCheck,
 } from "lucide-react";
 import type {
   PublicProfilePortfolio,
@@ -68,6 +73,22 @@ function difficultyLabel(d: string | null) {
   if (d === "MEDIUM") return "보통";
   if (d === "HARD") return "복잡";
   return null;
+}
+
+// 공간 타입 표시
+const SPACE_TYPE_LABELS: Record<string, string> = {
+  RESIDENTIAL: "주거",
+  COMMERCIAL: "상업",
+  OTHER: "기타",
+};
+
+// 시공 범위 표시 (snake_case → 읽기 좋게)
+function constructionScopeLabel(s: string | null) {
+  if (!s) return null;
+  return s
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function ImageCarousel({
@@ -265,6 +286,11 @@ export function PortfolioDetailModal({
     difficulty,
     estimatedCost,
     actualCost,
+    location,
+    spaceType,
+    constructionScope,
+    details,
+    tags,
   } = portfolio;
 
   // 룸별로 사진 그룹핑 (roomId 있는 미디어)
@@ -346,6 +372,18 @@ export function PortfolioDetailModal({
               {title}
             </h2>
             <div className="flex flex-wrap gap-2">
+              {spaceType && SPACE_TYPE_LABELS[spaceType] && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <Home size={11} />
+                  {SPACE_TYPE_LABELS[spaceType]}
+                </span>
+              )}
+              {location && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <MapPin size={11} />
+                  {location}
+                </span>
+              )}
               {startDate && (
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
                   <Calendar size={11} />
@@ -361,6 +399,13 @@ export function PortfolioDetailModal({
                   {diffLabel}
                 </span>
               )}
+              {details?.area && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <Ruler size={11} />
+                  {details.area}
+                  {details.areaUnit === "PYEONG" ? "평" : "㎡"}
+                </span>
+              )}
               {costDisplay && (
                 <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-md">
                   <span className="text-xs">₩</span>
@@ -368,6 +413,20 @@ export function PortfolioDetailModal({
                 </span>
               )}
             </div>
+            {/* 태그 */}
+            {tags && tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {tags.map((tag) => (
+                  <span
+                    key={tag.tagName}
+                    className="flex items-center gap-1 text-xs text-primary bg-primary/8 border border-primary/20 px-2 py-1 rounded-md"
+                  >
+                    <Tag size={9} />
+                    {tag.tagName}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ─────────────────────────────────
@@ -433,6 +492,79 @@ export function PortfolioDetailModal({
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {content}
               </p>
+            </div>
+          )}
+
+          {/* ─────────────────────────────────
+              6. 추가 상세 정보 (보증, 시공범위 등)
+              ───────────────────────────────── */}
+          {(details?.warrantyMonths ||
+            details?.bedroomCount ||
+            details?.bathroomCount ||
+            constructionScope) && (
+            <div className="px-5 py-5 border-t border-border">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                시공 정보
+              </h3>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                {constructionScope && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      시공 범위
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {constructionScopeLabel(constructionScope)}
+                    </p>
+                  </div>
+                )}
+                {details?.warrantyMonths && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1">
+                      <ShieldCheck size={10} />
+                      하자보증
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {details.warrantyMonths}개월
+                    </p>
+                  </div>
+                )}
+                {details?.bedroomCount && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      침실 수
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {details.bedroomCount}개
+                    </p>
+                  </div>
+                )}
+                {details?.bathroomCount && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      욕실 수
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {details.bathroomCount}개
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ─────────────────────────────────
+              빈 상태: 사진도 텍스트도 없을 때
+              ───────────────────────────────── */}
+          {media.length === 0 && !content && !hasBeforeAfter && !hasRooms && (
+            <div className="px-5 py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                아직 시공 사진이나 상세 내용이 없습니다.
+              </p>
+              {mode === "edit" && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  편집하기를 눌러 사진과 내용을 추가해보세요.
+                </p>
+              )}
             </div>
           )}
         </div>
