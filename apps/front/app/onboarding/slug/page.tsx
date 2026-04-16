@@ -129,7 +129,7 @@ export default function OnboardingSlugPage() {
         <div className="flex-1 px-6 pb-6">
           <div className="space-y-4">
             {/* URL 미리보기 */}
-            <div className="bg-secondary rounded-xl p-4 border border-border">
+            <div className="bg-secondary rounded-md p-4 border border-border">
               <p className="text-xs text-muted-foreground mb-2">
                 개인 프로필 주소
               </p>
@@ -159,7 +159,7 @@ export default function OnboardingSlugPage() {
                 }}
                 placeholder="닉네임"
                 autoFocus
-                className={`w-full px-4 py-3 rounded-xl border-2 transition-colors focus:outline-none text-lg bg-card text-foreground ${
+                className={`w-full px-4 py-3 rounded-md border-2 transition-colors focus:outline-none text-lg bg-card text-foreground ${
                   status === "available"
                     ? "border-primary/50 focus:border-primary"
                     : status === "taken" || status === "invalid"
@@ -245,7 +245,7 @@ export default function OnboardingSlugPage() {
             )}
 
             {/* 주의 안내 */}
-            <div className="bg-secondary rounded-xl p-4 border border-border flex items-start gap-2.5">
+            <div className="bg-secondary rounded-md p-4 border border-border flex items-start gap-2.5">
               <AlertCircle
                 size={14}
                 className="text-muted-foreground flex-shrink-0 mt-0.5"
@@ -271,7 +271,7 @@ export default function OnboardingSlugPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={status !== "available" || submitLoading}
-                className={`flex-1 py-3.5 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3.5 rounded-md font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
                   status !== "available" || submitLoading
                     ? "bg-secondary text-muted-foreground cursor-not-allowed"
                     : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95"

@@ -191,7 +191,7 @@ export default function OnboardingPage() {
               <button
                 onClick={handleBack}
                 disabled={submitLoading}
-                className="flex-1 py-3.5 rounded-xl border-2 border-border text-foreground font-bold hover:bg-secondary transition-colors disabled:opacity-50"
+                className="flex-1 py-3.5 rounded-md border-2 border-border text-foreground font-bold hover:bg-secondary transition-colors disabled:opacity-50"
               >
                 뒤로
               </button>
@@ -199,7 +199,7 @@ export default function OnboardingPage() {
             <button
               onClick={handleNext}
               disabled={isNextDisabled() || submitLoading}
-              className={`flex-1 py-3.5 rounded-xl font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
+              className={`flex-1 py-3.5 rounded-md font-bold transition-colors duration-200 flex items-center justify-center gap-2 ${
                 isNextDisabled() || submitLoading
                   ? "bg-secondary text-muted-foreground cursor-not-allowed"
                   : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95"

@@ -105,7 +105,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
 
         {/* 워커 미니카드 */}
         <div className="border-t border-border pt-7">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase mb-4">
             지금 활동 중인 전문가
           </p>
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">

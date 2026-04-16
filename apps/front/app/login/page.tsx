@@ -61,7 +61,7 @@ export default function LoginPage() {
   };
 
   const inputClass = (hasError?: boolean) =>
-    `w-full px-4 py-3 rounded-xl border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
+    `w-full px-4 py-3 rounded-md border bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${
       hasError ? "border-red-500" : "border-border focus:border-primary"
     }`;
 
@@ -77,7 +77,7 @@ export default function LoginPage() {
           </a>
         </div>
 
-        <div className="bg-card rounded-2xl border border-border shadow-2xl px-8 py-8">
+        <div className="bg-card rounded-lg border border-border px-8 py-8">
           {/* 헤더 */}
           <div className="mb-6">
             <h1 className="text-xl font-bold text-foreground">로그인</h1>
@@ -90,7 +90,7 @@ export default function LoginPage() {
           <div className="flex flex-col gap-3 mb-5">
             <a
               href={`${API_URL}/auth/login/google`}
-              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-xl border border-border bg-background hover:bg-secondary text-sm font-medium text-foreground transition-colors"
+              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-md border border-border bg-background hover:bg-secondary text-sm font-medium text-foreground transition-colors"
             >
               {/* Google 아이콘 */}
               <svg
@@ -120,7 +120,7 @@ export default function LoginPage() {
             </a>
             <a
               href={`${API_URL}/auth/login/kakao`}
-              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-xl border border-border bg-[#FEE500] hover:bg-[#F0D900] text-sm font-medium text-[#3C1E1E] transition-colors"
+              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-md border border-border bg-[#FEE500] hover:bg-[#F0D900] text-sm font-medium text-[#3C1E1E] transition-colors"
             >
               {/* 카카오 아이콘 */}
               <svg
@@ -155,7 +155,7 @@ export default function LoginPage() {
 
           {/* 에러 */}
           {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            <div className="mb-4 px-4 py-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
               {error}
             </div>
           )}
@@ -213,7 +213,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-primary-foreground text-sm font-bold py-3.5 rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+              className="w-full bg-primary text-primary-foreground text-sm font-bold py-3.5 rounded-md hover:bg-primary/90 active:scale-[0.98] transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-1"
             >
               {loading ? "로그인 중..." : "로그인"}
             </button>
