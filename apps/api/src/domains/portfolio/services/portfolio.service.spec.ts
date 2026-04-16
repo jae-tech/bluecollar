@@ -120,16 +120,14 @@ describe('PortfolioService', () => {
 
       // insert 체인: values().returning() 또는 values() (upsert 없음)
       const makeInsertChain = (returnValue?: any[]) => ({
-        values: vi
-          .fn()
-          .mockReturnValue(
-            returnValue
-              ? { returning: vi.fn().mockResolvedValue(returnValue) }
-              : {
-                  returning: undefined,
-                  then: (res: any) => Promise.resolve().then(res),
-                },
-          ),
+        values: vi.fn().mockReturnValue(
+          returnValue
+            ? { returning: vi.fn().mockResolvedValue(returnValue) }
+            : {
+                returning: undefined,
+                then: (res: any) => Promise.resolve().then(res),
+              },
+        ),
       });
 
       mockDb.transaction.mockImplementation(async (fn: any) => {
@@ -153,8 +151,11 @@ describe('PortfolioService', () => {
               }),
             }) // portfolios insert
             .mockReturnValue({
-              values: vi.fn().mockResolvedValue(undefined),
-            }), // 나머지 insert (details, rooms, tags, media)
+              values: vi.fn().mockReturnValue({
+                returning: vi.fn().mockResolvedValue([{ id: 'room-uuid-123' }]),
+                then: (res: any) => Promise.resolve(undefined).then(res),
+              }),
+            }), // 나머지 insert (details, rooms, tags, media) — returning() 지원
         };
         return fn(tx);
       });
@@ -239,7 +240,11 @@ describe('PortfolioService', () => {
         ],
       };
 
-      const roomsInsertMock = vi.fn().mockResolvedValue(undefined);
+      const roomsInsertMock = vi.fn().mockReturnValue({
+        returning: vi
+          .fn()
+          .mockResolvedValue([{ id: 'room-uuid-1' }, { id: 'room-uuid-2' }]),
+      });
 
       mockDb.transaction.mockImplementation(async (fn: any) => {
         let insertCallCount = 0;
@@ -256,10 +261,15 @@ describe('PortfolioService', () => {
               };
             }
             if (insertCallCount === 2) {
-              // portfolioRooms insert — rooms 배열 값 검증
+              // portfolioRooms insert — rooms 배열 값 검증 (returning() 호출됨)
               return { values: roomsInsertMock };
             }
-            return { values: vi.fn().mockResolvedValue(undefined) };
+            return {
+              values: vi.fn().mockReturnValue({
+                returning: vi.fn().mockResolvedValue([]),
+                then: (res: any) => Promise.resolve(undefined).then(res),
+              }),
+            };
           }),
         };
         return fn(tx);
@@ -362,7 +372,10 @@ describe('PortfolioService', () => {
           }),
           delete: deleteRoomsMock,
           insert: vi.fn().mockReturnValue({
-            values: vi.fn().mockResolvedValue(undefined),
+            values: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: 'room-uuid-new' }]),
+              then: (res: any) => Promise.resolve(undefined).then(res),
+            }),
           }),
         };
         return fn(tx);
