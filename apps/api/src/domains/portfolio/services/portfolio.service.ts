@@ -455,19 +455,24 @@ export class PortfolioService {
       }
 
       // Step 6: rooms 교체 (undefined = 변경없음, [] = 전체삭제, [...] = 교체)
+      // 삽입된 room ID를 반환받아 Step 8의 roomIndex → roomId 매핑에 사용
+      let insertedRooms: { id: string }[] = [];
       if (updateDto.rooms !== undefined) {
         await tx
           .delete(portfolioRooms)
           .where(eq(portfolioRooms.portfolioId, portfolioId));
         if (updateDto.rooms.length > 0) {
-          await tx.insert(portfolioRooms).values(
-            updateDto.rooms.map((room, index) => ({
-              portfolioId,
-              roomType: room.roomType,
-              roomLabel: room.roomLabel ?? null,
-              displayOrder: room.displayOrder ?? index,
-            })),
-          );
+          insertedRooms = await tx
+            .insert(portfolioRooms)
+            .values(
+              updateDto.rooms.map((room, index) => ({
+                portfolioId,
+                roomType: room.roomType,
+                roomLabel: room.roomLabel ?? null,
+                displayOrder: room.displayOrder ?? index,
+              })),
+            )
+            .returning({ id: portfolioRooms.id });
         }
       }
 
@@ -511,7 +516,12 @@ export class PortfolioService {
           if (item.videoDuration) record.videoDuration = item.videoDuration;
           if (item.thumbnailUrl) record.thumbnailUrl = item.thumbnailUrl;
           if (item.description) record.description = item.description;
-          if (item.roomId) record.roomId = item.roomId;
+          // roomIndex 우선: 방금 삽입된 room ID로 변환. roomId는 레거시 직접 바인딩용
+          if (item.roomIndex !== undefined && insertedRooms[item.roomIndex]) {
+            record.roomId = insertedRooms[item.roomIndex].id;
+          } else if (item.roomId) {
+            record.roomId = item.roomId;
+          }
           return record;
         });
 

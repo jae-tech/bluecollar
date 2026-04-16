@@ -200,7 +200,17 @@ export const UpdatePortfolioSchema = z
             .string()
             .uuid()
             .optional()
-            .describe('공간 ID (portfolioRooms FK, 선택)'),
+            .describe(
+              '공간 ID (portfolioRooms FK, 선택 — rooms 배열 기반 바인딩)',
+            ),
+
+          // roomIndex: 프론트에서 rooms 배열 인덱스를 전달, 백엔드가 삽입된 room ID로 변환
+          roomIndex: z
+            .number()
+            .int()
+            .min(0)
+            .optional()
+            .describe('rooms 배열 인덱스 — 삽입된 room UUID로 변환됨'),
         }),
       )
       .min(1, '미디어를 업데이트할 경우 최소 1개 이상이어야 합니다')
