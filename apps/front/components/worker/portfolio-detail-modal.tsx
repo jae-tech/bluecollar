@@ -43,7 +43,7 @@ function imageTypeLabel(type: string | null) {
 
 // 비용 표시 (원 단위 → 만원)
 function formatCost(amount: number | null) {
-  if (amount == null) return null;
+  if (amount == null || amount <= 0) return null;
   const man = Math.round(amount / 10000);
   if (man >= 10000) return `${(man / 10000).toFixed(1)}억원`;
   if (man >= 1000) return `${(man / 1000).toFixed(1)}천만원`;
@@ -383,7 +383,10 @@ export function PortfolioDetailModal({
             {/* 공간별 사진 */}
             {hasRooms && (
               <div className={hasBeforeAfter ? "border-t border-border" : ""}>
-                <RoomTabGallery groups={roomGroups} />
+                <RoomTabGallery
+                  key={roomGroups.map((g) => g.room.id).join("-")}
+                  groups={roomGroups}
+                />
               </div>
             )}
 
@@ -596,7 +599,7 @@ export function PortfolioDetailModal({
                       {workerName}
                     </p>
                   </div>
-                  {phone && /^\+?[\d\s\-()+]+$/.test(phone) ? (
+                  {phone && /^\+?[\d\s\-()+]*\d[\d\s\-()+]*$/.test(phone) ? (
                     <a
                       href={`tel:${phone}`}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
