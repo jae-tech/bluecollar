@@ -643,6 +643,44 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 
 ---
 
+## 🔒 보안 & 버그 수정 (/ship 적대적 리뷰 2026-04-16)
+
+### ~~TODO-080: updatePortfolio rooms=undefined 시 roomIndex→roomId 데이터 손실~~
+
+**Fixed on main, 2026-04-16** (/ship adversarial review)
+
+- `portfolio.service.ts`: rooms=undefined(미변경) + media에 roomIndex 있을 때 기존 rooms를 `displayOrder` 순으로 로드하여 `insertedRooms`에 사용
+- 이전: rooms 미변경 시 `insertedRooms=[]` → media의 모든 roomId가 null로 저장되는 데이터 손실 버그
+
+---
+
+### ~~TODO-081: updatePortfolio per-room 미디어 수량 검증 누락~~
+
+**Fixed on main, 2026-04-16** (/ship adversarial review)
+
+- `portfolio.service.ts`: createPortfolio와 동일한 `MAX_TOTAL_MEDIA=50`, `MAX_MEDIA_PER_ROOM=10` 검증 추가
+- 이전: PATCH 요청으로 공간당 10개 제한 bypass 가능
+
+---
+
+### ~~TODO-082: RoomTabGallery activeIdx 포트폴리오 전환 시 초기화 누락~~
+
+**Fixed on main, 2026-04-16** (/ship adversarial review)
+
+- `portfolio-detail-modal.tsx`: `<RoomTabGallery key={roomGroups.map(g => g.room.id).join('-')} ...>` — key prop으로 언마운트/리마운트 보장
+- 이전: 다른 포트폴리오 클릭 시 activeIdx가 새 portfolio의 rooms 수를 초과하면 갤러리 빈 상태
+
+---
+
+### ~~TODO-059: formatCost(0) — 0원 비용 null 반환 버그~~
+
+**Fixed on main, 2026-04-16** (autoplan E2-003 + /ship adversarial)
+
+- `portfolio-detail-modal.tsx:46`: `if (!amount)` → `if (amount == null)` → `if (amount == null || amount <= 0)` (최종)
+- 0원이 "0만원"으로 표시되는 버그 추가 수정
+
+---
+
 ## 🔒 보안 & 버그 수정 (autoplan 2026-04-16)
 
 ### ~~TODO-058: tel: href phone validation — portfolio-detail-modal~~
