@@ -416,9 +416,9 @@ export function PortfolioDetailModal({
             {/* 태그 */}
             {tags && tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {tags.map((tag) => (
+                {tags.map((tag, i) => (
                   <span
-                    key={tag.tagName}
+                    key={`${tag.tagName}-${i}`}
                     className="flex items-center gap-1 text-xs text-primary bg-primary/8 border border-primary/20 px-2 py-1 rounded-md"
                   >
                     <Tag size={9} />
@@ -507,47 +507,50 @@ export function PortfolioDetailModal({
                 시공 정보
               </h3>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                {constructionScope && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      시공 범위
-                    </p>
-                    <p className="text-sm text-foreground">
-                      {constructionScopeLabel(constructionScope)}
-                    </p>
-                  </div>
-                )}
-                {details?.warrantyMonths && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1">
-                      <ShieldCheck size={10} />
-                      하자보증
-                    </p>
-                    <p className="text-sm text-foreground">
-                      {details.warrantyMonths}개월
-                    </p>
-                  </div>
-                )}
-                {details?.bedroomCount && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      침실 수
-                    </p>
-                    <p className="text-sm text-foreground">
-                      {details.bedroomCount}개
-                    </p>
-                  </div>
-                )}
-                {details?.bathroomCount && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      욕실 수
-                    </p>
-                    <p className="text-sm text-foreground">
-                      {details.bathroomCount}개
-                    </p>
-                  </div>
-                )}
+                {[
+                  constructionScope
+                    ? {
+                        key: "scope",
+                        label: "시공 범위",
+                        value: constructionScopeLabel(constructionScope),
+                        icon: null,
+                      }
+                    : null,
+                  details?.warrantyMonths
+                    ? {
+                        key: "warranty",
+                        label: "하자보증",
+                        value: `${details.warrantyMonths}개월`,
+                        icon: <ShieldCheck size={10} />,
+                      }
+                    : null,
+                  details?.bedroomCount
+                    ? {
+                        key: "bedroom",
+                        label: "침실 수",
+                        value: `${details.bedroomCount}개`,
+                        icon: null,
+                      }
+                    : null,
+                  details?.bathroomCount
+                    ? {
+                        key: "bathroom",
+                        label: "욕실 수",
+                        value: `${details.bathroomCount}개`,
+                        icon: null,
+                      }
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .map((item) => (
+                    <div key={item!.key}>
+                      <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1">
+                        {item!.icon}
+                        {item!.label}
+                      </p>
+                      <p className="text-sm text-foreground">{item!.value}</p>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
