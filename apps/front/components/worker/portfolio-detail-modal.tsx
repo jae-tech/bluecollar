@@ -191,9 +191,11 @@ function ImageCarousel({
 function BeforeAfterTabs({
   beforeImages,
   afterImages,
+  compact,
 }: {
   beforeImages: PublicProfileMedia[];
   afterImages: PublicProfileMedia[];
+  compact?: boolean;
 }) {
   const [tab, setTab] = useState<"before" | "after">(
     afterImages.length > 0 ? "after" : "before",
@@ -205,23 +207,23 @@ function BeforeAfterTabs({
     <div>
       {/* 탭 헤더 (둘 다 있을 때만) */}
       {hasBoth && (
-        <div className="flex border-b border-border">
+        <div className="flex">
           <button
             onClick={() => setTab("before")}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors relative ${
+            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 ${
               tab === "before"
-                ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-foreground after:-mb-px"
-                : "text-muted-foreground hover:text-foreground"
+                ? "text-foreground border-foreground"
+                : "text-muted-foreground border-border hover:text-foreground"
             }`}
           >
             시공 전
           </button>
           <button
             onClick={() => setTab("after")}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors relative ${
+            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 ${
               tab === "after"
-                ? "text-primary after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:-mb-px"
-                : "text-muted-foreground hover:text-foreground"
+                ? "text-primary border-primary"
+                : "text-muted-foreground border-border hover:text-foreground"
             }`}
           >
             시공 후
@@ -231,10 +233,10 @@ function BeforeAfterTabs({
 
       {/* 이미지 */}
       {tab === "before" && beforeImages.length > 0 && (
-        <ImageCarousel images={beforeImages} />
+        <ImageCarousel images={beforeImages} compact={compact} />
       )}
       {tab === "after" && afterImages.length > 0 && (
-        <ImageCarousel images={afterImages} />
+        <ImageCarousel images={afterImages} compact={compact} />
       )}
 
       {/* 탭이 하나뿐일 때 레이블 */}
@@ -371,12 +373,13 @@ export function PortfolioDetailModal({
             ───────────────────────────────────────────────────────── */}
         <div className="flex-1 min-h-0 md:grid md:grid-cols-[3fr_2fr] overflow-hidden">
           {/* ── 왼쪽 패널: 이미지 영역 ── */}
-          <div className="overflow-y-auto md:border-r md:border-border">
+          <div className="overflow-y-auto min-h-0 md:border-r md:border-border">
             {/* 시공 전/후 (탭) */}
             {hasBeforeAfter && (
               <BeforeAfterTabs
                 beforeImages={beforeImages}
                 afterImages={afterImages}
+                compact
               />
             )}
 
@@ -386,12 +389,15 @@ export function PortfolioDetailModal({
                 <RoomTabGallery
                   key={roomGroups.map((g) => g.room.id).join("-")}
                   groups={roomGroups}
+                  compact
                 />
               </div>
             )}
 
             {/* 룸도 비포/애프터도 없으면 전체 이미지 슬라이더 */}
-            {allImages.length > 0 && <ImageCarousel images={allImages} />}
+            {allImages.length > 0 && (
+              <ImageCarousel images={allImages} compact />
+            )}
 
             {/* 도면 / 시공 과정 이미지 */}
             {detailImages.length > 0 && (
@@ -401,7 +407,7 @@ export function PortfolioDetailModal({
                     시공 과정
                   </span>
                 </div>
-                <ImageCarousel images={detailImages} />
+                <ImageCarousel images={detailImages} compact />
               </div>
             )}
 
@@ -635,8 +641,10 @@ export function PortfolioDetailModal({
 /** 공간별 사진 — 수평 탭 + 캐러셀 */
 function RoomTabGallery({
   groups,
+  compact,
 }: {
   groups: { room: PortfolioRoom; images: PublicProfileMedia[] }[];
+  compact?: boolean;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const active = groups[activeIdx];
@@ -679,7 +687,11 @@ function RoomTabGallery({
       {/* 선택된 공간 캐러셀 */}
       <div className="mt-3">
         {active && (
-          <ImageCarousel key={active.room.id} images={active.images} />
+          <ImageCarousel
+            key={active.room.id}
+            images={active.images}
+            compact={compact}
+          />
         )}
       </div>
     </div>
