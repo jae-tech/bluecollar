@@ -78,31 +78,25 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background">
       {/* ── 상단 헤더 ─────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-card border-b border-border">
-        <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-5 h-14 flex items-center justify-between">
           <a
             href="/"
             className="text-base font-bold tracking-tight text-foreground"
           >
             Bluecollar <span className="text-primary">CV</span>
           </a>
-          <div className="flex items-center gap-3">
-            <a
-              href="/search"
-              className="hidden sm:flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              워커 검색
-            </a>
+          <div className="flex items-center gap-4">
             <a
               href={`/worker/${profile?.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               내 프로필 보기
             </a>
             <button
               onClick={logout}
-              className="flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               로그아웃
             </button>
@@ -110,44 +104,59 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-5 py-8">
+      <div className="max-w-3xl mx-auto px-5 py-8">
         {/* ── 프로필 요약 카드 ───────────────────────────────────────────── */}
-        <div className="bg-card border border-border rounded-md p-5 mb-6 flex items-center gap-4">
-          {/* 아바타 */}
-          <div className="relative flex-shrink-0">
-            <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden">
-              <User size={24} className="text-muted-foreground" />
+        <div className="mb-8">
+          <div className="flex items-center gap-4">
+            {/* 아바타 */}
+            <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center flex-shrink-0">
+              <User size={22} className="text-muted-foreground" />
             </div>
-          </div>
-
-          {/* 정보 */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-bold text-foreground truncate">
+            {/* 이름 + URL */}
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-foreground truncate leading-tight">
                 {profile?.businessName ?? profile?.slug}
               </p>
-              {profile?.slug && (
-                <span className="text-xs text-primary font-medium">인증됨</span>
-              )}
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {profile?.slug ? getProfileUrl(profile.slug) : ""}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {profile?.slug ? getProfileUrl(profile.slug) : ""}
-            </p>
+            {/* 프로필 편집 버튼 */}
+            <button
+              onClick={() => setActiveTab("profile")}
+              className="flex-shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors border border-border rounded-md px-3 py-1.5"
+            >
+              편집
+            </button>
           </div>
 
-          {/* 프로필 보기 링크 (모바일) */}
-          <a
-            href={`/worker/${profile?.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sm:hidden flex-shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            내 프로필
-          </a>
+          {/* 통계 배지 */}
+          {(profile?.yearsOfExperience || portfolios.length > 0) && (
+            <div className="flex items-center gap-2 mt-4">
+              {portfolios.length > 0 && (
+                <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1 rounded-md">
+                  포트폴리오 {portfolios.length}개
+                </span>
+              )}
+              {profile?.yearsOfExperience && (
+                <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1 rounded-md">
+                  경력 {profile.yearsOfExperience}년
+                </span>
+              )}
+              {profile?.fields && profile.fields.length > 0 && (
+                <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1 rounded-md">
+                  {profile.fields[0].fieldCode}
+                  {profile.fields.length > 1
+                    ? ` 외 ${profile.fields.length - 1}`
+                    : ""}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── 탭 ───────────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-1 bg-secondary rounded-md p-1 border border-border mb-6 w-fit">
+        <div className="flex border-b border-border mb-6">
           {(
             [
               { id: "portfolio", label: "포트폴리오" },
@@ -158,9 +167,9 @@ export default function DashboardPage() {
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
                 activeTab === id
-                  ? "bg-card text-foreground border border-border"
+                  ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-foreground after:-mb-px"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -242,17 +251,16 @@ function PortfolioTab({
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-base font-bold text-foreground">포트폴리오</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {portfolios.length}개의 시공 사례
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {portfolios.length > 0
+            ? `시공 사례 ${portfolios.length}개`
+            : "아직 포트폴리오가 없습니다"}
+        </p>
         <button
           onClick={onAdd}
-          className="flex items-center gap-2 bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
         >
-          <Plus size={15} />
+          <Plus size={14} />
           추가
         </button>
       </div>
@@ -260,7 +268,7 @@ function PortfolioTab({
       {portfolios.length === 0 ? (
         <EmptyPortfolio onAdd={onAdd} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {portfolios.map((p) => (
             <PortfolioCard
               key={p.id}
@@ -316,11 +324,12 @@ function PortfolioCard({
     )?.mediaUrl ?? null;
 
   return (
-    <div className="group rounded-md border border-border bg-card overflow-hidden hover:border-primary/40 transition-colors">
+    <div className="group rounded-md border border-border bg-card overflow-hidden hover:border-primary/30 transition-colors">
       {/* 썸네일 — 클릭 시 상세 모달 오픈 */}
       <button
         onClick={() => onView(portfolio)}
-        className="w-full aspect-video bg-secondary relative overflow-hidden cursor-pointer block"
+        className="w-full bg-secondary relative overflow-hidden cursor-pointer block"
+        style={{ aspectRatio: "4/3" }}
         aria-label={`${portfolio.title} 상세보기`}
       >
         {thumb ? (
@@ -332,43 +341,37 @@ function PortfolioCard({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Camera size={24} className="text-muted-foreground" />
+            <Camera size={20} className="text-muted-foreground" />
           </div>
         )}
         {/* 호버 오버레이 */}
-        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors duration-200 flex items-center justify-center">
-          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 px-3 py-1.5 rounded-md bg-card/90 backdrop-blur-sm text-xs font-semibold text-foreground">
-            상세보기
+        <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors duration-200 flex items-center justify-center">
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 px-3 py-1 rounded-md bg-card/90 backdrop-blur-sm text-xs font-semibold text-foreground">
+            미리보기
           </span>
         </div>
       </button>
 
-      {/* 내용 */}
-      <div className="p-3.5">
-        <p className="text-sm font-semibold text-foreground line-clamp-1 mb-1">
+      {/* 내용 + 액션 */}
+      <div className="p-3">
+        <p className="text-sm font-semibold text-foreground line-clamp-1 mb-3">
           {portfolio.title}
         </p>
-        {portfolio.content && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {portfolio.content}
-          </p>
-        )}
-      </div>
-
-      {/* 액션 */}
-      <div className="px-3.5 pb-3.5 flex items-center gap-2">
-        <button
-          onClick={() => onEdit(portfolio)}
-          className="text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          편집
-        </button>
-        <button
-          onClick={() => onDelete(portfolio.id)}
-          className="text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto"
-        >
-          삭제
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onEdit(portfolio)}
+            className="flex-1 text-xs font-medium text-center py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+          >
+            편집
+          </button>
+          <button
+            onClick={() => onDelete(portfolio.id)}
+            className="w-8 h-7 flex items-center justify-center rounded-md border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+            aria-label="삭제"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -378,10 +381,11 @@ function AddPortfolioCard({ onAdd }: { onAdd: () => void }) {
   return (
     <button
       onClick={onAdd}
-      className="rounded-md border border-dashed border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors aspect-square flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary min-h-[160px]"
+      className="rounded-md border border-dashed border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
+      style={{ aspectRatio: "4/3" }}
     >
-      <Plus size={24} />
-      <span className="text-sm font-medium">포트폴리오 추가</span>
+      <Plus size={20} />
+      <span className="text-xs font-medium">추가</span>
     </button>
   );
 }

@@ -9,6 +9,7 @@ import {
   portfolioMedia,
   portfolioDetails,
   portfolioTags,
+  portfolioRooms,
   users,
 } from '@repo/database';
 import { validateSlug } from '@/common/validators/slug.validator';
@@ -95,8 +96,10 @@ export class PublicService {
     let allDetails: any[] = [];
     let allTags: any[] = [];
 
+    let allRooms: any[] = [];
+
     if (portfolioIds.length > 0) {
-      [allMedia, allDetails, allTags] = await Promise.all([
+      [allMedia, allDetails, allTags, allRooms] = await Promise.all([
         this.db
           .select()
           .from(portfolioMedia)
@@ -110,6 +113,11 @@ export class PublicService {
           .select()
           .from(portfolioTags)
           .where(inArray(portfolioTags.portfolioId, portfolioIds))
+          .orderBy((t) => t.displayOrder),
+        this.db
+          .select()
+          .from(portfolioRooms)
+          .where(inArray(portfolioRooms.portfolioId, portfolioIds))
           .orderBy((t) => t.displayOrder),
       ]);
     }
@@ -133,10 +141,19 @@ export class PublicService {
       tagsByPortfolio.set(t.portfolioId, arr);
     });
 
+    const roomsByPortfolio = new Map<string, typeof allRooms>();
+    allRooms.forEach((r) => {
+      if (!roomsByPortfolio.has(r.portfolioId)) {
+        roomsByPortfolio.set(r.portfolioId, []);
+      }
+      roomsByPortfolio.get(r.portfolioId)!.push(r);
+    });
+
     const portfoliosWithMedia = portfoliosList.map((portfolio) => ({
       ...portfolio,
       details: detailsByPortfolio.get(portfolio.id) ?? null,
       tags: tagsByPortfolio.get(portfolio.id) ?? [],
+      rooms: roomsByPortfolio.get(portfolio.id) ?? [],
       media: mediaByPortfolio.get(portfolio.id) || [],
     }));
 
@@ -214,6 +231,13 @@ export class PublicService {
             }
           : null,
         tags: p.tags,
+        rooms: (p.rooms ?? []).map((r) => ({
+          id: r.id,
+          portfolioId: r.portfolioId,
+          roomType: r.roomType,
+          roomLabel: r.roomLabel,
+          displayOrder: r.displayOrder,
+        })),
         media: p.media.map((m) => ({
           id: m.id,
           mediaUrl: m.mediaUrl,
@@ -223,6 +247,7 @@ export class PublicService {
           thumbnailUrl: m.thumbnailUrl,
           displayOrder: m.displayOrder,
           description: m.description,
+          roomId: m.roomId ?? null,
         })),
       })),
     };
