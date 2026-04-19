@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   X,
@@ -16,6 +16,7 @@ import {
   Tag,
   Home,
   ShieldCheck,
+  Package,
 } from "lucide-react";
 import type {
   PublicProfilePortfolio,
@@ -91,13 +92,7 @@ function constructionScopeLabel(s: string | null) {
     .join(" ");
 }
 
-function ImageCarousel({
-  images,
-  compact,
-}: {
-  images: PublicProfileMedia[];
-  compact?: boolean;
-}) {
+function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => setIdx(0), [images]);
@@ -105,12 +100,11 @@ function ImageCarousel({
   if (images.length === 0) return null;
 
   const current = images[idx];
-  const ratio = compact ? "4/3" : "16/9";
 
   return (
     <div>
       {/* 메인 이미지 */}
-      <div className="relative bg-secondary" style={{ aspectRatio: ratio }}>
+      <div className="relative bg-secondary" style={{ aspectRatio: "4/3" }}>
         <Image
           src={current.mediaUrl}
           alt={current.description ?? `사진 ${idx + 1}`}
@@ -120,7 +114,7 @@ function ImageCarousel({
         />
         {/* 타입 배지 */}
         {current.imageType && (
-          <span className="absolute top-3 left-3 px-2 py-1 rounded-md bg-foreground/60 text-background text-xs font-semibold">
+          <span className="absolute top-3 left-3 px-2 py-1 rounded-sm bg-foreground/60 text-background text-xs font-semibold">
             {imageTypeLabel(current.imageType)}
           </span>
         )}
@@ -129,21 +123,21 @@ function ImageCarousel({
             <button
               onClick={() => setIdx((i) => Math.max(i - 1, 0))}
               disabled={idx === 0}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-sm bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
               aria-label="이전 사진"
             >
-              <ChevronLeft size={17} className="text-foreground" />
+              <ChevronLeft size={16} className="text-foreground" />
             </button>
             <button
               onClick={() => setIdx((i) => Math.min(i + 1, images.length - 1))}
               disabled={idx === images.length - 1}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-sm bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
               aria-label="다음 사진"
             >
-              <ChevronRight size={17} className="text-foreground" />
+              <ChevronRight size={16} className="text-foreground" />
             </button>
             {/* 카운터 */}
-            <span className="absolute bottom-3 right-3 px-2 py-1 rounded-md bg-foreground/60 text-background text-xs font-medium">
+            <span className="absolute bottom-3 right-3 px-2 py-1 rounded-sm bg-foreground/60 text-background text-xs font-medium">
               {idx + 1} / {images.length}
             </span>
           </>
@@ -157,7 +151,7 @@ function ImageCarousel({
             <button
               key={i}
               onClick={() => setIdx(i)}
-              className={`relative flex-shrink-0 w-16 h-11 rounded-md overflow-hidden border-2 transition-all ${
+              className={`relative flex-shrink-0 w-16 h-11 rounded-sm overflow-hidden border-2 transition-all ${
                 i === idx
                   ? "border-primary"
                   : "border-transparent opacity-60 hover:opacity-90"
@@ -191,11 +185,9 @@ function ImageCarousel({
 function BeforeAfterTabs({
   beforeImages,
   afterImages,
-  compact,
 }: {
   beforeImages: PublicProfileMedia[];
   afterImages: PublicProfileMedia[];
-  compact?: boolean;
 }) {
   const [tab, setTab] = useState<"before" | "after">(
     afterImages.length > 0 ? "after" : "before",
@@ -207,23 +199,23 @@ function BeforeAfterTabs({
     <div>
       {/* 탭 헤더 (둘 다 있을 때만) */}
       {hasBoth && (
-        <div className="flex">
+        <div className="flex border-b border-border">
           <button
             onClick={() => setTab("before")}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 ${
+            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 -mb-px ${
               tab === "before"
                 ? "text-foreground border-foreground"
-                : "text-muted-foreground border-border hover:text-foreground"
+                : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
           >
             시공 전
           </button>
           <button
             onClick={() => setTab("after")}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 ${
+            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 -mb-px ${
               tab === "after"
                 ? "text-primary border-primary"
-                : "text-muted-foreground border-border hover:text-foreground"
+                : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
           >
             시공 후
@@ -233,10 +225,10 @@ function BeforeAfterTabs({
 
       {/* 이미지 */}
       {tab === "before" && beforeImages.length > 0 && (
-        <ImageCarousel images={beforeImages} compact={compact} />
+        <ImageCarousel images={beforeImages} />
       )}
       {tab === "after" && afterImages.length > 0 && (
-        <ImageCarousel images={afterImages} compact={compact} />
+        <ImageCarousel images={afterImages} />
       )}
 
       {/* 탭이 하나뿐일 때 레이블 */}
@@ -251,6 +243,113 @@ function BeforeAfterTabs({
   );
 }
 
+/**
+ * 공간별 사진 — sticky 탭 + 공간별 세로 스크롤
+ * 탭 클릭 시 해당 공간 섹션으로 스크롤 이동
+ */
+function RoomScrollGallery({
+  groups,
+  scrollContainerRef,
+}: {
+  groups: { room: PortfolioRoom; images: PublicProfileMedia[] }[];
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // 탭 클릭 → 해당 섹션으로 스크롤
+  function scrollToSection(idx: number) {
+    const container = scrollContainerRef.current;
+    const section = sectionRefs.current[idx];
+    if (!container || !section) return;
+
+    const containerTop = container.getBoundingClientRect().top;
+    const sectionTop = section.getBoundingClientRect().top;
+    const offset = sectionTop - containerTop + container.scrollTop - 48; // 탭 높이만큼 오프셋
+
+    container.scrollTo({ top: offset, behavior: "smooth" });
+    setActiveIdx(idx);
+  }
+
+  // 스크롤 시 활성 탭 동기화
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    function handleScroll() {
+      const containerTop = container!.getBoundingClientRect().top;
+      let closestIdx = 0;
+      let closestDist = Infinity;
+
+      sectionRefs.current.forEach((section, i) => {
+        if (!section) return;
+        const dist = Math.abs(
+          section.getBoundingClientRect().top - containerTop - 56,
+        );
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIdx = i;
+        }
+      });
+      setActiveIdx(closestIdx);
+    }
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [scrollContainerRef]);
+
+  return (
+    <div>
+      {/* sticky 탭 바 */}
+      <div className="sticky top-0 z-10 bg-card border-b border-border">
+        <div className="flex gap-1 px-4 py-2 overflow-x-auto scrollbar-hide">
+          {groups.map(({ room, images }, i) => (
+            <button
+              key={room.id}
+              onClick={() => scrollToSection(i)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors border ${
+                i === activeIdx
+                  ? "bg-foreground text-background border-foreground rounded-sm"
+                  : "bg-card text-muted-foreground border-border rounded-sm hover:border-foreground/40 hover:text-foreground"
+              }`}
+            >
+              {roomLabel(room)}
+              {images.length > 1 && (
+                <span
+                  className={`text-[10px] ${
+                    i === activeIdx ? "opacity-60" : "opacity-50"
+                  }`}
+                >
+                  {images.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 공간별 이미지 세로 스크롤 */}
+      {groups.map(({ room, images }, i) => (
+        <div
+          key={room.id}
+          ref={(el) => {
+            sectionRefs.current[i] = el;
+          }}
+          className={i > 0 ? "border-t border-border" : ""}
+        >
+          {/* 공간 이름 헤더 */}
+          <div className="px-5 pt-4 pb-2">
+            <span className="text-xs font-bold text-muted-foreground uppercase">
+              {roomLabel(room)}
+            </span>
+          </div>
+          <ImageCarousel key={room.id} images={images} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function PortfolioDetailModal({
   portfolio,
   workerName,
@@ -259,6 +358,9 @@ export function PortfolioDetailModal({
   mode = "view",
   onEdit,
 }: Props) {
+  // 좌측 이미지 패널 스크롤 컨테이너 ref
+  const imageScrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (portfolio) {
       document.body.style.overflow = "hidden";
@@ -338,6 +440,10 @@ export function PortfolioDetailModal({
 
   const diffLabel = difficultyLabel(difficulty);
 
+  // 자재 태그 (materialId 있는 것) vs 일반 태그 분리
+  const materialTags = (tags ?? []).filter((t) => t.materialId);
+  const generalTags = (tags ?? []).filter((t) => !t.materialId);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-6"
@@ -352,52 +458,52 @@ export function PortfolioDetailModal({
         onClick={onClose}
       />
 
-      {/* 패널 */}
+      {/* 패널 — radius 최소화, 각진 느낌 */}
       <div
-        className="relative z-10 w-full md:max-w-4xl bg-card rounded-t-lg md:rounded-lg border border-border overflow-hidden max-h-[96dvh] md:max-h-[90dvh] flex flex-col"
+        className="relative z-10 w-full md:max-w-4xl bg-card rounded-t-sm md:rounded-sm border border-border overflow-hidden max-h-[96dvh] md:max-h-[90dvh] flex flex-col"
         style={{ animation: "slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)" }}
       >
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-sm bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-secondary transition-colors"
           aria-label="닫기"
         >
-          <X size={15} className="text-foreground" />
+          <X size={14} className="text-foreground" />
         </button>
 
         {/* ─────────────────────────────────────────────────────────
             본문 레이아웃
             모바일: 단일 컬럼 스크롤
-            데스크탑(md+): 좌(이미지) | 우(정보) 2컬럼 분할
+            데스크탑(md+): 좌(이미지 스크롤) | 우(정보) 2컬럼 분할
             ───────────────────────────────────────────────────────── */}
         <div className="flex-1 min-h-0 md:grid md:grid-cols-[3fr_2fr] overflow-hidden">
-          {/* ── 왼쪽 패널: 이미지 영역 ── */}
-          <div className="overflow-y-auto min-h-0 md:border-r md:border-border">
+          {/* ── 왼쪽 패널: 이미지 영역 (스크롤) ── */}
+          <div
+            ref={imageScrollRef}
+            className="overflow-y-auto min-h-0 md:border-r md:border-border"
+          >
             {/* 시공 전/후 (탭) */}
             {hasBeforeAfter && (
               <BeforeAfterTabs
                 beforeImages={beforeImages}
                 afterImages={afterImages}
-                compact
               />
             )}
 
-            {/* 공간별 사진 */}
+            {/* 공간별 사진 — sticky 탭 + 세로 스크롤 */}
             {hasRooms && (
               <div className={hasBeforeAfter ? "border-t border-border" : ""}>
-                <RoomTabGallery
+                <RoomScrollGallery
                   key={roomGroups.map((g) => g.room.id).join("-")}
                   groups={roomGroups}
-                  compact
+                  scrollContainerRef={imageScrollRef}
                 />
               </div>
             )}
 
             {/* 룸도 비포/애프터도 없으면 전체 이미지 슬라이더 */}
-            {allImages.length > 0 && (
-              <ImageCarousel images={allImages} compact />
-            )}
+            {allImages.length > 0 && <ImageCarousel images={allImages} />}
 
             {/* 도면 / 시공 과정 이미지 */}
             {detailImages.length > 0 && (
@@ -407,11 +513,11 @@ export function PortfolioDetailModal({
                     시공 과정
                   </span>
                 </div>
-                <ImageCarousel images={detailImages} compact />
+                <ImageCarousel images={detailImages} />
               </div>
             )}
 
-            {/* 사진 없을 때 빈 상태 (모바일 전용 — 데스크탑은 오른쪽 패널에서 처리) */}
+            {/* 사진 없을 때 빈 상태 (모바일 전용) */}
             {media.length === 0 && (
               <div className="md:hidden px-5 py-10 text-center">
                 <p className="text-sm text-muted-foreground">
@@ -430,19 +536,19 @@ export function PortfolioDetailModal({
               </h2>
               <div className="flex flex-wrap gap-2">
                 {spaceType && SPACE_TYPE_LABELS[spaceType] && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     <Home size={11} />
                     {SPACE_TYPE_LABELS[spaceType]}
                   </span>
                 )}
                 {location && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     <MapPin size={11} />
                     {location}
                   </span>
                 )}
                 {startDate && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     <Calendar size={11} />
                     {startDate.slice(0, 7).replace("-", "년 ")}월
                     {endDate &&
@@ -451,32 +557,32 @@ export function PortfolioDetailModal({
                   </span>
                 )}
                 {diffLabel && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     <Wrench size={11} />
                     {diffLabel}
                   </span>
                 )}
                 {details?.area && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-md">
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     <Ruler size={11} />
                     {details.area}
                     {details.areaUnit === "PYEONG" ? "평" : "㎡"}
                   </span>
                 )}
                 {costDisplay && (
-                  <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-md">
+                  <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-sm">
                     <span className="text-xs">₩</span>
                     {costDisplay}
                   </span>
                 )}
               </div>
-              {/* 태그 */}
-              {tags && tags.length > 0 && (
+              {/* 일반 태그 (자재 아닌 것) */}
+              {generalTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-3">
-                  {tags.map((tag, i) => (
+                  {generalTags.map((tag, i) => (
                     <span
                       key={`${tag.tagName}-${i}`}
-                      className="flex items-center gap-1 text-xs text-accent-foreground bg-accent border border-border px-2 py-1 rounded-md"
+                      className="flex items-center gap-1 text-xs text-accent-foreground bg-accent border border-border px-2 py-1 rounded-sm"
                     >
                       <Tag size={9} />
                       {tag.tagName}
@@ -546,6 +652,27 @@ export function PortfolioDetailModal({
               </div>
             )}
 
+            {/* 사용 자재 */}
+            {materialTags.length > 0 && (
+              <div className="px-5 py-5 border-b border-border">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase mb-3 flex items-center gap-1.5">
+                  <Package size={11} />
+                  사용 자재
+                </h3>
+                <ul className="flex flex-col gap-2">
+                  {materialTags.map((tag, i) => (
+                    <li
+                      key={`${tag.tagName}-${i}`}
+                      className="flex items-center gap-2.5 text-sm text-foreground"
+                    >
+                      <span className="w-1 h-1 bg-primary flex-shrink-0" />
+                      {tag.tagName}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* 시공 내용 텍스트 */}
             {content && (
               <div className="px-5 py-5 border-b border-border">
@@ -589,7 +716,7 @@ export function PortfolioDetailModal({
                       onEdit?.();
                       onClose();
                     }}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
                   >
                     <Pencil size={14} />
                     편집하기
@@ -608,7 +735,7 @@ export function PortfolioDetailModal({
                   {phone && /^\+?[\d\s\-()+]*\d[\d\s\-()+]*$/.test(phone) ? (
                     <a
                       href={`tel:${phone}`}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
                     >
                       <Phone size={14} />
                       의뢰하기
@@ -616,7 +743,7 @@ export function PortfolioDetailModal({
                   ) : (
                     <button
                       disabled
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-md bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
                       title="전화번호 미등록"
                     >
                       <MessageCircle size={14} />
@@ -634,66 +761,6 @@ export function PortfolioDetailModal({
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
       `}</style>
-    </div>
-  );
-}
-
-/** 공간별 사진 — 수평 탭 + 캐러셀 */
-function RoomTabGallery({
-  groups,
-  compact,
-}: {
-  groups: { room: PortfolioRoom; images: PublicProfileMedia[] }[];
-  compact?: boolean;
-}) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const active = groups[activeIdx];
-
-  return (
-    <div>
-      {/* 섹션 라벨 */}
-      <div className="px-5 pt-4 pb-0">
-        <span className="text-xs font-bold text-muted-foreground uppercase">
-          공간별 사진
-        </span>
-      </div>
-
-      {/* 공간 탭 스크롤 */}
-      <div className="flex gap-2 px-5 pt-3 pb-0 overflow-x-auto scrollbar-hide">
-        {groups.map(({ room, images }, i) => (
-          <button
-            key={room.id}
-            onClick={() => setActiveIdx(i)}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border ${
-              i === activeIdx
-                ? "bg-foreground text-background border-foreground"
-                : "bg-card text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground"
-            }`}
-          >
-            {roomLabel(room)}
-            {images.length > 1 && (
-              <span
-                className={`text-[10px] ${
-                  i === activeIdx ? "opacity-60" : "opacity-50"
-                }`}
-              >
-                {images.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* 선택된 공간 캐러셀 */}
-      <div className="mt-3">
-        {active && (
-          <ImageCarousel
-            key={active.room.id}
-            images={active.images}
-            compact={compact}
-          />
-        )}
-      </div>
     </div>
   );
 }
