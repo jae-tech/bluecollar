@@ -199,26 +199,32 @@ function BeforeAfterTabs({
     <div>
       {/* 탭 헤더 (둘 다 있을 때만) */}
       {hasBoth && (
-        <div className="flex border-b border-border">
+        <div className="relative flex border-b border-border">
           <button
             onClick={() => setTab("before")}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 -mb-px ${
+            className={`relative flex-1 py-2.5 text-xs font-bold uppercase transition-colors ${
               tab === "before"
-                ? "text-foreground border-foreground"
-                : "text-muted-foreground border-transparent hover:text-foreground"
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             시공 전
+            {tab === "before" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+            )}
           </button>
           <button
             onClick={() => setTab("after")}
-            className={`flex-1 py-2.5 text-xs font-bold uppercase transition-colors border-b-2 -mb-px ${
+            className={`relative flex-1 py-2.5 text-xs font-bold uppercase transition-colors ${
               tab === "after"
-                ? "text-primary border-primary"
-                : "text-muted-foreground border-transparent hover:text-foreground"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             시공 후
+            {tab === "after" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+            )}
           </button>
         </div>
       )}
@@ -256,6 +262,7 @@ function RoomScrollGallery({
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const tabBarRef = useRef<HTMLDivElement | null>(null);
 
   // 탭 클릭 → 해당 섹션으로 스크롤
   function scrollToSection(idx: number) {
@@ -263,9 +270,13 @@ function RoomScrollGallery({
     const section = sectionRefs.current[idx];
     if (!container || !section) return;
 
+    // 탭 바 높이를 동적으로 읽어 오프셋 계산
+    const tabBarHeight =
+      tabBarRef.current?.getBoundingClientRect().height ?? 40;
     const containerTop = container.getBoundingClientRect().top;
     const sectionTop = section.getBoundingClientRect().top;
-    const offset = sectionTop - containerTop + container.scrollTop - 48; // 탭 높이만큼 오프셋
+    const offset =
+      sectionTop - containerTop + container.scrollTop - tabBarHeight;
 
     container.scrollTo({ top: offset, behavior: "smooth" });
     setActiveIdx(idx);
@@ -301,7 +312,10 @@ function RoomScrollGallery({
   return (
     <div>
       {/* sticky 탭 바 */}
-      <div className="sticky top-0 z-10 bg-card border-b border-border">
+      <div
+        ref={tabBarRef}
+        className="sticky top-0 z-10 bg-card border-b border-border"
+      >
         <div className="flex gap-1 px-4 py-2 overflow-x-auto scrollbar-hide">
           {groups.map(({ room, images }, i) => (
             <button
@@ -466,7 +480,7 @@ export function PortfolioDetailModal({
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-sm bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+          className="absolute top-3 right-3 z-20 w-10 h-10 rounded-sm bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-secondary transition-colors"
           aria-label="닫기"
         >
           <X size={14} className="text-foreground" />
@@ -477,11 +491,11 @@ export function PortfolioDetailModal({
             모바일: 단일 컬럼 스크롤
             데스크탑(md+): 좌(이미지 스크롤) | 우(정보) 2컬럼 분할
             ───────────────────────────────────────────────────────── */}
-        <div className="flex-1 min-h-0 md:grid md:grid-cols-[3fr_2fr] overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col md:grid md:grid-cols-[3fr_2fr] overflow-hidden">
           {/* ── 왼쪽 패널: 이미지 영역 (스크롤) ── */}
           <div
             ref={imageScrollRef}
-            className="overflow-y-auto min-h-0 md:border-r md:border-border"
+            className="overflow-y-auto md:border-r md:border-border"
           >
             {/* 시공 전/후 (탭) */}
             {hasBeforeAfter && (
@@ -528,7 +542,7 @@ export function PortfolioDetailModal({
           </div>
 
           {/* ── 오른쪽 패널: 시공 정보 영역 ── */}
-          <div className="overflow-y-auto flex flex-col">
+          <div className="overflow-y-auto flex flex-col border-t border-border md:border-t-0">
             {/* 제목 + 메타 배지 */}
             <div className="px-5 pt-6 pb-4 pr-14 border-b border-border">
               <h2 className="text-lg font-bold text-foreground leading-snug mb-3">
