@@ -481,28 +481,8 @@ export function PortfolioDetailModal({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  if (!portfolio) return null;
-
-  const {
-    media: rawMedia,
-    rooms,
-    title,
-    content,
-    startDate,
-    endDate,
-    difficulty,
-    estimatedCost,
-    actualCost,
-    location,
-    spaceType,
-    constructionScope,
-    details,
-    tags,
-  } = portfolio;
-
-  const media = rawMedia ?? [];
-
   // 룸별 사진 그룹핑 — useMemo로 렌더마다 O(n×m) 재계산 방지
+  // ※ Rules of Hooks: early return 이전에 선언해야 Hook 순서 불변 보장
   const {
     roomGroups,
     beforeImages,
@@ -512,17 +492,31 @@ export function PortfolioDetailModal({
     hasRooms,
     hasBeforeAfter,
   } = useMemo(() => {
-    const groups: { room: PortfolioRoom; images: PublicProfileMedia[] }[] = (
-      rooms ?? []
-    )
-      .sort((a, b) => a.displayOrder - b.displayOrder)
-      .map((room) => ({
-        room,
-        images: media
-          .filter((m) => m.roomId === room.id)
-          .sort((a, b) => a.displayOrder - b.displayOrder),
-      }))
-      .filter((g) => g.images.length > 0);
+    if (!portfolio) {
+      return {
+        roomGroups: [],
+        beforeImages: [],
+        afterImages: [],
+        detailImages: [],
+        allImages: [],
+        hasRooms: false,
+        hasBeforeAfter: false,
+      };
+    }
+
+    const media = portfolio.media ?? [];
+    const rooms = portfolio.rooms ?? [];
+
+    const groups: { room: PortfolioRoom; images: PublicProfileMedia[] }[] =
+      rooms
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map((room) => ({
+          room,
+          images: media
+            .filter((m) => m.roomId === room.id)
+            .sort((a, b) => a.displayOrder - b.displayOrder),
+        }))
+        .filter((g) => g.images.length > 0);
 
     const roomless = media.filter((m) => !m.roomId);
     const before = roomless.filter((m) => m.imageType === "BEFORE");
@@ -546,6 +540,27 @@ export function PortfolioDetailModal({
     // portfolio.id가 같으면 media/rooms도 동일 — 동일 포트폴리오 내 re-render 최적화
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [portfolio?.id]);
+
+  if (!portfolio) return null;
+
+  const {
+    media: rawMedia,
+    rooms,
+    title,
+    content,
+    startDate,
+    endDate,
+    difficulty,
+    estimatedCost,
+    actualCost,
+    location,
+    spaceType,
+    constructionScope,
+    details,
+    tags,
+  } = portfolio;
+
+  const media = rawMedia ?? [];
 
   // TODO-067: 예상/실제 비용 구분 표시
   const estDisplay = formatCost(estimatedCost);
