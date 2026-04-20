@@ -316,7 +316,7 @@ export interface PublicProfilePortfolio {
     bedroomCount: number | null;
   } | null;
   rooms: PortfolioRoom[];
-  tags: PortfolioTag[];
+  tags: string[];
   media: PublicProfileMedia[];
 }
 
