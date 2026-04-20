@@ -13,6 +13,7 @@ import { Throttle } from '@nestjs/throttler';
 import { PinoLogger } from 'nestjs-pino';
 import { PublicService } from '../services/public.service';
 import { Public } from '@/common/decorators/public.decorator';
+import { SubmitInquiryDto } from '../dtos/submit-inquiry.dto';
 
 /**
  * Public Controller
@@ -269,16 +270,7 @@ export class PublicController {
   @ApiResponse({ status: 429, description: '요청 한도 초과' })
   async submitInquiry(
     @Param('slug') slug: string,
-    @Body()
-    body: {
-      name: string;
-      phone: string;
-      location: string;
-      workType: string;
-      budget?: string;
-      message?: string;
-      projectTitle?: string;
-    },
+    @Body() body: SubmitInquiryDto,
   ) {
     this.logger.info({ slug }, '의뢰 접수 요청 수신');
     return this.publicService.submitInquiry(slug, body);

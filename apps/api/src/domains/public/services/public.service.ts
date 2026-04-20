@@ -513,6 +513,9 @@ export class PublicService {
       .where(inArray(workerFields.workerProfileId, profileIds));
 
     // Step 5: 포트폴리오 수 + 대표 이미지 조회
+    // 단기 가드: 워커당 최대 3개 포트폴리오만 조회 (전체 조회 시 쿼리 폭발 방지)
+    // TODO: LATERAL JOIN으로 교체하여 1개 포트폴리오 + 1개 미디어만 정확히 가져오도록 개선
+    const portfolioFetchLimit = limit * 3;
     const allPortfolios = await this.db
       .select({
         id: portfolios.id,
@@ -521,7 +524,8 @@ export class PublicService {
       })
       .from(portfolios)
       .where(inArray(portfolios.workerProfileId, profileIds))
-      .orderBy(desc(portfolios.createdAt));
+      .orderBy(desc(portfolios.createdAt))
+      .limit(portfolioFetchLimit);
 
     const portfolioIds = allPortfolios.map((p) => p.id);
     let mediaRows: { portfolioId: string; mediaUrl: string }[] = [];
