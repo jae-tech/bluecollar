@@ -566,10 +566,9 @@ export class PublicService {
       }
     });
 
-    // Step 7: 결과 조립 및 정렬
-    const filteredProfiles = profileRows.filter((p) =>
-      profileIds.includes(p.id),
-    );
+    // Step 7: 결과 조립 및 정렬 (Set으로 O(n) 필터)
+    const profileIdSet = new Set(profileIds);
+    const filteredProfiles = profileRows.filter((p) => profileIdSet.has(p.id));
 
     const results = filteredProfiles.map((p) => {
       const latestPortId = latestPortfolioByWorker.get(p.id);

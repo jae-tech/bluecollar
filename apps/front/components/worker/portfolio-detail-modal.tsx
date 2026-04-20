@@ -439,7 +439,6 @@ function RoomScrollGallery({
 }
 
 // overflow lock 카운터 — 복수 모달 동시 마운트 시 스크롤 잠금이 풀리는 버그 방지
-// overflow lock 카운터 — 복수 모달 동시 마운트 시 스크롤 잠금이 풀리는 버그 방지
 // JS inline style 직접 설정 (CSS attribute selector는 Turbopack 캐시 누락 가능)
 function lockBodyScroll() {
   const count = Number(document.body.dataset.overflowLock ?? 0) + 1;

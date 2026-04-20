@@ -6,7 +6,6 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { SignupModal } from "@/components/signup-modal";
-import { InquiryForm } from "@/components/inquiry-form";
 import { EmptyState } from "@/components/search/empty-state";
 import { FilterPanel, type Filters } from "@/components/search/filter-panel";
 import {
@@ -44,8 +43,6 @@ function SearchPageInner() {
   const [loading, setLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [inquiryFormOpen, setInquiryFormOpen] = useState(false);
-
   // 워커 검색 결과 (API 연결)
   const [workers, setWorkers] = useState<WorkerSearchResult[]>([]);
 
@@ -337,9 +334,6 @@ function SearchPageInner() {
 
       <Footer onSignupClick={() => setModalOpen(true)} />
       <SignupModal open={modalOpen} onClose={() => setModalOpen(false)} />
-      {inquiryFormOpen && (
-        <InquiryForm onClose={() => setInquiryFormOpen(false)} />
-      )}
     </div>
   );
 }
