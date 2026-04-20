@@ -249,10 +249,12 @@ export class PortfolioService {
             if (mediaItem.description)
               record.description = mediaItem.description;
             // roomIndex 우선: 삽입된 room ID로 변환. roomId는 레거시 직접 바인딩 지원용
-            if (
-              mediaItem.roomIndex !== undefined &&
-              insertedRooms[mediaItem.roomIndex]
-            ) {
+            if (mediaItem.roomIndex !== undefined) {
+              if (mediaItem.roomIndex >= insertedRooms.length) {
+                throw new BadRequestException(
+                  `roomIndex ${mediaItem.roomIndex}가 유효 범위(0~${insertedRooms.length - 1})를 벗어났습니다`,
+                );
+              }
               record.roomId = insertedRooms[mediaItem.roomIndex].id;
             } else if (mediaItem.roomId) {
               record.roomId = mediaItem.roomId;
@@ -547,7 +549,12 @@ export class PortfolioService {
           if (item.thumbnailUrl) record.thumbnailUrl = item.thumbnailUrl;
           if (item.description) record.description = item.description;
           // roomIndex 우선: 방금 삽입된 room ID로 변환. roomId는 레거시 직접 바인딩용
-          if (item.roomIndex !== undefined && insertedRooms[item.roomIndex]) {
+          if (item.roomIndex !== undefined) {
+            if (item.roomIndex >= insertedRooms.length) {
+              throw new BadRequestException(
+                `roomIndex ${item.roomIndex}가 유효 범위(0~${insertedRooms.length - 1})를 벗어났습니다`,
+              );
+            }
             record.roomId = insertedRooms[item.roomIndex].id;
           } else if (item.roomId) {
             record.roomId = item.roomId;

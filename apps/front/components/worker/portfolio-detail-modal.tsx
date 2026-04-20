@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   X,
@@ -17,6 +17,7 @@ import {
   Home,
   ShieldCheck,
   Package,
+  Camera,
 } from "lucide-react";
 import type {
   PublicProfilePortfolio,
@@ -27,6 +28,7 @@ import type {
 interface Props {
   portfolio: PublicProfilePortfolio | null;
   workerName: string;
+  workerSlug?: string;
   phone?: string;
   onClose: () => void;
   /** "edit" 모드에서는 하단 CTA가 편집 버튼으로 교체됨 */
@@ -115,8 +117,16 @@ function constructionScopeLabel(s: string | null) {
     .join(" ");
 }
 
-function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
+function ImageCarousel({
+  images,
+  isPrimary = false,
+}: {
+  images: PublicProfileMedia[];
+  isPrimary?: boolean;
+}) {
   const [idx, setIdx] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => setIdx(0), [images]);
 
@@ -124,16 +134,55 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
 
   const current = images[idx];
 
+  function prev() {
+    setIdx((i) => Math.max(i - 1, 0));
+  }
+  function next() {
+    setIdx((i) => Math.min(i + 1, images.length - 1));
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      prev();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      next();
+    }
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return;
+    const delta = touchStartX.current - e.changedTouches[0].clientX;
+    if (delta > 50) next();
+    else if (delta < -50) prev();
+    touchStartX.current = null;
+  }
+
   return (
     <div>
       {/* 메인 이미지 */}
-      <div className="relative bg-secondary" style={{ aspectRatio: "4/3" }}>
+      <div
+        ref={containerRef}
+        className="relative bg-secondary focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
+        style={{ aspectRatio: "4/3" }}
+        tabIndex={images.length > 1 ? 0 : -1}
+        onKeyDown={handleKeyDown}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        role={images.length > 1 ? "group" : undefined}
+        aria-label={images.length > 1 ? "이미지 갤러리" : undefined}
+      >
         <Image
           src={current.mediaUrl}
           alt={current.description ?? `사진 ${idx + 1}`}
           fill
           className="object-cover"
-          priority
+          priority={isPrimary}
         />
         {/* 타입 배지 */}
         {current.imageType && (
@@ -144,17 +193,17 @@ function ImageCarousel({ images }: { images: PublicProfileMedia[] }) {
         {images.length > 1 && (
           <>
             <button
-              onClick={() => setIdx((i) => Math.max(i - 1, 0))}
+              onClick={prev}
               disabled={idx === 0}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-sm bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-sm bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
               aria-label="이전 사진"
             >
               <ChevronLeft size={16} className="text-foreground" />
             </button>
             <button
-              onClick={() => setIdx((i) => Math.min(i + 1, images.length - 1))}
+              onClick={next}
               disabled={idx === images.length - 1}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-sm bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-sm bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center disabled:opacity-25 hover:bg-card transition-colors"
               aria-label="다음 사진"
             >
               <ChevronRight size={16} className="text-foreground" />
@@ -254,10 +303,13 @@ function BeforeAfterTabs({
 
       {/* 이미지 */}
       {tab === "before" && beforeImages.length > 0 && (
-        <ImageCarousel images={beforeImages} />
+        <ImageCarousel
+          images={beforeImages}
+          isPrimary={afterImages.length === 0}
+        />
       )}
       {tab === "after" && afterImages.length > 0 && (
-        <ImageCarousel images={afterImages} />
+        <ImageCarousel images={afterImages} isPrimary />
       )}
 
       {/* 탭이 하나뿐일 때 레이블 */}
@@ -380,16 +432,32 @@ function RoomScrollGallery({
               {roomLabel(room)}
             </span>
           </div>
-          <ImageCarousel key={room.id} images={images} />
+          <ImageCarousel key={room.id} images={images} isPrimary={i === 0} />
         </div>
       ))}
     </div>
   );
 }
 
+// overflow lock 카운터 — 복수 모달 동시 마운트 시 스크롤 잠금이 풀리는 버그 방지
+// data-overflow-lock 속성 카운터 방식: CSS body[data-overflow-lock] { overflow: hidden }
+function lockBodyScroll() {
+  const count = Number(document.body.dataset.overflowLock ?? 0) + 1;
+  document.body.dataset.overflowLock = String(count);
+}
+function unlockBodyScroll() {
+  const count = Number(document.body.dataset.overflowLock ?? 0) - 1;
+  if (count <= 0) {
+    delete document.body.dataset.overflowLock;
+  } else {
+    document.body.dataset.overflowLock = String(count);
+  }
+}
+
 export function PortfolioDetailModal({
   portfolio,
   workerName,
+  workerSlug,
   phone,
   onClose,
   mode = "view",
@@ -400,11 +468,9 @@ export function PortfolioDetailModal({
 
   useEffect(() => {
     if (portfolio) {
-      document.body.style.overflow = "hidden";
+      lockBodyScroll();
+      return () => unlockBodyScroll();
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [portfolio]);
 
   useEffect(() => {
@@ -436,35 +502,50 @@ export function PortfolioDetailModal({
 
   const media = rawMedia ?? [];
 
-  // 룸별로 사진 그룹핑 (roomId 있는 미디어)
-  const roomGroups: { room: PortfolioRoom; images: PublicProfileMedia[] }[] = (
-    rooms ?? []
-  )
-    .sort((a, b) => a.displayOrder - b.displayOrder)
-    .map((room) => ({
-      room,
-      images: media
-        .filter((m) => m.roomId === room.id)
-        .sort((a, b) => a.displayOrder - b.displayOrder),
-    }))
-    .filter((g) => g.images.length > 0);
+  // 룸별 사진 그룹핑 — useMemo로 렌더마다 O(n×m) 재계산 방지
+  const {
+    roomGroups,
+    beforeImages,
+    afterImages,
+    detailImages,
+    allImages,
+    hasRooms,
+    hasBeforeAfter,
+  } = useMemo(() => {
+    const groups: { room: PortfolioRoom; images: PublicProfileMedia[] }[] = (
+      rooms ?? []
+    )
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((room) => ({
+        room,
+        images: media
+          .filter((m) => m.roomId === room.id)
+          .sort((a, b) => a.displayOrder - b.displayOrder),
+      }))
+      .filter((g) => g.images.length > 0);
 
-  // 룸에 속하지 않은 사진 분류
-  const roomlessMedia = media.filter((m) => !m.roomId);
-  const beforeImages = roomlessMedia.filter((m) => m.imageType === "BEFORE");
-  const afterImages = roomlessMedia.filter((m) => m.imageType === "AFTER");
-  const detailImages = roomlessMedia.filter(
-    (m) =>
-      m.imageType === "DETAIL" || m.imageType === "BLUEPRINT" || !m.imageType,
-  );
+    const roomless = media.filter((m) => !m.roomId);
+    const before = roomless.filter((m) => m.imageType === "BEFORE");
+    const after = roomless.filter((m) => m.imageType === "AFTER");
+    const detail = roomless.filter(
+      (m) =>
+        m.imageType === "DETAIL" || m.imageType === "BLUEPRINT" || !m.imageType,
+    );
+    const rHasRooms = groups.length > 0;
+    const rHasBeforeAfter = before.length > 0 || after.length > 0;
 
-  const hasRooms = roomGroups.length > 0;
-  const hasBefore = beforeImages.length > 0;
-  const hasAfter = afterImages.length > 0;
-  const hasBeforeAfter = hasBefore || hasAfter;
-
-  // 룸도 비포/애프터도 없으면 전체 미디어를 하나로
-  const allImages = !hasRooms && !hasBeforeAfter ? media : [];
+    return {
+      roomGroups: groups,
+      beforeImages: before,
+      afterImages: after,
+      detailImages: detail,
+      allImages: !rHasRooms && !rHasBeforeAfter ? media : [],
+      hasRooms: rHasRooms,
+      hasBeforeAfter: rHasBeforeAfter,
+    };
+    // portfolio.id가 같으면 media/rooms도 동일 — 동일 포트폴리오 내 re-render 최적화
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [portfolio?.id]);
 
   // TODO-067: 예상/실제 비용 구분 표시
   const estDisplay = formatCost(estimatedCost);
@@ -549,9 +630,10 @@ export function PortfolioDetailModal({
               </div>
             )}
 
-            {/* 사진 없을 때 빈 상태 (모바일 전용) */}
+            {/* 사진 없을 때 빈 상태 */}
             {media.length === 0 && (
-              <div className="md:hidden px-5 py-10 text-center">
+              <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
+                <Camera size={24} className="text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">
                   아직 시공 사진이 없습니다.
                 </p>
@@ -770,6 +852,15 @@ export function PortfolioDetailModal({
                     <p className="text-sm font-bold text-foreground truncate">
                       {workerName}
                     </p>
+                    {workerSlug && (
+                      <a
+                        href={`/worker/${workerSlug}`}
+                        className="text-xs text-primary hover:underline"
+                        onClick={onClose}
+                      >
+                        프로필 전체보기 →
+                      </a>
+                    )}
                   </div>
                   {phone && /^\+?[\d\s\-()+]*\d[\d\s\-()+]*$/.test(phone) ? (
                     <a
@@ -799,11 +890,6 @@ export function PortfolioDetailModal({
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-      `}</style>
     </div>
   );
 }
