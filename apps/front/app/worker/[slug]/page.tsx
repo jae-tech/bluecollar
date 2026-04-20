@@ -19,28 +19,10 @@ import type { PublicProfile, PublicProfilePortfolio } from "@/lib/api";
 import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
 import { InquiryForm } from "@/components/worker/inquiry-form";
 import { SPACE_TYPE_LABEL } from "@/lib/constants";
-
-// 업종 코드 → 표시명 매핑
-const FIELD_LABEL: Record<string, string> = {
-  TILE: "타일",
-  WALLPAPER: "도배",
-  PAINTING: "페인트",
-  FLOORING: "바닥재",
-  PLUMBING: "배관",
-  ELECTRICAL: "전기",
-  CARPENTRY: "목공",
-  MASONRY: "조적",
-  WATERPROOFING: "방수",
-  INSULATION: "단열",
-  GLASS: "유리",
-  METAL: "금속",
-  HVAC: "냉난방",
-  DEMOLITION: "철거",
-  GENERAL: "종합",
-};
+import { FIELD_CODE_LABELS } from "@/lib/field-codes";
 
 function fieldLabel(code: string) {
-  return FIELD_LABEL[code] ?? code;
+  return FIELD_CODE_LABELS[code] ?? code;
 }
 
 export default function WorkerProfilePage() {
