@@ -439,15 +439,18 @@ function RoomScrollGallery({
 }
 
 // overflow lock 카운터 — 복수 모달 동시 마운트 시 스크롤 잠금이 풀리는 버그 방지
-// data-overflow-lock 속성 카운터 방식: CSS body[data-overflow-lock] { overflow: hidden }
+// overflow lock 카운터 — 복수 모달 동시 마운트 시 스크롤 잠금이 풀리는 버그 방지
+// JS inline style 직접 설정 (CSS attribute selector는 Turbopack 캐시 누락 가능)
 function lockBodyScroll() {
   const count = Number(document.body.dataset.overflowLock ?? 0) + 1;
   document.body.dataset.overflowLock = String(count);
+  document.body.style.overflow = "hidden";
 }
 function unlockBodyScroll() {
   const count = Number(document.body.dataset.overflowLock ?? 0) - 1;
   if (count <= 0) {
     delete document.body.dataset.overflowLock;
+    document.body.style.overflow = "";
   } else {
     document.body.dataset.overflowLock = String(count);
   }
