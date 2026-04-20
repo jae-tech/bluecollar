@@ -577,6 +577,80 @@ export async function updateWorkerProfileFields(
   });
 }
 
+// ─── Inquiry ─────────────────────────────────────────────────────────────────
+
+export interface InquiryPayload {
+  name: string;
+  phone: string;
+  location: string;
+  workType: string;
+  budget?: string;
+  message?: string;
+  projectTitle?: string;
+}
+
+/** 워커 공개 프로필에 의뢰 접수 (토큰 불필요) */
+export async function submitInquiry(
+  slug: string,
+  payload: InquiryPayload,
+): Promise<{ ok: true; message: string }> {
+  return apiFetch(
+    `/public/profiles/${encodeURIComponent(slug)}/inquiry`,
+    { method: "POST", body: JSON.stringify(payload) },
+    true,
+  );
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+
+export interface WorkerSearchResult {
+  id: string;
+  slug: string;
+  businessName: string;
+  profileImageUrl: string | null;
+  careerSummary: string | null;
+  yearsOfExperience: number | null;
+  businessVerified: boolean;
+  officeCity: string | null;
+  officeDistrict: string | null;
+  fields: string[];
+  portfolioCount: number;
+  thumbnailUrl: string | null;
+}
+
+export interface SearchWorkersParams {
+  q?: string;
+  fieldCode?: string;
+  areaCode?: string;
+  minYears?: number;
+  maxYears?: number;
+  verifiedOnly?: boolean;
+  sort?: "latest" | "portfolio";
+  limit?: number;
+}
+
+/** 워커 검색 (검색 페이지용, 토큰 불필요) */
+export async function searchWorkers(
+  params: SearchWorkersParams = {},
+): Promise<WorkerSearchResult[]> {
+  const sp = new URLSearchParams();
+  if (params.q) sp.set("q", params.q);
+  if (params.fieldCode) sp.set("fieldCode", params.fieldCode);
+  if (params.areaCode) sp.set("areaCode", params.areaCode);
+  if (params.minYears !== undefined)
+    sp.set("minYears", String(params.minYears));
+  if (params.maxYears !== undefined)
+    sp.set("maxYears", String(params.maxYears));
+  if (params.verifiedOnly) sp.set("verifiedOnly", "true");
+  if (params.sort) sp.set("sort", params.sort);
+  if (params.limit !== undefined) sp.set("limit", String(params.limit));
+  return apiFetch<WorkerSearchResult[]>(
+    `/public/profiles/search?${sp.toString()}`,
+    {},
+    true,
+  );
+}
+
 export async function checkSlugAvailability(slug: string): Promise<boolean> {
   const result = await apiFetch<{ available: boolean; reason?: string }>(
     `/public/profiles/slug-check?slug=${encodeURIComponent(slug)}`,
