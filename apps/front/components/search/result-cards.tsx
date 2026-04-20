@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Star, MessageCircle, Award } from "lucide-react";
-import type { Project, Worker } from "@/lib/data";
+import { CheckCircle2, MessageCircle, Award, Briefcase } from "lucide-react";
+import type { Project } from "@/lib/data";
+import type { WorkerSearchResult } from "@/lib/api";
+import { FIELD_CODE_LABELS } from "@/lib/field-codes";
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 
@@ -69,40 +71,46 @@ export function WorkerCard({
   onClick,
   priority = false,
 }: {
-  worker: Worker;
+  worker: WorkerSearchResult;
   onClick: () => void;
   priority?: boolean;
 }) {
   const router = useRouter();
 
-  const handleCardClick = () => {
-    if (worker.slug) {
-      router.push(`/worker/${worker.slug}`);
-    } else {
-      onClick();
-    }
-  };
+  const region = [worker.officeCity, worker.officeDistrict]
+    .filter(Boolean)
+    .join(" ");
+
+  const specialtyLabels = worker.fields
+    .slice(0, 2)
+    .map((code) => FIELD_CODE_LABELS[code] ?? code);
 
   return (
     <div
       className="group rounded-md border border-border bg-card hover:border-primary/40 transition-colors overflow-hidden cursor-pointer"
-      onClick={handleCardClick}
+      onClick={() => router.push(`/worker/${worker.slug}`)}
     >
       <div className="p-5 flex flex-col items-center text-center gap-3">
         {/* Avatar */}
         <div className="relative">
-          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border">
-            <Image
-              src={worker.img}
-              alt={worker.name}
-              width={64}
-              height={64}
-              loading={priority ? "eager" : "lazy"}
-              priority={priority}
-              className="w-full h-full object-cover"
-            />
+          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border bg-secondary flex items-center justify-center">
+            {worker.profileImageUrl ? (
+              <Image
+                src={worker.profileImageUrl}
+                alt={worker.businessName}
+                width={64}
+                height={64}
+                loading={priority ? "eager" : "lazy"}
+                priority={priority}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-xl font-bold text-muted-foreground">
+                {worker.businessName.charAt(0)}
+              </span>
+            )}
           </div>
-          {worker.cvVerified && (
+          {worker.businessVerified && (
             <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-0.5">
               <CheckCircle2 size={12} className="text-primary-foreground" />
             </div>
@@ -112,43 +120,44 @@ export function WorkerCard({
         {/* Name + region */}
         <div>
           <div className="flex items-center gap-1.5 justify-center">
-            <p className="font-bold text-foreground">{worker.name}</p>
-            {worker.verified && (
+            <p className="font-bold text-foreground">{worker.businessName}</p>
+            {worker.businessVerified && (
               <Award size={13} className="text-primary flex-shrink-0" />
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {worker.region}
+            {region || "지역 미설정"}
           </p>
         </div>
 
         {/* Specialty tags */}
-        <div className="flex flex-wrap gap-1 justify-center">
-          {worker.specialty.map((s) => (
-            <span
-              key={s}
-              className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border"
-            >
-              {s}
-            </span>
-          ))}
-        </div>
+        {specialtyLabels.length > 0 && (
+          <div className="flex flex-wrap gap-1 justify-center">
+            {specialtyLabels.map((s) => (
+              <span
+                key={s}
+                className="text-xs bg-secondary text-foreground px-2.5 py-1 rounded-md border border-border"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Stats row */}
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          {worker.yearsOfExperience !== null && (
+            <>
+              <span className="font-medium text-foreground">
+                {worker.yearsOfExperience}년차
+              </span>
+              <span className="w-px h-3 bg-border" />
+            </>
+          )}
           <div className="flex items-center gap-1">
-            <Star size={11} className="fill-primary text-primary" />
-            <span className="font-semibold text-foreground">
-              {worker.rating}
-            </span>
-            <span>({worker.reviews})</span>
+            <Briefcase size={11} />
+            <span>{worker.portfolioCount}건</span>
           </div>
-          <span className="w-px h-3 bg-border" />
-          <span className="font-medium text-foreground">
-            {worker.years}년차
-          </span>
-          <span className="w-px h-3 bg-border" />
-          <span>{worker.portfolioCount}건</span>
         </div>
       </div>
 

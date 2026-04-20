@@ -17,6 +17,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getPublicProfile, getMyWorkerProfile } from "@/lib/api";
 import type { PublicProfile, PublicProfilePortfolio } from "@/lib/api";
 import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
+import { InquiryForm } from "@/components/worker/inquiry-form";
 import { SPACE_TYPE_LABEL } from "@/lib/constants";
 
 // 업종 코드 → 표시명 매핑
@@ -55,6 +56,10 @@ export default function WorkerProfilePage() {
   const [isOwner, setIsOwner] = useState(false);
   const [selectedPortfolio, setSelectedPortfolio] =
     useState<PublicProfilePortfolio | null>(null);
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inquiryPortfolioTitle, setInquiryPortfolioTitle] = useState<
+    string | undefined
+  >();
   const [shareToast, setShareToast] = useState(false);
 
   useEffect(() => {
@@ -294,22 +299,24 @@ export default function WorkerProfilePage() {
 
           {/* CTA */}
           <div className="flex gap-2">
-            {profile.officePhoneNumber ? (
+            <button
+              onClick={() => {
+                setInquiryPortfolioTitle(undefined);
+                setInquiryOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              <MessageCircle size={13} />
+              의뢰하기
+            </button>
+            {profile.officePhoneNumber && (
               <a
                 href={`tel:${profile.officePhoneNumber}`}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-md border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
               >
                 <Phone size={13} />
-                의뢰하기
+                전화
               </a>
-            ) : (
-              <button
-                disabled
-                className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary/50 text-primary-foreground text-sm font-semibold cursor-not-allowed"
-              >
-                <Phone size={13} />
-                의뢰하기
-              </button>
             )}
           </div>
         </section>
@@ -398,7 +405,8 @@ export default function WorkerProfilePage() {
                     )}
                     {portfolio.startDate && (
                       <p className="text-[11px] text-muted-foreground">
-                        {portfolio.startDate.slice(0, 7).replace("-", "년 ")}월
+                        {portfolio.startDate.slice(0, 4)}년{" "}
+                        {portfolio.startDate.slice(5, 7)}월
                       </p>
                     )}
                   </button>
@@ -431,6 +439,15 @@ export default function WorkerProfilePage() {
         workerName={profile.businessName}
         phone={profile.officePhoneNumber ?? undefined}
         onClose={() => setSelectedPortfolio(null)}
+      />
+
+      {/* 의뢰 폼 */}
+      <InquiryForm
+        open={inquiryOpen}
+        onClose={() => setInquiryOpen(false)}
+        workerSlug={profile.slug}
+        workerName={profile.businessName}
+        projectTitle={inquiryPortfolioTitle}
       />
 
       {/* 공유 토스트 */}

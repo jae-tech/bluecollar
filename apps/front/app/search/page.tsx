@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { SignupModal } from "@/components/signup-modal";
@@ -15,7 +15,9 @@ import {
   SkeletonProjectCard,
   SkeletonWorkerCard,
 } from "@/components/search/result-cards";
-import { PROJECTS, WORKERS } from "@/lib/data";
+import { PROJECTS } from "@/lib/data";
+import { searchWorkers, type WorkerSearchResult } from "@/lib/api";
+import { FIELD_CODE_LABELS } from "@/lib/field-codes";
 
 const DEFAULT_FILTERS: Filters = {
   specialty: "전체",
@@ -44,23 +46,20 @@ function SearchPageInner() {
   const [modalOpen, setModalOpen] = useState(false);
   const [inquiryFormOpen, setInquiryFormOpen] = useState(false);
 
-  // Simulated loading on filter change
+  // 워커 검색 결과 (API 연결)
+  const [workers, setWorkers] = useState<WorkerSearchResult[]>([]);
+
   const applyFilters = useCallback((next: Filters) => {
-    setLoading(true);
     setFilters(next);
-    setTimeout(() => setLoading(false), 450);
   }, []);
 
   const handleTabChange = (tab: "projects" | "workers") => {
-    setLoading(true);
     setActiveTab(tab);
-    setTimeout(() => setLoading(false), 350);
   };
 
   const handleQuerySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => setLoading(false), 450);
+    // URL sync를 통해 useEffect가 자동으로 API 호출
   };
 
   // Sync URL query param
@@ -71,6 +70,53 @@ function SearchPageInner() {
     if (filters.specialty !== "전체") sp.set("specialty", filters.specialty);
     router.replace(`/search?${sp.toString()}`, { scroll: false });
   }, [query, activeTab, filters.specialty, router]);
+
+  // 워커 API 조회: 쿼리/필터 변경 시 debounce 후 호출
+  useEffect(() => {
+    // 전문 분야 이름 → fieldCode 역변환
+    const fieldCode =
+      filters.specialty !== "전체"
+        ? Object.entries(FIELD_CODE_LABELS).find(
+            ([, label]) => label === filters.specialty,
+          )?.[0]
+        : undefined;
+
+    let minYears: number | undefined;
+    let maxYears: number | undefined;
+    if (filters.experience === "3년 이하") maxYears = 3;
+    else if (filters.experience === "3~10년") {
+      minYears = 3;
+      maxYears = 10;
+    } else if (filters.experience === "10년 이상") minYears = 10;
+
+    const verifiedOnly =
+      filters.verification === "Bluecollar CV 인증 완료" ? true : undefined;
+
+    const sort: "portfolio" | "latest" | undefined =
+      filters.sort === "포트폴리오 많은 순"
+        ? "portfolio"
+        : filters.sort === "최신순"
+          ? "latest"
+          : undefined;
+
+    setLoading(true);
+    const timer = setTimeout(() => {
+      searchWorkers({
+        q: query || undefined,
+        fieldCode,
+        minYears,
+        maxYears,
+        verifiedOnly,
+        sort,
+        limit: SOFT_WALL_LIMIT + 10,
+      })
+        .then((results) => setWorkers(results))
+        .catch(() => setWorkers([]))
+        .finally(() => setLoading(false));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query, filters]);
 
   // ── Filtered data ───────────────────────────────────────────────────────────
 
@@ -93,41 +139,8 @@ function SearchPageInner() {
     return a.id - b.id;
   });
 
-  const filteredWorkers = WORKERS.filter((w) => {
-    if (
-      filters.specialty !== "전체" &&
-      !w.specialty.includes(filters.specialty)
-    )
-      return false;
-    if (filters.experience !== "전체") {
-      if (filters.experience === "3년 이하" && w.years > 3) return false;
-      if (filters.experience === "3~10년" && (w.years <= 3 || w.years > 10))
-        return false;
-      if (filters.experience === "10년 이상" && w.years <= 10) return false;
-    }
-    if (filters.verification !== "모든 워커") {
-      if (filters.verification === "자격증 인증됨" && !w.verified) return false;
-      if (filters.verification === "Bluecollar CV 인증 완료" && !w.cvVerified)
-        return false;
-    }
-    if (query) {
-      const q = query.toLowerCase();
-      const matchName = w.name.toLowerCase().includes(q);
-      const matchSpec = w.specialty.some((s) => s.toLowerCase().includes(q));
-      const matchRegion = w.region.toLowerCase().includes(q);
-      if (!matchName && !matchSpec && !matchRegion) return false;
-    }
-    return true;
-  }).sort((a, b) => {
-    if (filters.sort === "인기순") return b.reviews - a.reviews;
-    if (filters.sort === "최신순") return b.id - a.id;
-    if (filters.sort === "포트폴리오 많은 순")
-      return b.portfolioCount - a.portfolioCount;
-    return 0;
-  });
-
   const totalResults =
-    activeTab === "projects" ? filteredProjects.length : filteredWorkers.length;
+    activeTab === "projects" ? filteredProjects.length : workers.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -269,8 +282,8 @@ function SearchPageInner() {
                   ) : (
                     <EmptyState tab="projects" />
                   )
-                ) : filteredWorkers.length > 0 ? (
-                  filteredWorkers
+                ) : workers.length > 0 ? (
+                  workers
                     .slice(0, SOFT_WALL_LIMIT)
                     .map((w, i) => (
                       <WorkerCard

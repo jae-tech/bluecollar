@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  Post,
+  Body,
   Param,
   Query,
   HttpCode,
@@ -83,6 +85,61 @@ export class PublicController {
   })
   async getLatestPortfolios() {
     return this.publicService.getLatestPortfolios(8);
+  }
+
+  /**
+   * 워커 검색 (검색 페이지용)
+   *
+   * 키워드, 전문 분야 코드, 활동 지역 코드, 경력 연수로 워커를 검색합니다.
+   */
+  @Get('search')
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 60 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '워커 검색',
+    description:
+      '키워드, 전문 분야 코드(fieldCode), 활동 지역 코드(areaCode), 경력 연수(minYears/maxYears)로 워커를 검색합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '검색 결과',
+  })
+  async searchWorkers(
+    @Query('q') query?: string,
+    @Query('fieldCode') fieldCode?: string,
+    @Query('areaCode') areaCode?: string,
+    @Query('minYears') minYearsStr?: string,
+    @Query('maxYears') maxYearsStr?: string,
+    @Query('verifiedOnly') verifiedOnlyStr?: string,
+    @Query('sort') sort?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    // 쿼리 파라미터 수동 파싱 (ParseIntPipe는 undefined를 허용하지 않음)
+    const minYears =
+      minYearsStr !== undefined ? parseInt(minYearsStr, 10) : undefined;
+    const maxYears =
+      maxYearsStr !== undefined ? parseInt(maxYearsStr, 10) : undefined;
+    const verifiedOnly = verifiedOnlyStr === 'true';
+    const limit =
+      limitStr !== undefined ? Math.min(parseInt(limitStr, 10), 50) : 20;
+    const sortParam = sort === 'portfolio' ? 'portfolio' : 'latest';
+
+    this.logger.info(
+      { query, fieldCode, areaCode, minYears, maxYears, verifiedOnly, sort },
+      '워커 검색 요청',
+    );
+
+    return this.publicService.searchWorkers({
+      query: query?.trim(),
+      fieldCode,
+      areaCode,
+      minYears: !isNaN(minYears as number) ? minYears : undefined,
+      maxYears: !isNaN(maxYears as number) ? maxYears : undefined,
+      verifiedOnly,
+      sort: sortParam,
+      limit,
+    });
   }
 
   /**
@@ -190,5 +247,40 @@ export class PublicController {
     }
 
     return profile;
+  }
+
+  /**
+   * 공개 프로필 의뢰 접수
+   *
+   * 고객이 워커 공개 프로필에서 의뢰 폼을 제출할 때 호출됩니다.
+   * 이름, 연락처, 시공 위치, 공종이 필수입니다.
+   */
+  @Post(':slug/inquiry')
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } }) // 분당 5건 — 스팸 방지
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: '의뢰 접수',
+    description:
+      '고객이 워커 프로필에서 의뢰를 보냅니다. 이름, 연락처, 위치, 공종이 필수.',
+  })
+  @ApiResponse({ status: 200, description: '의뢰 접수 성공' })
+  @ApiResponse({ status: 404, description: '프로필을 찾을 수 없음' })
+  @ApiResponse({ status: 429, description: '요청 한도 초과' })
+  async submitInquiry(
+    @Param('slug') slug: string,
+    @Body()
+    body: {
+      name: string;
+      phone: string;
+      location: string;
+      workType: string;
+      budget?: string;
+      message?: string;
+      projectTitle?: string;
+    },
+  ) {
+    this.logger.info({ slug }, '의뢰 접수 요청 수신');
+    return this.publicService.submitInquiry(slug, body);
   }
 }

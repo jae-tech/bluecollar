@@ -83,9 +83,32 @@ const SPACE_TYPE_LABELS: Record<string, string> = {
   OTHER: "기타",
 };
 
-// 시공 범위 표시 (snake_case → 읽기 좋게)
+// 시공 범위 코드 → 한국어 레이블
+const CONSTRUCTION_SCOPE_LABELS: Record<string, string> = {
+  // 범위 유형
+  FULL: "전체 리모델링",
+  PARTIAL: "부분 시공",
+  KITCHEN: "주방",
+  BATHROOM: "욕실",
+  LIVING: "거실",
+  BEDROOM: "침실",
+  BALCONY: "발코니",
+  ENTRANCE: "현관",
+  FLOOR: "바닥재",
+  CEILING: "천장",
+  WALL: "벽체",
+  WINDOW: "창호",
+  ELECTRIC: "전기",
+  PLUMBING: "배관",
+  TILE: "타일",
+  PAINT: "도장/도배",
+  DEMO: "철거",
+};
+
 function constructionScopeLabel(s: string | null) {
   if (!s) return null;
+  // 코드가 매핑에 있으면 한국어로, 없으면 snake_case 분해
+  if (CONSTRUCTION_SCOPE_LABELS[s]) return CONSTRUCTION_SCOPE_LABELS[s];
   return s
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
@@ -443,14 +466,9 @@ export function PortfolioDetailModal({
   // 룸도 비포/애프터도 없으면 전체 미디어를 하나로
   const allImages = !hasRooms && !hasBeforeAfter ? media : [];
 
-  const costDisplay = (() => {
-    const est = formatCost(estimatedCost);
-    const act = formatCost(actualCost);
-    if (est && act) return `${est} ~ ${act}`;
-    if (act) return act;
-    if (est) return est;
-    return null;
-  })();
+  // TODO-067: 예상/실제 비용 구분 표시
+  const estDisplay = formatCost(estimatedCost);
+  const actDisplay = formatCost(actualCost);
 
   const diffLabel = difficultyLabel(difficulty);
 
@@ -564,10 +582,10 @@ export function PortfolioDetailModal({
                 {startDate && (
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     <Calendar size={11} />
-                    {startDate.slice(0, 7).replace("-", "년 ")}월
+                    {startDate.slice(0, 4)}년 {startDate.slice(5, 7)}월
                     {endDate &&
                       endDate !== startDate &&
-                      ` ~ ${endDate.slice(0, 7).replace("-", "년 ")}월`}
+                      ` ~ ${endDate.slice(0, 4)}년 ${endDate.slice(5, 7)}월`}
                   </span>
                 )}
                 {diffLabel && (
@@ -583,10 +601,17 @@ export function PortfolioDetailModal({
                     {details.areaUnit === "PYEONG" ? "평" : "㎡"}
                   </span>
                 )}
-                {costDisplay && (
+                {actDisplay && (
                   <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-sm">
                     <span className="text-xs">₩</span>
-                    {costDisplay}
+                    {actDisplay}
+                  </span>
+                )}
+                {!actDisplay && estDisplay && (
+                  <span className="flex items-center gap-1 text-sm font-semibold text-muted-foreground bg-secondary border border-border px-3 py-1.5 rounded-sm">
+                    <span className="text-xs">₩</span>
+                    {estDisplay}
+                    <span className="text-xs font-normal ml-0.5">예상</span>
                   </span>
                 )}
               </div>
@@ -755,14 +780,18 @@ export function PortfolioDetailModal({
                       의뢰하기
                     </a>
                   ) : (
-                    <button
-                      disabled
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-primary/50 text-primary-foreground text-sm font-bold flex-shrink-0 cursor-not-allowed"
-                      title="전화번호 미등록"
-                    >
-                      <MessageCircle size={14} />
-                      문의하기
-                    </button>
+                    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                      <button
+                        disabled
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-secondary text-muted-foreground border border-border text-sm font-bold cursor-not-allowed"
+                      >
+                        <MessageCircle size={14} />
+                        문의하기
+                      </button>
+                      <p className="text-[10px] text-muted-foreground">
+                        전화번호 미등록
+                      </p>
+                    </div>
                   )}
                 </>
               )}

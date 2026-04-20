@@ -13,7 +13,7 @@ import {
   users,
 } from '@repo/database';
 import { validateSlug } from '@/common/validators/slug.validator';
-import { eq, inArray, sql, desc } from 'drizzle-orm';
+import { eq, inArray, sql, desc, ilike, and, gte, lte, or } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
 
@@ -373,6 +373,292 @@ export class PublicService {
       .from(workerProfiles);
 
     return { workerCount: result[0]?.count ?? 0 };
+  }
+
+  /**
+   * 워커 검색 (검색 페이지용)
+   *
+   * 키워드(사업명, 경력 요약), 전문 분야 코드, 활동 지역 코드, 경력 연수로 필터링합니다.
+   * 각 워커의 포트폴리오 수와 대표 이미지를 포함하여 반환합니다.
+   *
+   * @param query 검색 키워드 (사업명 또는 경력 요약 대상)
+   * @param fieldName 전문 분야 한국어 이름 (masterCodes.name, 예: "타일")
+   * @param areaCode 활동 지역 코드 (예: "AREA_SEOUL_GN")
+   * @param minYears 최소 경력 연수
+   * @param maxYears 최대 경력 연수
+   * @param verifiedOnly 사업자 인증 워커만 조회
+   * @param sort 정렬 기준 ("latest" | "portfolio")
+   * @param limit 최대 반환 수 (기본 20)
+   */
+  async searchWorkers(params: {
+    query?: string;
+    fieldCode?: string;
+    areaCode?: string;
+    minYears?: number;
+    maxYears?: number;
+    verifiedOnly?: boolean;
+    sort?: 'latest' | 'portfolio';
+    limit?: number;
+  }): Promise<
+    Array<{
+      id: string;
+      slug: string;
+      businessName: string;
+      profileImageUrl: string | null;
+      careerSummary: string | null;
+      yearsOfExperience: number | null;
+      businessVerified: boolean;
+      officeCity: string | null;
+      officeDistrict: string | null;
+      fields: string[];
+      portfolioCount: number;
+      thumbnailUrl: string | null;
+    }>
+  > {
+    const {
+      query,
+      fieldCode,
+      areaCode,
+      minYears,
+      maxYears,
+      verifiedOnly,
+      sort,
+      limit = 20,
+    } = params;
+
+    // Step 1: workerProfiles 기본 필터링
+    const conditions: ReturnType<typeof eq>[] = [];
+    if (query) {
+      conditions.push(
+        or(
+          ilike(workerProfiles.businessName, `%${query}%`),
+          ilike(workerProfiles.careerSummary, `%${query}%`),
+        ) as ReturnType<typeof eq>,
+      );
+    }
+    if (verifiedOnly) {
+      conditions.push(eq(workerProfiles.businessVerified, true));
+    }
+    if (minYears !== undefined) {
+      conditions.push(gte(workerProfiles.yearsOfExperience, minYears));
+    }
+    if (maxYears !== undefined) {
+      conditions.push(lte(workerProfiles.yearsOfExperience, maxYears));
+    }
+
+    const baseQuery = this.db
+      .select({
+        id: workerProfiles.id,
+        slug: workerProfiles.slug,
+        businessName: workerProfiles.businessName,
+        profileImageUrl: workerProfiles.profileImageUrl,
+        careerSummary: workerProfiles.careerSummary,
+        yearsOfExperience: workerProfiles.yearsOfExperience,
+        businessVerified: workerProfiles.businessVerified,
+        officeCity: workerProfiles.officeCity,
+        officeDistrict: workerProfiles.officeDistrict,
+        createdAt: workerProfiles.createdAt,
+      })
+      .from(workerProfiles)
+      .$dynamic();
+
+    const profileRows =
+      conditions.length > 0
+        ? await baseQuery.where(and(...conditions))
+        : await baseQuery;
+
+    if (profileRows.length === 0) return [];
+
+    let profileIds = profileRows.map((p) => p.id);
+
+    // Step 2: 전문 분야 코드 필터 (workerFields 조인)
+    if (fieldCode) {
+      const matchingFields = await this.db
+        .select({ workerProfileId: workerFields.workerProfileId })
+        .from(workerFields)
+        .where(
+          and(
+            inArray(workerFields.workerProfileId, profileIds),
+            eq(workerFields.fieldCode, fieldCode),
+          ),
+        );
+      const matchingIds = new Set(matchingFields.map((f) => f.workerProfileId));
+      profileIds = profileIds.filter((id) => matchingIds.has(id));
+    }
+
+    // Step 3: 활동 지역 코드 필터 (workerAreas 조인)
+    if (areaCode) {
+      const matchingAreas = await this.db
+        .select({ workerProfileId: workerAreas.workerProfileId })
+        .from(workerAreas)
+        .where(
+          and(
+            inArray(workerAreas.workerProfileId, profileIds),
+            eq(workerAreas.areaCode, areaCode),
+          ),
+        );
+      const matchingIds = new Set(matchingAreas.map((a) => a.workerProfileId));
+      profileIds = profileIds.filter((id) => matchingIds.has(id));
+    }
+
+    if (profileIds.length === 0) return [];
+
+    // Step 4: 전문 분야 목록 일괄 조회
+    const allFields = await this.db
+      .select({
+        workerProfileId: workerFields.workerProfileId,
+        fieldCode: workerFields.fieldCode,
+      })
+      .from(workerFields)
+      .where(inArray(workerFields.workerProfileId, profileIds));
+
+    // Step 5: 포트폴리오 수 + 대표 이미지 조회
+    const allPortfolios = await this.db
+      .select({
+        id: portfolios.id,
+        workerProfileId: portfolios.workerProfileId,
+        createdAt: portfolios.createdAt,
+      })
+      .from(portfolios)
+      .where(inArray(portfolios.workerProfileId, profileIds))
+      .orderBy(desc(portfolios.createdAt));
+
+    const portfolioIds = allPortfolios.map((p) => p.id);
+    let mediaRows: { portfolioId: string; mediaUrl: string }[] = [];
+    if (portfolioIds.length > 0) {
+      mediaRows = await this.db
+        .select({
+          portfolioId: portfolioMedia.portfolioId,
+          mediaUrl: portfolioMedia.mediaUrl,
+        })
+        .from(portfolioMedia)
+        .where(inArray(portfolioMedia.portfolioId, portfolioIds))
+        .orderBy(portfolioMedia.displayOrder);
+    }
+
+    // Step 6: 인메모리 그룹핑
+    const fieldsByWorker = new Map<string, string[]>();
+    allFields.forEach((f) => {
+      const arr = fieldsByWorker.get(f.workerProfileId) ?? [];
+      arr.push(f.fieldCode);
+      fieldsByWorker.set(f.workerProfileId, arr);
+    });
+
+    // 워커별 포트폴리오 수
+    const portfolioCountByWorker = new Map<string, number>();
+    // 워커별 최신 포트폴리오 ID (대표 이미지용)
+    const latestPortfolioByWorker = new Map<string, string>();
+    allPortfolios.forEach((p) => {
+      portfolioCountByWorker.set(
+        p.workerProfileId,
+        (portfolioCountByWorker.get(p.workerProfileId) ?? 0) + 1,
+      );
+      if (!latestPortfolioByWorker.has(p.workerProfileId)) {
+        latestPortfolioByWorker.set(p.workerProfileId, p.id);
+      }
+    });
+
+    // 포트폴리오별 첫 번째 이미지
+    const thumbnailByPortfolio = new Map<string, string>();
+    mediaRows.forEach((m) => {
+      if (!thumbnailByPortfolio.has(m.portfolioId)) {
+        thumbnailByPortfolio.set(m.portfolioId, m.mediaUrl);
+      }
+    });
+
+    // Step 7: 결과 조립 및 정렬
+    const filteredProfiles = profileRows.filter((p) =>
+      profileIds.includes(p.id),
+    );
+
+    const results = filteredProfiles.map((p) => {
+      const latestPortId = latestPortfolioByWorker.get(p.id);
+      const thumbnailUrl = latestPortId
+        ? (thumbnailByPortfolio.get(latestPortId) ?? null)
+        : null;
+
+      return {
+        id: p.id,
+        slug: p.slug,
+        businessName: p.businessName,
+        profileImageUrl: p.profileImageUrl,
+        careerSummary: p.careerSummary,
+        yearsOfExperience: p.yearsOfExperience,
+        businessVerified: p.businessVerified,
+        officeCity: p.officeCity,
+        officeDistrict: p.officeDistrict,
+        fields: fieldsByWorker.get(p.id) ?? [],
+        portfolioCount: portfolioCountByWorker.get(p.id) ?? 0,
+        thumbnailUrl,
+        _createdAt: p.createdAt,
+      };
+    });
+
+    // 정렬
+    results.sort((a, b) => {
+      if (sort === 'portfolio') return b.portfolioCount - a.portfolioCount;
+      // 기본: 최신 가입순
+      return (
+        new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
+      );
+    });
+
+    return results
+      .slice(0, limit)
+      .map(({ _createdAt: _ignored, ...rest }) => rest);
+  }
+
+  /**
+   * 공개 프로필 의뢰 접수
+   *
+   * 고객이 워커 공개 프로필에서 의뢰를 보낼 때 호출됩니다.
+   * 현재는 로그만 남기고 성공을 반환합니다.
+   * Phase 2에서 SMS 알림 또는 이메일 발송 연동 예정.
+   *
+   * @param slug 워커 슬러그
+   * @param payload 의뢰 내용
+   */
+  async submitInquiry(
+    slug: string,
+    payload: {
+      name: string;
+      phone: string;
+      location: string;
+      workType: string;
+      budget?: string;
+      message?: string;
+      projectTitle?: string;
+    },
+  ): Promise<{ ok: true; message: string }> {
+    // 슬러그로 워커 프로필 존재 확인
+    const profiles = await this.db
+      .select({
+        id: workerProfiles.id,
+        businessName: workerProfiles.businessName,
+      })
+      .from(workerProfiles)
+      .where(eq(workerProfiles.slug, slug))
+      .limit(1);
+
+    if (!profiles || profiles.length === 0) {
+      throw new NotFoundException('해당 슬러그의 프로필을 찾을 수 없습니다');
+    }
+
+    this.logger.info(
+      {
+        slug,
+        workerProfileId: profiles[0].id,
+        clientName: payload.name,
+        workType: payload.workType,
+        location: payload.location,
+      },
+      '의뢰 접수',
+    );
+
+    // TODO Phase 2: SMS/이메일 알림 발송
+    // await this.smsService.send(profiles[0].officePhoneNumber, `새 의뢰 — ${payload.name}: ${payload.location}`);
+
+    return { ok: true, message: '의뢰가 접수되었습니다.' };
   }
 
   /**
