@@ -16,7 +16,6 @@ import {
   Tag,
   Home,
   ShieldCheck,
-  Package,
   Camera,
 } from "lucide-react";
 import type {
@@ -568,9 +567,8 @@ export function PortfolioDetailModal({
 
   const diffLabel = difficultyLabel(difficulty);
 
-  // 자재 태그 (materialId 있는 것) vs 일반 태그 분리
-  const materialTags = (tags ?? []).filter((t) => t.materialId);
-  const generalTags = (tags ?? []).filter((t) => !t.materialId);
+  // 태그 — API는 string[] 반환
+  const allTags = tags ?? [];
 
   return (
     <div
@@ -712,16 +710,16 @@ export function PortfolioDetailModal({
                   </span>
                 )}
               </div>
-              {/* 일반 태그 (자재 아닌 것) */}
-              {generalTags.length > 0 && (
+              {/* 태그 */}
+              {allTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-3">
-                  {generalTags.map((tag, i) => (
+                  {allTags.map((tag, i) => (
                     <span
-                      key={`${tag.tagName}-${i}`}
+                      key={`${tag}-${i}`}
                       className="flex items-center gap-1 text-xs text-accent-foreground bg-accent border border-border px-2 py-1 rounded-sm"
                     >
                       <Tag size={9} />
-                      {tag.tagName}
+                      {tag}
                     </span>
                   ))}
                 </div>
@@ -785,27 +783,6 @@ export function PortfolioDetailModal({
                       </div>
                     ))}
                 </div>
-              </div>
-            )}
-
-            {/* 사용 자재 */}
-            {materialTags.length > 0 && (
-              <div className="px-5 py-5 border-b border-border">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase mb-3 flex items-center gap-1.5">
-                  <Package size={11} />
-                  사용 자재
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {materialTags.map((tag, i) => (
-                    <li
-                      key={`${tag.tagName}-${i}`}
-                      className="flex items-center gap-2.5 text-sm text-foreground"
-                    >
-                      <span className="w-1 h-1 bg-primary flex-shrink-0" />
-                      {tag.tagName}
-                    </li>
-                  ))}
-                </ul>
               </div>
             )}
 
