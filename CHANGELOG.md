@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.2.0.0] - 2026-04-21
+
+### Added
+
+- 포트폴리오 모달 딥링크 — `?portfolio=[id]` URL로 직접 접근 시 자동 오픈, 브라우저 뒤로가기로 닫기
+- 포트폴리오 모달 키보드 네비게이션 — ArrowLeft/Right로 이미지 이동
+- 포트폴리오 모달 모바일 스와이프 제스처 — 50px 임계값 touchstart/touchend
+- 워커 검색 API 연결 — 키워드·업종·지역·경력·인증 필터, 검색 결과 카드 렌더링
+- 의뢰 폼 실 API 연결 — POST /public/profiles/:slug/inquiry 연동 (Zod 입력 검증 포함)
+- 포트폴리오 모달에서 워커 프로필 전체보기 링크 추가
+- 프론트엔드 Vitest 설정 + FIELD_CODE_LABELS 단위 테스트 추가
+
+### Changed
+
+- 포트폴리오 모달 공간 갤러리 — RoomTabGallery → RoomScrollGallery (수직 스크롤 + sticky 탭)
+- 포트폴리오 모달 비용 표시 — 단일 cost → 예상(estDisplay) / 실제(actDisplay) 분리
+- overflow lock — CSS attribute selector 방식 → JS inline style 직접 설정 (Turbopack 호환)
+- searchWorkers 포트폴리오 조회 — 무제한 → limit * 3 가드로 DB 부하 제한
+
+### Fixed
+
+- useMemo Rules of Hooks 위반 수정 — early return 이전으로 이동 (딥링크 앱 크래시 해결)
+- 포트폴리오 태그 렌더링 버그 수정 — API 반환 타입 `string[]` 불일치로 태그 텍스트 미표시
+- 워커 프로필 업종 뱃지 한국어 미표시 수정 — 잘못된 FIELD_LABEL 맵 → field-codes.ts 임포트
+- 온보딩 3단계 다음 버튼 — 스킬 미선택 시 비활성화 로직 수정
+- 업종 코드 배지 한국어 표시 수정 — FLD_* raw enum 대신 FIELD_CODE_LABELS 사용
+- parseInt NaN 가드 추가 — 검색 limit 파라미터 잘못된 입력 시 빈 결과 반환 버그
+- O(n²) → O(n): profileIds.includes() → Set.has() 로 검색 결과 조립 최적화
+- 검색 페이지 dead state 제거 — inquiryFormOpen / 구 stub InquiryForm import
+
 ## [0.1.0.0] - 2026-04-16
 
 ### Added
