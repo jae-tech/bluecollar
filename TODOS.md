@@ -820,3 +820,29 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 **What:** `SELECT COUNT(*) FROM portfolioMedia WHERE roomId IS NOT NULL` 비율 확인
 **Why:** RoomTabGallery가 실제로 몇 %의 포트폴리오에서 렌더되는지 불명. UX 가정 검증 필요.
 **Effort:** XS (DB 쿼리 1개)
+
+---
+
+## 🐛 QA 이슈 (Fixed by /qa on main, 2026-04-20)
+
+### ~~ISSUE-003: PortfolioDetailModal — useMemo Rules of Hooks 위반~~
+
+**Fixed on main, 2026-04-20** (commit f2ccbce) — `useMemo`를 `if (!portfolio) return null` early return 이전으로 이동. 딥링크로 접근 시 null → non-null 전환에서 Hook 순서 불변 보장.
+
+---
+
+### ~~ISSUE-004: 포트폴리오 태그 string[] API 타입 불일치~~
+
+**Fixed on main, 2026-04-20** (commit 792ac08) — 백엔드가 `string[]` 반환하는데 프론트 타입이 `PortfolioTag[]`로 선언. `api.ts` 타입 수정 + 렌더링 코드를 `string[]` 기준으로 통일.
+
+---
+
+### ~~ISSUE-005: 워커 프로필 페이지 FLD_* 뱃지 한국어 미표시~~
+
+**Fixed on main, 2026-04-20** (commit cfd1148) — `page.tsx`가 자체 잘못된 `FIELD_LABEL` 맵 사용 (`TILE` 대신 `FLD_TILE` 필요). `field-codes.ts`의 `FIELD_CODE_LABELS` 임포트로 교체.
+
+---
+
+### ~~ISSUE-006: Overflow lock CSS attribute selector 미적용~~
+
+**Fixed on main, 2026-04-20** (commit 736f0fa) — `body[data-overflow-lock]` CSS가 Turbopack 번들에서 누락. `lockBodyScroll()`/`unlockBodyScroll()`에서 `document.body.style.overflow`를 직접 설정하도록 변경.
