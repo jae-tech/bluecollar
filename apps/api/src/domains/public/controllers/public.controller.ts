@@ -122,7 +122,7 @@ export class PublicController {
       maxYearsStr !== undefined ? parseInt(maxYearsStr, 10) : undefined;
     const verifiedOnly = verifiedOnlyStr === 'true';
     const limit =
-      limitStr !== undefined ? Math.min(parseInt(limitStr, 10), 50) : 20;
+      limitStr !== undefined ? Math.min(parseInt(limitStr, 10) || 20, 50) : 20;
     const sortParam = sort === 'portfolio' ? 'portfolio' : 'latest';
 
     this.logger.info(
