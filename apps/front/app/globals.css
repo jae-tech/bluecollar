@@ -140,6 +140,31 @@
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* overflow lock counter — body[data-overflow-lock] prevents background scroll */
+body[data-overflow-lock] {
+  overflow: hidden;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-marquee {
     animation: marquee 35s linear infinite;

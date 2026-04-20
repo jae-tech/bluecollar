@@ -40,18 +40,9 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 
 ## 🔄 상태 관리 (API 연결 준비)
 
-### TODO-004: InquiryForm 상태 (Loading/Error/Success)
+### ~~TODO-004: InquiryForm 상태 (Loading/Error/Success)~~
 
-**What:** `components/worker/inquiry-form.tsx`에 제출 중 Spinner, 에러 Toast, 성공 메시지 추가
-**Why:** 현재 form은 submit 후 아무 일도 안 일어남 — API 연결 시 UX 없음
-**Pros:** API 연결 후 즉시 동작하는 UX
-**Cons:** 없음
-**Context:**
-
-- Loading: 버튼 disabled + Spinner
-- Error: Toast "전송 실패. 다시 시도해주세요"
-- Success: 폼 숨기고 "문의가 전송되었습니다. 워커가 48시간 내 응답할 예정입니다" 표시
-  **Depends on:** API 엔드포인트 (`POST /inquiries`)
+**Fixed on main, 2026-04-20** — `inquiry-form.tsx`: loading state (Loader2 스피너), apiError 상태, 성공 시 submitted 화면. `submitInquiry()` 실제 API 호출.
 
 ---
 
@@ -148,16 +139,9 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 
 ## 🔌 API 연동 준비 (워커 프로필 페이지)
 
-### TODO-013: InquiryForm mock submit → 실제 API 연동
+### ~~TODO-013: InquiryForm mock submit → 실제 API 연동~~
 
-**What:** `apps/front/components/inquiry-form.tsx`의 `handleSubmit`이 현재 setTimeout mock 처리.
-**Why:** 사용자가 문의 폼을 제출해도 실제로 아무 데이터도 저장되지 않음. API 연동 PR 때 반드시 처리.
-**Pros:** 실제 문의 데이터 수신 가능, 워커에게 알림 발송 가능
-**Cons:** 백엔드 `/inquiries` 엔드포인트 설계 필요
-**Context:** `handleSubmit` 함수 내 `// TODO: POST /inquiries API 연동 필요 — 현재 mock 처리` 코멘트 참조. 성공 시 토스트 메시지는 이미 구현됨.
-**Effort:** M
-**Priority:** P1
-**Depends on:** API 연동 PR (20260330 디자인 문서)
+**Fixed on main, 2026-04-20** — `POST /public/profiles/:slug/inquiry` 엔드포인트 추가. InquiryForm에서 `submitInquiry()` 호출.
 
 ### TODO-014: /worker/[slug] 동적 라우트에 notFound() 처리 추가
 
@@ -729,127 +713,97 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 
 ## 🎨 디자인 시스템 — 모달 스프린트 (autoplan 2026-04-16, 잔여)
 
-### TODO-063: close button rounded-full → rounded-md
+### ~~TODO-063: close button rounded-full → rounded-md~~
 
-**What:** `portfolio-detail-modal.tsx:359` 닫기 버튼 `rounded-full` → `rounded-md`
-**Why:** DESIGN.md radius 계층 — 버튼은 `--radius-sm` (rounded-md). `rounded-full`은 아바타/아이콘 전용.
-**Effort:** XS
+**Fixed on main, 2026-04-20** — 이미 `rounded-sm` 적용됨 (코드 확인 후 추가 수정 불필요).
 
 ---
 
-### TODO-064: Desktop left panel empty state — md:hidden 제거
+### ~~TODO-064: Desktop left panel empty state — md:hidden 제거~~
 
-**What:** `portfolio-detail-modal.tsx:403-410` 빈 상태 div의 `md:hidden` 제거
-**Why:** 데스크탑에서 사진 없는 포트폴리오 열면 좌측 패널이 완전히 빈 흰색 void
-**Effort:** XS
+**Fixed on main, 2026-04-20** — `md:hidden` 제거, Camera 아이콘 + 텍스트 2줄 empty state 추가.
 
 ---
 
-### TODO-065: 비활성 의뢰하기 버튼 — 이유 표시
+### ~~TODO-065: 비활성 의뢰하기 버튼 — 이유 표시~~
 
-**What:** `portfolio-detail-modal.tsx:608-614` phone 없을 때 disabled 버튼에 "전화번호 미등록" 텍스트 또는 인라인 레이블 추가
-**Why:** 고객이 버튼이 비활성인 이유를 모름
-**Effort:** XS (title 속성으로 임시 처리 완료, 인라인 레이블로 개선 권장)
+**Fixed on main, 2026-04-20** — 인라인 "전화번호 미등록" 텍스트 레이블 추가.
 
 ---
 
-### TODO-066: constructionScopeLabel — 영어 → 한글 매핑
+### ~~TODO-066: constructionScopeLabel — 영어 → 한글 매핑~~
 
-**What:** `portfolio-detail-modal.tsx:86-93` `constructionScopeLabel()` 함수가 영어 enum을 title-case로 출력
-**Why:** 한국어 UI에 "Full Renovation" 같은 영어 출력 — UX 일관성 파괴
-**Fix:** `ROOM_TYPE_LABELS`처럼 한국어 매핑 테이블 추가
-**Effort:** S
+**Fixed on main, 2026-04-20** — `CONSTRUCTION_SCOPE_LABELS` 딕셔너리 추가, 16개 enum 한글 매핑.
 
 ---
 
-### TODO-067: 비용 표시 — 예상/실제 분리 표시
+### ~~TODO-067: 비용 표시 — 예상/실제 분리 표시~~
 
-**What:** `portfolio-detail-modal.tsx:326-333` estimatedCost와 actualCost를 range로 표시 ("500만원 ~ 700만원") → 별도 레이블로 분리
-**Why:** 두 값은 범위가 아닌 견적vs실제. 고객에게 의미 혼동.
-**Effort:** S
+**Fixed on main, 2026-04-20** — estDisplay/actDisplay 분리, 각각 bg-secondary/"(예상)" vs bg-accent 스타일 적용.
 
 ---
 
-### TODO-068: 날짜 포맷 — endDate 앞 공백 누락
+### ~~TODO-068: 날짜 포맷 — endDate 앞 공백 누락~~
 
-**What:** `portfolio-detail-modal.tsx:439` `~ ${endDate...}` 앞에 공백 누락
-**Effort:** XS
+**Fixed on main, 2026-04-20** — `slice(0,4)}년 ${slice(5,7)}월` 형식으로 통일.
 
 ---
 
-### TODO-069: 인라인 keyframes → globals.css 이전
+### ~~TODO-069: 인라인 keyframes → globals.css 이전~~
 
-**What:** `portfolio-detail-modal.tsx:621-624` fadeIn/slideUp `<style>` 태그 → `globals.css`로 이전
-**Why:** React 매 렌더마다 style 태그 재주입
-**Effort:** XS
+**Fixed on main, 2026-04-20** — fadeIn/slideUp keyframes를 `globals.css`로 이전, `<style>` 태그 제거. `body[data-overflow-lock]` CSS도 추가.
 
 ---
 
 ## 🦾 엔지니어링 — 모달 스프린트 (autoplan 2026-04-16, 잔여)
 
-### TODO-070: roomIndex OOB — BadRequestException 가드
+### ~~TODO-070: roomIndex OOB — BadRequestException 가드~~
 
-**What:** `portfolio.service.ts:520` roomIndex가 insertedRooms 배열 범위 밖이면 silent data loss → BadRequestException 추가
-**Why:** 동시 편집 시 stale roomIndex로 미디어가 룸 없이 저장됨
-**Effort:** S
+**Fixed on main, 2026-04-20** — create/update 양쪽에 `BadRequestException` 추가. silent data loss 제거.
 
 ---
 
-### TODO-071: body overflow lock 스택 처리
+### ~~TODO-071: body overflow lock 스택 처리~~
 
-**What:** `portfolio-detail-modal.tsx:262` `document.body.style.overflow = "hidden"` → class 기반 counter로 교체
-**Why:** 두 모달이 동시에 마운트/언마운트되면 두 번째 모달의 스크롤 잠금이 풀림
-**Effort:** S
+**Fixed on main, 2026-04-20** — `data-overflow-lock` counter 방식으로 교체. CSS `body[data-overflow-lock] { overflow: hidden }`. 복수 모달 동시 마운트 시 안전.
 
 ---
 
-### TODO-072: ImageCarousel priority prop — 최상위 캐러셀만
+### ~~TODO-072: ImageCarousel priority prop — 최상위 캐러셀만~~
 
-**What:** `portfolio-detail-modal.tsx:119` `priority` prop → 최상위 캐러셀에만 전달, 나머지 false
-**Why:** 여러 캐러셀 동시 렌더 시 모두 high-priority 이미지 preload → LCP 경합
-**Effort:** S
+**Fixed on main, 2026-04-20** — `isPrimary?: boolean` prop 추가. BeforeAfterTabs 초기 활성 탭만, RoomScrollGallery 첫 번째 룸만 `priority`.
 
 ---
 
-### TODO-073: roomGroups useMemo
+### ~~TODO-073: roomGroups useMemo~~
 
-**What:** `portfolio-detail-modal.tsx:297-316` roomGroups/roomlessMedia 계산 → `useMemo([media, rooms])` 적용
-**Why:** 렌더마다 O(n\*m) 필터 재실행
-**Effort:** XS
+**Fixed on main, 2026-04-20** — `useMemo([portfolio?.id])` 적용. O(n×m) 재계산 방지.
 
 ---
 
 ## 🎯 제품 개선 — 모달 스프린트 CEO 리뷰 (autoplan 2026-04-16)
 
-### TODO-074: 포트폴리오 deep link — ?portfolio=[id] 쿼리 파라미터
+### ~~TODO-074: 포트폴리오 deep link — ?portfolio=[id] 쿼리 파라미터~~
 
-**What:** 모달 열릴 때 URL에 `?portfolio=[id]` pushState → 클라이언트 공유 가능
-**Why:** 고객이 특정 시공 사례를 카카오톡 등으로 공유하고 싶을 때 링크가 없음
-**Effort:** S
+**Fixed on main, 2026-04-20** — 모달 열릴 때 pushState, 닫힐 때 URL 복원. 딥링크 초기 로드 useEffect 추가. popstate cleanup 포함.
 
 ---
 
-### TODO-075: 캐러셀 키보드 방향키 네비게이션
+### ~~TODO-075: 캐러셀 키보드 방향키 네비게이션~~
 
-**What:** `ImageCarousel`에 좌우 방향키로 이미지 전환 추가
-**Why:** 접근성 + 데스크탑 UX
-**Effort:** XS
+**Fixed on main, 2026-04-20** — `tabIndex={0}` + `onKeyDown` (ArrowLeft/Right, preventDefault). 터치 타겟 36px → 44px.
 
 ---
 
-### TODO-076: 모바일 스와이프 제스처
+### ~~TODO-076: 모바일 스와이프 제스처~~
 
-**What:** `ImageCarousel`에 touchstart/touchend 핸들러 또는 CSS `scroll-snap` 적용
-**Why:** 모바일에서 손가락 스와이프로 이미지 전환 기대
-**Effort:** S
+**Fixed on main, 2026-04-20** — touchstart/touchend delta 방식 (50px 임계값). CSS scroll-snap 대신 useState(idx) 동기화 방식 채택.
 
 ---
 
-### TODO-077: 모달에서 워커 프로필 링크
+### ~~TODO-077: 모달에서 워커 프로필 링크~~
 
-**What:** view 모드 CTA 영역에 "프로필 전체 보기" 텍스트 링크 추가
-**Why:** 클라이언트가 포트폴리오 하나만 보고 워커 전체 프로필로 이동하고 싶을 때 경로 없음
-**Effort:** XS
+**Fixed on main, 2026-04-20** — `workerSlug` prop 추가, view 모드 CTA 워커 이름 아래 "프로필 전체보기 →" 텍스트 링크.
 
 ---
 

@@ -87,6 +87,22 @@ export default function WorkerProfilePage() {
       .catch(() => {});
   }, [urlSlug]);
 
+  // 딥링크 — ?portfolio=[id] 쿼리 파라미터로 포트폴리오 모달 자동 오픈
+  useEffect(() => {
+    if (!publicProfile) return;
+    const id = new URLSearchParams(window.location.search).get("portfolio");
+    if (!id) return;
+    const target = publicProfile.portfolios.find((p) => p.id === id);
+    if (target) setSelectedPortfolio(target);
+  }, [publicProfile]);
+
+  // 뒤로 가기(popstate) 시 모달 닫힘
+  useEffect(() => {
+    const handler = () => setSelectedPortfolio(null);
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
@@ -348,7 +364,14 @@ export default function WorkerProfilePage() {
                 return (
                   <button
                     key={portfolio.id}
-                    onClick={() => setSelectedPortfolio(portfolio)}
+                    onClick={() => {
+                      setSelectedPortfolio(portfolio);
+                      window.history.pushState(
+                        {},
+                        "",
+                        `?portfolio=${portfolio.id}`,
+                      );
+                    }}
                     className="group text-left"
                   >
                     <div className="aspect-[4/3] overflow-hidden rounded-md bg-secondary relative mb-2">
@@ -437,8 +460,12 @@ export default function WorkerProfilePage() {
       <PortfolioDetailModal
         portfolio={selectedPortfolio}
         workerName={profile.businessName}
+        workerSlug={profile.slug}
         phone={profile.officePhoneNumber ?? undefined}
-        onClose={() => setSelectedPortfolio(null)}
+        onClose={() => {
+          setSelectedPortfolio(null);
+          window.history.pushState({}, "", window.location.pathname);
+        }}
       />
 
       {/* 의뢰 폼 */}
