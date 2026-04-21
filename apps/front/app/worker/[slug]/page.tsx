@@ -10,6 +10,7 @@ import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal
 import { InquiryForm } from "@/components/worker/inquiry-form";
 import { SPACE_TYPE_LABEL } from "@/lib/constants";
 import { FIELD_CODE_LABELS } from "@/lib/field-codes";
+import { Logo } from "@/components/logo";
 
 function fieldLabel(code: string) {
   return FIELD_CODE_LABELS[code] ?? code;
@@ -111,7 +112,7 @@ export default function WorkerProfilePage() {
               href="/"
               className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
             >
-              Bluecollar <span className="text-primary">CV</span>
+              <Logo className="text-sm font-semibold" />
             </a>
           </div>
         </header>
@@ -419,7 +420,7 @@ export default function WorkerProfilePage() {
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             Powered by{" "}
-            <span className="font-semibold text-primary">Bluecollar CV</span>
+            <Logo className="font-semibold text-foreground" />
           </a>
         </div>
       </footer>

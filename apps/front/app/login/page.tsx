@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { Logo } from "@/components/logo";
 import { login, getMyWorkerProfile, ApiError } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -71,9 +72,7 @@ export default function LoginPage() {
         {/* 로고 */}
         <div className="text-center mb-8">
           <a href="/" className="inline-flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight text-foreground">
-              Bluecollar <span className="text-primary">CV</span>
-            </span>
+            <Logo className="text-2xl font-bold tracking-tight text-foreground" />
           </a>
         </div>
 
