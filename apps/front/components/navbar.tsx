@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { logout } from "@/lib/api";
+import { Logo } from "@/components/logo";
 
 interface NavbarProps {
   onSignupClick: () => void;
@@ -37,9 +38,7 @@ export function Navbar({ onSignupClick }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <a href="/" className="flex items-center gap-2">
-          <span className="text-xl font-bold tracking-tight text-foreground">
-            Bluecollar <span className="text-primary">CV</span>
-          </span>
+          <Logo className="text-xl font-bold tracking-tight text-foreground" />
         </a>
 
         {/* Desktop Nav */}
