@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   description:
     "흩어져 있던 시공 기록을 60초 만에 세련된 디지털 프로필 사이트로 만드세요. 목공, 타일, 전기, 도배, 설비 등 모든 분야의 현장 전문가를 위한 플랫폼.",
   generator: "v0.app",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 export default async function RootLayout({
