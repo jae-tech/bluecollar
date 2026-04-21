@@ -4,26 +4,26 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Bluecollar CV Design System — Clean Product UI */
+  /* Bluecollar CV Design System — Deep Stone (2026-04-21) */
   --background: #ffffff;
-  --foreground: #111111;
+  --foreground: #1c1917;
   --card: #ffffff;
-  --card-foreground: #111111;
+  --card-foreground: #1c1917;
   --popover: #ffffff;
-  --popover-foreground: #111111;
-  --primary: #ff6b00;
-  --primary-foreground: #ffffff;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #111111;
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
-  --accent: #fff3e8;
-  --accent-foreground: #c44e00;
+  --popover-foreground: #1c1917;
+  --primary: #292524;
+  --primary-foreground: #fafaf9;
+  --secondary: #f6f4f2;
+  --secondary-foreground: #1c1917;
+  --muted: #f6f4f2;
+  --muted-foreground: #6b5e57;
+  --accent: #f5f0eb;
+  --accent-foreground: #292524;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e8e8e8;
-  --input: #e8e8e8;
-  --ring: #ff6b00;
+  --border: #e5e0db;
+  --input: #e5e0db;
+  --ring: #292524;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -36,13 +36,13 @@
   --radius-lg: 0.75rem; /* 12px — 모달, 시트, 대형 카드 */
   --radius-xl: 1rem; /* 16px — 바텀시트 */
   --sidebar: #ffffff;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #ff6b00;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f5f5f5;
-  --sidebar-accent-foreground: #111111;
-  --sidebar-border: #e8e8e8;
-  --sidebar-ring: #ff6b00;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #292524;
+  --sidebar-primary-foreground: #fafaf9;
+  --sidebar-accent: #f6f4f2;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e5e0db;
+  --sidebar-ring: #292524;
 }
 
 .dark {
@@ -53,19 +53,19 @@
   --card-foreground: #e8e8e8;
   --popover: #1c1c1c;
   --popover-foreground: #e8e8e8;
-  --primary: #ff7a1a;
-  --primary-foreground: #ffffff;
+  --primary: #3d3835;
+  --primary-foreground: #fafaf9;
   --secondary: #262626;
   --secondary-foreground: #e8e8e8;
   --muted: #262626;
   --muted-foreground: #8a8a8a;
-  --accent: #2a1a0a;
-  --accent-foreground: #ff9a4d;
+  --accent: #2a2422;
+  --accent-foreground: #d6cec9;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #2e2e2e;
   --input: #2e2e2e;
-  --ring: #ff7a1a;
+  --ring: #3d3835;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -73,12 +73,12 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: #1c1c1c;
   --sidebar-foreground: #e8e8e8;
-  --sidebar-primary: #ff7a1a;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary: #3d3835;
+  --sidebar-primary-foreground: #fafaf9;
   --sidebar-accent: #262626;
   --sidebar-accent-foreground: #e8e8e8;
   --sidebar-border: #2e2e2e;
-  --sidebar-ring: #ff7a1a;
+  --sidebar-ring: #3d3835;
 }
 
 @theme inline {

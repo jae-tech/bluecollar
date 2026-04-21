@@ -33,17 +33,17 @@
 
 ## Color
 - **Approach:** Restrained — primary는 한 번만 씀. 나머지는 중립.
-- **Primary:** `#FF6B00` — 오렌지. 현장 에너지, 행동 유도. 버튼, 링크, 포커스링에만.
-- **Primary dark mode:** `#FF7A1A` — 다크에서 살짝 밝게 (대비 유지)
-- **Accent (subtle):** `#FFF3E8` bg / `#C44E00` fg — 오렌지를 배경으로 쓸 때 (배지, 하이라이트)
+- **Primary:** `#292524` — Deep Stone. 따뜻한 다크 브라운. 시공 재료(흙·돌·콘크리트)에서 온 색. 버튼, 링크, 포커스링에만.
+- **Primary dark mode:** `#3D3835` — 다크에서 살짝 밝게 (대비 유지)
+- **Accent (subtle):** `#F5F0EB` bg / `#292524` fg — primary를 배경으로 쓸 때 (배지, 하이라이트)
 - **Neutrals:**
   - Background: `#FFFFFF`
   - Card/Surface: `#FFFFFF` (border로 구분)
-  - Secondary/Muted bg: `#F5F5F5`
-  - Border: `#E8E8E8`
-  - Input border: `#E8E8E8`
-  - Muted text: `#737373`
-  - Body text: `#111111`
+  - Secondary/Muted bg: `#F6F4F2`
+  - Border: `#E5E0DB`
+  - Input border: `#E5E0DB`
+  - Muted text: `#6B5E57`
+  - Body text: `#1C1917`
 - **Semantic:**
   - Success: `#16A34A` / bg `#F0FDF4`
   - Warning: `#D97706` / bg `#FFFBEB`
@@ -93,16 +93,16 @@
 - **금지:** `transition: all`, layout 속성(width/height) 애니메이션
 
 ## Component 규칙
-- **버튼:** primary는 `#FF6B00` bg, 흰 텍스트, `radius-sm`. ghost는 border만.
-- **인풋:** border `#E8E8E8`, focus시 `ring-2 ring-primary/30`. placeholder `#737373`.
+- **버튼:** primary는 `#292524` bg, `#FAFAF9` 텍스트, `radius-sm`. ghost는 border만.
+- **인풋:** border `#E5E0DB`, focus시 `ring-2 ring-primary/30`. placeholder `#6B5E57`.
 - **카드:** `border border-border rounded-md` (8px). 그림자 금지 — border로만 구분.
-- **배지:** `accent` 색상(`#FFF3E8` / `#C44E00`) 또는 neutral(`#F5F5F5` / `#737373`).
+- **배지:** `accent` 색상(`#F5F0EB` / `#292524`) 또는 neutral(`#F6F4F2` / `#6B5E57`).
 - **상태 메시지:** success/warning/error/info 각각 배경색 + 좌측 4px solid border.
 
 ## Anti-patterns (금지)
 - 모든 요소에 같은 border-radius
 - 그림자(shadow)로 elevation 표현 — border를 사용할 것
-- primary 오렌지를 배경 전체에 깔기
+- primary를 배경 전체에 깔기
 - `transition: all`
 - 카드를 구분 없이 중첩
 - 텍스트에 letter-spacing (한글)
@@ -115,3 +115,4 @@
 | 2026-04-03 | destructive-foreground 버그 수정 | #DC2626 → bg, #FFFFFF → fg |
 | 2026-04-03 | radius 계층화 | sm/md/lg/xl 명시적 값으로. calc() 의존 제거 |
 | 2026-04-03 | dark mode 직접 설계 | oklch 자동생성 제거, elevation 기반 수동 설계 |
+| 2026-04-21 | primary #FF6B00 → #292524 (Deep Stone) | 오렌지가 브랜드 톤을 가볍게 만듦. 시공 재료(흙·돌·콘크리트)에서 온 따뜻한 다크 브라운으로 교체. 포트폴리오라는 명칭도 확정 (디지털 명함 표현 폐기). |
