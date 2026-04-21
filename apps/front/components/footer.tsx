@@ -1,5 +1,7 @@
 "use client";
 
+import { Logo } from "@/components/logo";
+
 interface FooterProps {
   onSignupClick: () => void;
 }
@@ -11,9 +13,7 @@ export function Footer({ onSignupClick }: FooterProps) {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           {/* Logo + tagline */}
           <div className="flex flex-col gap-2">
-            <span className="text-xl font-bold tracking-tight text-foreground">
-              Bluecollar <span className="text-primary">CV</span>
-            </span>
+            <Logo className="text-xl font-bold tracking-tight text-foreground" />
             <p className="text-sm text-muted-foreground">
               현장 전문가의 디지털 명함 플랫폼
             </p>
