@@ -8,13 +8,7 @@ import {
   ChevronRight,
   Phone,
   MessageCircle,
-  Calendar,
-  Wrench,
   Pencil,
-  MapPin,
-  Ruler,
-  Tag,
-  Home,
   ShieldCheck,
   Camera,
 } from "lucide-react";
@@ -665,20 +659,17 @@ export function PortfolioDetailModal({
               </h2>
               <div className="flex flex-wrap gap-2">
                 {spaceType && SPACE_TYPE_LABELS[spaceType] && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
-                    <Home size={11} />
+                  <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     {SPACE_TYPE_LABELS[spaceType]}
                   </span>
                 )}
                 {location && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
-                    <MapPin size={11} />
+                  <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     {location}
                   </span>
                 )}
                 {startDate && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
-                    <Calendar size={11} />
+                  <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     {startDate.slice(0, 4)}년 {startDate.slice(5, 7)}월
                     {endDate &&
                       endDate !== startDate &&
@@ -686,29 +677,25 @@ export function PortfolioDetailModal({
                   </span>
                 )}
                 {diffLabel && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
-                    <Wrench size={11} />
+                  <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     {diffLabel}
                   </span>
                 )}
                 {details?.area && (
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
-                    <Ruler size={11} />
+                  <span className="text-xs text-muted-foreground bg-secondary border border-border px-2.5 py-1.5 rounded-sm">
                     {details.area}
                     {details.areaUnit === "PYEONG" ? "평" : "㎡"}
                   </span>
                 )}
                 {actDisplay && (
-                  <span className="flex items-center gap-1 text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-sm">
-                    <span className="text-xs">₩</span>
-                    {actDisplay}
+                  <span className="text-sm font-semibold text-foreground bg-accent border border-border px-3 py-1.5 rounded-sm">
+                    ₩{actDisplay}
                   </span>
                 )}
                 {!actDisplay && estDisplay && (
-                  <span className="flex items-center gap-1 text-sm font-semibold text-muted-foreground bg-secondary border border-border px-3 py-1.5 rounded-sm">
-                    <span className="text-xs">₩</span>
-                    {estDisplay}
-                    <span className="text-xs font-normal ml-0.5">예상</span>
+                  <span className="text-sm font-semibold text-muted-foreground bg-secondary border border-border px-3 py-1.5 rounded-sm">
+                    ₩{estDisplay}
+                    <span className="text-xs font-normal ml-1">예상</span>
                   </span>
                 )}
               </div>
@@ -718,9 +705,8 @@ export function PortfolioDetailModal({
                   {allTags.map((tag, i) => (
                     <span
                       key={`${tag}-${i}`}
-                      className="flex items-center gap-1 text-xs text-accent-foreground bg-accent border border-border px-2 py-1 rounded-sm"
+                      className="text-xs text-accent-foreground bg-accent border border-border px-2 py-1 rounded-sm"
                     >
-                      <Tag size={9} />
                       {tag}
                     </span>
                   ))}
@@ -752,7 +738,7 @@ export function PortfolioDetailModal({
                           key: "warranty",
                           label: "하자보증",
                           value: `${details.warrantyMonths}개월`,
-                          icon: <ShieldCheck size={10} />,
+                          icon: null,
                         }
                       : null,
                     details?.bedroomCount
@@ -775,8 +761,7 @@ export function PortfolioDetailModal({
                     .filter(Boolean)
                     .map((item) => (
                       <div key={item!.key}>
-                        <p className="text-xs text-muted-foreground mb-0.5 flex items-center gap-1">
-                          {item!.icon}
+                        <p className="text-xs text-muted-foreground mb-0.5">
                           {item!.label}
                         </p>
                         <p className="text-sm font-medium text-foreground">
