@@ -2,17 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import {
-  BadgeCheck,
-  Share2,
-  MessageCircle,
-  Phone,
-  MapPin,
-  AlertTriangle,
-  Briefcase,
-  Calendar,
-  Clock,
-} from "lucide-react";
+import { BadgeCheck, Share2, AlertTriangle } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getPublicProfile, getMyWorkerProfile } from "@/lib/api";
 import type { PublicProfile, PublicProfilePortfolio } from "@/lib/api";
@@ -249,35 +239,33 @@ export default function WorkerProfilePage() {
           )}
 
           {/* 메타 행 */}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-5 flex-wrap">
-            {profile.officeDistrict ? (
-              <span className="flex items-center gap-1">
-                <MapPin size={11} />
-                {profile.officeCity} {profile.officeDistrict}
+          <div className="flex items-center gap-0 text-xs text-muted-foreground mb-5 flex-wrap">
+            {(profile.officeDistrict || profile.officeAddress) && (
+              <span>
+                {profile.officeDistrict
+                  ? `${profile.officeCity} ${profile.officeDistrict}`
+                  : profile.officeAddress}
               </span>
-            ) : profile.officeAddress ? (
-              <span className="flex items-center gap-1">
-                <MapPin size={11} />
-                {profile.officeAddress}
-              </span>
-            ) : null}
+            )}
             {profile.yearsOfExperience != null && (
-              <span className="flex items-center gap-1">
-                <Briefcase size={11} />
-                경력 {profile.yearsOfExperience}년
-              </span>
+              <>
+                {(profile.officeDistrict || profile.officeAddress) && (
+                  <span className="mx-2 opacity-30">·</span>
+                )}
+                <span>경력 {profile.yearsOfExperience}년</span>
+              </>
             )}
             {profile.operatingHours && (
-              <span className="flex items-center gap-1">
-                <Clock size={11} />
-                {profile.operatingHours}
-              </span>
+              <>
+                <span className="mx-2 opacity-30">·</span>
+                <span>{profile.operatingHours}</span>
+              </>
             )}
             {portfolios.length > 0 && (
-              <span className="flex items-center gap-1">
-                <Calendar size={11} />
-                시공 {portfolios.length}건
-              </span>
+              <>
+                <span className="mx-2 opacity-30">·</span>
+                <span>시공 {portfolios.length}건</span>
+              </>
             )}
           </div>
 
@@ -302,17 +290,15 @@ export default function WorkerProfilePage() {
                 setInquiryPortfolioTitle(undefined);
                 setInquiryOpen(true);
               }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
-              <MessageCircle size={13} />
               의뢰하기
             </button>
             {profile.officePhoneNumber && (
               <a
                 href={`tel:${profile.officePhoneNumber}`}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-md border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
+                className="px-4 py-2 rounded-md border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
               >
-                <Phone size={13} />
                 전화
               </a>
             )}
