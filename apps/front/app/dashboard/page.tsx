@@ -19,6 +19,7 @@ import type {
   MasterCode,
 } from "@/lib/api";
 import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
+import { Logo } from "@/components/logo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -105,7 +106,7 @@ export default function DashboardPage() {
             href="/"
             className="text-base font-bold tracking-tight text-foreground"
           >
-            Bluecollar <span className="text-primary">CV</span>
+            <Logo />
           </a>
           <div className="flex items-center gap-4">
             <a
