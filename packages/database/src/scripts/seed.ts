@@ -64,6 +64,25 @@ async function seed() {
         name: "기계가공",
         sortOrder: 18,
       },
+      // 견적서 기준 추가 직종 (2026-04-21)
+      {
+        code: "FLD_PLASTER",
+        group: "FIELD",
+        name: "미장",
+        sortOrder: 19,
+      },
+      {
+        code: "FLD_HVAC",
+        group: "FIELD",
+        name: "에어컨/냉난방",
+        sortOrder: 20,
+      },
+      {
+        code: "FLD_FURNITURE",
+        group: "FIELD",
+        name: "가구/붙박이",
+        sortOrder: 21,
+      },
 
       // --- SKILL_TAG (기술 태그) --- 업종별 세부 태그 ---
 
@@ -583,6 +602,170 @@ async function seed() {
         sortOrder: 4,
       },
 
+      // 미장
+      {
+        code: "TAG_PLASTER_CEMENT",
+        group: "SKILL_TAG_FLD_PLASTER",
+        name: "시멘트 미장",
+        sortOrder: 1,
+      },
+      {
+        code: "TAG_PLASTER_SELF_LEVEL",
+        group: "SKILL_TAG_FLD_PLASTER",
+        name: "셀프레벨링",
+        sortOrder: 2,
+      },
+      {
+        code: "TAG_PLASTER_FLOOR_FLAT",
+        group: "SKILL_TAG_FLD_PLASTER",
+        name: "바닥 평탄화",
+        sortOrder: 3,
+      },
+      {
+        code: "TAG_PLASTER_WALL",
+        group: "SKILL_TAG_FLD_PLASTER",
+        name: "벽면 미장",
+        sortOrder: 4,
+      },
+      {
+        code: "TAG_PLASTER_EPOXY_GROUT",
+        group: "SKILL_TAG_FLD_PLASTER",
+        name: "에폭시 줄눈",
+        sortOrder: 5,
+      },
+
+      // 에어컨/냉난방
+      {
+        code: "TAG_HVAC_SYSTEM_AC",
+        group: "SKILL_TAG_FLD_HVAC",
+        name: "시스템 에어컨 설치",
+        sortOrder: 1,
+      },
+      {
+        code: "TAG_HVAC_DUCT",
+        group: "SKILL_TAG_FLD_HVAC",
+        name: "덕트 공사",
+        sortOrder: 2,
+      },
+      {
+        code: "TAG_HVAC_SPLIT",
+        group: "SKILL_TAG_FLD_HVAC",
+        name: "스탠드/벽걸이 에어컨",
+        sortOrder: 3,
+      },
+      {
+        code: "TAG_HVAC_VENTILATION",
+        group: "SKILL_TAG_FLD_HVAC",
+        name: "환기 시스템",
+        sortOrder: 4,
+      },
+      {
+        code: "TAG_HVAC_FAN",
+        group: "SKILL_TAG_FLD_HVAC",
+        name: "환풍기 설치",
+        sortOrder: 5,
+      },
+
+      // 가구/붙박이
+      {
+        code: "TAG_FURN_BUILTIN",
+        group: "SKILL_TAG_FLD_FURNITURE",
+        name: "붙박이장",
+        sortOrder: 1,
+      },
+      {
+        code: "TAG_FURN_SHOE",
+        group: "SKILL_TAG_FLD_FURNITURE",
+        name: "신발장",
+        sortOrder: 2,
+      },
+      {
+        code: "TAG_FURN_KITCHEN",
+        group: "SKILL_TAG_FLD_FURNITURE",
+        name: "주방 가구/싱크대",
+        sortOrder: 3,
+      },
+      {
+        code: "TAG_FURN_FRIDGE_PANEL",
+        group: "SKILL_TAG_FLD_FURNITURE",
+        name: "냉장고장",
+        sortOrder: 4,
+      },
+      {
+        code: "TAG_FURN_CUSTOM",
+        group: "SKILL_TAG_FLD_FURNITURE",
+        name: "맞춤 가구 제작",
+        sortOrder: 5,
+      },
+
+      // 목공 추가 태그 (견적서 기준 누락 항목)
+      {
+        code: "TAG_CARP_PARTITION",
+        group: "SKILL_TAG_FLD_CARPENTRY",
+        name: "가벽 신설",
+        sortOrder: 7,
+      },
+      {
+        code: "TAG_CARP_LIGHTBOX",
+        group: "SKILL_TAG_FLD_CARPENTRY",
+        name: "등박스",
+        sortOrder: 8,
+      },
+      {
+        code: "TAG_CARP_TV_WALL",
+        group: "SKILL_TAG_FLD_CARPENTRY",
+        name: "TV 매립벽",
+        sortOrder: 9,
+      },
+
+      // 창호 추가 태그 (견적서 기준 누락 항목)
+      {
+        code: "TAG_WIN_TURNING",
+        group: "SKILL_TAG_FLD_WINDOW",
+        name: "터닝도어",
+        sortOrder: 6,
+      },
+      {
+        code: "TAG_WIN_INNER",
+        group: "SKILL_TAG_FLD_WINDOW",
+        name: "내창",
+        sortOrder: 7,
+      },
+
+      // 욕실 추가 태그 (견적서 기준 누락 항목)
+      {
+        code: "TAG_BATH_CEILING",
+        group: "SKILL_TAG_FLD_BATHROOM",
+        name: "욕실 천장재",
+        sortOrder: 5,
+      },
+      {
+        code: "TAG_BATH_FAN",
+        group: "SKILL_TAG_FLD_BATHROOM",
+        name: "환풍기 설치",
+        sortOrder: 6,
+      },
+
+      // 마감 (실리콘/줄눈 — FLD_CLEANING에 추가)
+      {
+        code: "TAG_CLEAN_SILICON",
+        group: "SKILL_TAG_FLD_CLEANING",
+        name: "실리콘 마감",
+        sortOrder: 4,
+      },
+      {
+        code: "TAG_CLEAN_GROUT",
+        group: "SKILL_TAG_FLD_CLEANING",
+        name: "줄눈 마감",
+        sortOrder: 5,
+      },
+      {
+        code: "TAG_CLEAN_DOORLOCK",
+        group: "SKILL_TAG_FLD_CLEANING",
+        name: "도어락/인터폰 설치",
+        sortOrder: 6,
+      },
+
       // --- EXP (숙련도) ---
       { code: "EXP_1TO3", group: "EXP", name: "1~3년", sortOrder: 1 },
       { code: "EXP_3TO5", group: "EXP", name: "3~5년", sortOrder: 2 },
@@ -1054,16 +1237,32 @@ async function seed() {
       { name: "우드 타일", category: "타일", slug: "wood-tile" },
       { name: "메탈 타일", category: "타일", slug: "metal-tile" },
       { name: "유리 타일", category: "타일", slug: "glass-tile" },
-      { name: "대형 포세린 (60×120)", category: "타일", slug: "large-porcelain-60x120" },
+      {
+        name: "대형 포세린 (60×120)",
+        category: "타일",
+        slug: "large-porcelain-60x120",
+      },
       { name: "헤링본 타일", category: "타일", slug: "herringbone-tile" },
       { name: "육각 타일", category: "타일", slug: "hexagon-tile" },
       { name: "줄눈 타일", category: "타일", slug: "grout-tile" },
-      { name: "욕실 바닥 논슬립 타일", category: "타일", slug: "non-slip-floor-tile" },
+      {
+        name: "욕실 바닥 논슬립 타일",
+        category: "타일",
+        slug: "non-slip-floor-tile",
+      },
       { name: "외벽 타일", category: "타일", slug: "exterior-wall-tile" },
       { name: "현관 타일", category: "타일", slug: "entrance-tile" },
       { name: "수영장 타일", category: "타일", slug: "pool-tile" },
-      { name: "인테리어 벽 타일", category: "타일", slug: "interior-wall-tile" },
-      { name: "주방 앞치마 타일", category: "타일", slug: "kitchen-backsplash-tile" },
+      {
+        name: "인테리어 벽 타일",
+        category: "타일",
+        slug: "interior-wall-tile",
+      },
+      {
+        name: "주방 앞치마 타일",
+        category: "타일",
+        slug: "kitchen-backsplash-tile",
+      },
 
       // --- 바닥재 (15개) ---
       { name: "강화마루", category: "바닥재", slug: "laminate-flooring" },
@@ -1076,17 +1275,29 @@ async function seed() {
       { name: "대나무 마루", category: "바닥재", slug: "bamboo-flooring" },
       { name: "에폭시 바닥재", category: "바닥재", slug: "epoxy-flooring" },
       { name: "고무 바닥재", category: "바닥재", slug: "rubber-flooring" },
-      { name: "자기질 바닥 타일", category: "바닥재", slug: "porcelain-floor-tile" },
+      {
+        name: "자기질 바닥 타일",
+        category: "바닥재",
+        slug: "porcelain-floor-tile",
+      },
       { name: "온돌 마루", category: "바닥재", slug: "ondol-flooring" },
       { name: "방수 바닥재", category: "바닥재", slug: "waterproof-flooring" },
       { name: "SPC 바닥재", category: "바닥재", slug: "spc-flooring" },
-      { name: "셀프레벨링 바닥재", category: "바닥재", slug: "self-leveling-floor" },
+      {
+        name: "셀프레벨링 바닥재",
+        category: "바닥재",
+        slug: "self-leveling-floor",
+      },
 
       // --- 페인트 (10개) ---
       { name: "수성 페인트", category: "페인트", slug: "water-based-paint" },
       { name: "유성 페인트", category: "페인트", slug: "oil-based-paint" },
       { name: "에나멜 페인트", category: "페인트", slug: "enamel-paint" },
-      { name: "탄성 방수 페인트", category: "페인트", slug: "elastic-waterproof-paint" },
+      {
+        name: "탄성 방수 페인트",
+        category: "페인트",
+        slug: "elastic-waterproof-paint",
+      },
       { name: "실리콘 페인트", category: "페인트", slug: "silicone-paint" },
       { name: "에폭시 페인트", category: "페인트", slug: "epoxy-paint" },
       { name: "천장 페인트", category: "페인트", slug: "ceiling-paint" },
@@ -1102,7 +1313,11 @@ async function seed() {
       { name: "천연 소재 벽지", category: "도배", slug: "natural-wallpaper" },
       { name: "유리섬유 벽지", category: "도배", slug: "fiberglass-wallpaper" },
       { name: "방음 벽지", category: "도배", slug: "soundproof-wallpaper" },
-      { name: "방습 벽지", category: "도배", slug: "moisture-resistant-wallpaper" },
+      {
+        name: "방습 벽지",
+        category: "도배",
+        slug: "moisture-resistant-wallpaper",
+      },
       { name: "단열 벽지", category: "도배", slug: "insulating-wallpaper" },
       { name: "폼 벽지", category: "도배", slug: "foam-wallpaper" },
 
@@ -1112,10 +1327,18 @@ async function seed() {
       { name: "세면대", category: "위생도기", slug: "washbasin" },
       { name: "욕조", category: "위생도기", slug: "bathtub" },
       { name: "샤워부스", category: "위생도기", slug: "shower-booth" },
-      { name: "파우더룸 세면대", category: "위생도기", slug: "powder-room-sink" },
+      {
+        name: "파우더룸 세면대",
+        category: "위생도기",
+        slug: "powder-room-sink",
+      },
       { name: "소변기", category: "위생도기", slug: "urinal" },
       { name: "수전 세트", category: "위생도기", slug: "faucet-set" },
-      { name: "욕실 악세서리 세트", category: "위생도기", slug: "bathroom-accessory-set" },
+      {
+        name: "욕실 악세서리 세트",
+        category: "위생도기",
+        slug: "bathroom-accessory-set",
+      },
       { name: "거울 수납장", category: "위생도기", slug: "mirror-cabinet" },
 
       // --- 창호 (8개) ---
@@ -1132,7 +1355,11 @@ async function seed() {
       { name: "줄눈 시공제", category: "줄눈/접착제", slug: "grout-compound" },
       { name: "타일 접착제", category: "줄눈/접착제", slug: "tile-adhesive" },
       { name: "방수 시트", category: "기타", slug: "waterproof-sheet" },
-      { name: "단열재 (압출법 보온판)", category: "기타", slug: "xps-insulation" },
+      {
+        name: "단열재 (압출법 보온판)",
+        category: "기타",
+        slug: "xps-insulation",
+      },
       { name: "석고보드", category: "기타", slug: "gypsum-board" },
       { name: "OSB 합판", category: "기타", slug: "osb-panel" },
       { name: "몰딩 (MDF)", category: "기타", slug: "mdf-molding" },
@@ -1144,7 +1371,9 @@ async function seed() {
       .values(materialsSeedData)
       .onConflictDoNothing()
       .execute();
-    console.log(`✓ Inserted ${materialsSeedData.length} materials (upsert-safe)`);
+    console.log(
+      `✓ Inserted ${materialsSeedData.length} materials (upsert-safe)`,
+    );
 
     const materialsResult = await db.select().from(materials).execute();
     const byCategory = materialsResult.reduce(
