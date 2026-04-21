@@ -20,6 +20,9 @@ import {
   Flame,
   Cog,
   Droplets,
+  Sofa,
+  AirVent,
+  BrickWall,
 } from "lucide-react";
 import { getCodes, type MasterCode } from "@/lib/api";
 
@@ -43,6 +46,10 @@ const FIELD_ICON_MAP: Record<string, React.ElementType> = {
   FLD_GLAZING: Glasses,
   FLD_WELDING: Flame,
   FLD_MACHINING: Cog,
+  // 견적서 기준 추가 직종 (2026-04-21)
+  FLD_PLASTER: BrickWall,
+  FLD_HVAC: AirVent,
+  FLD_FURNITURE: Sofa,
 };
 
 interface Step1Props {
