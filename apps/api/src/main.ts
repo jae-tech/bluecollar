@@ -68,8 +68,9 @@ async function bootstrap(): Promise<void> {
   });
 
   // 5. CORS (서브도메인 대응)
+  // Origin은 "https://bluecollar.cv" 형태로 전달되므로 스킴까지 포함해서 매칭
   app.enableCors({
-    origin: [/(?:^|\.)bluecollar\.cv$/, /localhost:\d+$/],
+    origin: [/^https?:\/\/(?:[\w-]+\.)?bluecollar\.cv$/, /^http:\/\/localhost:\d+$/],
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   });
