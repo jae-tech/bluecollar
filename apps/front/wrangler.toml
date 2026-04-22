@@ -6,11 +6,11 @@ compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 # 정적 자산 (Next.js 빌드 결과물)
 assets = { directory = ".open-next/assets", binding = "ASSETS" }
 
-# Worker 라우트: apex 도메인 + 모든 서브도메인을 동일 Worker로 처리
-# Cloudflare Dashboard에서 DNS Wildcard 레코드(*.bluecollar.cv → Worker)도 필요
+# Worker 라우트: apex 도메인 + 서브도메인 (api 제외)
+# api.bluecollar.cv는 OCI 서버로 직접 연결 (Cloudflare DNS A 레코드, 프록시 off)
 routes = [
   { pattern = "bluecollar.cv/*", zone_name = "bluecollar.cv" },
-  { pattern = "*.bluecollar.cv/*", zone_name = "bluecollar.cv" },
+  { pattern = "www.bluecollar.cv/*", zone_name = "bluecollar.cv" },
 ]
 
 # Worker 자기 참조 (OpenNext 내부 라우팅용)
