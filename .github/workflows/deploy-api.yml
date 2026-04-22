@@ -196,16 +196,10 @@ jobs:
                     },
                     {
                       "title": "Commit",
-                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
                       "short": true
-                    },
-                    {
-                      "title": "Commit Message",
-                      "value": "${{ github.event.head_commit.message }}",
-                      "short": false
                     }
-                  ],
-                  "ts": ${{ github.run_id }}
+                  ]
                 }
               ]
             }
@@ -240,16 +234,10 @@ jobs:
                     },
                     {
                       "title": "Commit",
-                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
                       "short": true
-                    },
-                    {
-                      "title": "Commit Message",
-                      "value": "${{ github.event.head_commit.message }}",
-                      "short": false
                     }
-                  ],
-                  "ts": ${{ github.run_id }}
+                  ]
                 }
               ]
             }
