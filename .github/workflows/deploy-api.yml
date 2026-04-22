@@ -175,7 +175,39 @@ jobs:
         with:
           payload: |
             {
-              "text": "✅ *API 배포 성공*\n• 커밋: `${{ github.sha }}` by ${{ github.actor }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|워크플로우 보기>"
+              "attachments": [
+                {
+                  "fallback": "BlueCollar API Deploy Success",
+                  "color": "#2EB67D",
+                  "pretext": "🔨 *BlueCollar API:* 배포 성공",
+                  "title": "Deployment Complete: bluecollar-cv API",
+                  "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "text": "Successfully deployed to production server.",
+                  "fields": [
+                    {
+                      "title": "Branch",
+                      "value": "${{ github.ref_name }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Triggered by",
+                      "value": "${{ github.actor }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit Message",
+                      "value": "${{ github.event.head_commit.message }}",
+                      "short": false
+                    }
+                  ],
+                  "ts": ${{ github.run_id }}
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DEPLOY }}
@@ -187,7 +219,39 @@ jobs:
         with:
           payload: |
             {
-              "text": "❌ *API 배포 실패*\n• 커밋: `${{ github.sha }}` by ${{ github.actor }}\n• <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|로그 확인>"
+              "attachments": [
+                {
+                  "fallback": "BlueCollar API Deploy Failed",
+                  "color": "#E01E5A",
+                  "pretext": "🚨 *BlueCollar API:* 배포 실패",
+                  "title": "Deployment Failed: bluecollar-cv API",
+                  "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "text": "배포 중 오류가 발생했습니다. 로그를 확인해주세요.",
+                  "fields": [
+                    {
+                      "title": "Branch",
+                      "value": "${{ github.ref_name }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Triggered by",
+                      "value": "${{ github.actor }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit Message",
+                      "value": "${{ github.event.head_commit.message }}",
+                      "short": false
+                    }
+                  ],
+                  "ts": ${{ github.run_id }}
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_ERROR }}
