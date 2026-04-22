@@ -1,0 +1,148 @@
+name: Deploy Front (Cloudflare Workers)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/front/**"
+      - "wrangler.toml"
+      - ".github/workflows/deploy-front.yml"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    name: Wait & Notify Slack
+
+    steps:
+      - name: Wait for Cloudflare deployment
+        id: cf_deploy
+        run: |
+          echo "Waiting for Cloudflare Workers deployment..."
+          PROJECT_NAME="bluecollar"
+          ACCOUNT_ID="${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
+          API_TOKEN="${{ secrets.CLOUDFLARE_API_TOKEN }}"
+
+          for i in $(seq 1 24); do
+            RESPONSE=$(curl -s \
+              -H "Authorization: Bearer $API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/scripts/$PROJECT_NAME/deployments")
+
+            STATUS=$(echo "$RESPONSE" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          deployments = data.get('result', {}).get('items', [])
+          if deployments:
+              print(deployments[0].get('metadata', {}).get('author_email', 'unknown'))
+          else:
+              print('pending')
+          " 2>/dev/null || echo "pending")
+
+            LATEST=$(echo "$RESPONSE" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          deployments = data.get('result', {}).get('items', [])
+          if deployments:
+              print(deployments[0].get('id', ''))
+          " 2>/dev/null || echo "")
+
+            if [ -n "$LATEST" ]; then
+              echo "✅ Deployment found: $LATEST"
+              echo "deployment_id=$LATEST" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            echo "  attempt $i/24, retrying in 10s..."
+            sleep 10
+          done
+
+          echo "❌ Deployment not detected within 4 minutes"
+          exit 1
+
+      - name: Notify Slack (배포 성공)
+        if: success()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "fallback": "BlueCollar Front Deploy Success",
+                  "color": "#2EB67D",
+                  "pretext": "🚀 *BlueCollar Front:* 배포 성공",
+                  "title": "Deployment Complete: bluecollar-cv Front",
+                  "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "text": "Successfully deployed to Cloudflare Workers.",
+                  "fields": [
+                    {
+                      "title": "Branch",
+                      "value": "${{ github.ref_name }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Triggered by",
+                      "value": "${{ github.actor }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit Message",
+                      "value": "${{ github.event.head_commit.message }}",
+                      "short": false
+                    }
+                  ],
+                  "ts": ${{ github.run_id }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DEPLOY }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack (배포 실패)
+        if: failure()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "fallback": "BlueCollar Front Deploy Failed",
+                  "color": "#E01E5A",
+                  "pretext": "🚨 *BlueCollar Front:* 배포 실패",
+                  "title": "Deployment Failed: bluecollar-cv Front",
+                  "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "text": "배포 중 오류가 발생했습니다. 로그를 확인해주세요.",
+                  "fields": [
+                    {
+                      "title": "Branch",
+                      "value": "${{ github.ref_name }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Triggered by",
+                      "value": "${{ github.actor }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>",
+                      "short": true
+                    },
+                    {
+                      "title": "Commit Message",
+                      "value": "${{ github.event.head_commit.message }}",
+                      "short": false
+                    }
+                  ],
+                  "ts": ${{ github.run_id }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_ERROR }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
