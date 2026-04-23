@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Logo } from "@/components/logo";
 
 interface FooterProps {
@@ -42,9 +43,12 @@ export function Footer({ onSignupClick }: FooterProps) {
             >
               서비스 소개
             </a>
-            <span className="text-sm text-muted-foreground/50 cursor-not-allowed">
+            <Link
+              href="/privacy"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               개인정보처리방침
-            </span>
+            </Link>
           </nav>
 
           {/* Social + CTA — 의미적으로 분리 */}

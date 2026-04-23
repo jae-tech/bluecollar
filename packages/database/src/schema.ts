@@ -149,6 +149,10 @@ export const users = pgTable(
     // 👥 사용자 역할
     role: roleEnum("role").default("CLIENT").notNull(), // 'ADMIN' | 'WORKER' | 'CLIENT'
 
+    // 📜 약관 동의 기록
+    termsAgreedAt: timestamp("terms_agreed_at"), // 이용약관 동의 시각
+    termsVersion: varchar("terms_version", { length: 20 }), // 동의한 약관 버전 (예: '2026-04')
+
     // ⏰ 타임스탬프
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -160,10 +164,10 @@ export const users = pgTable(
     phoneIdx: index("idx_users_phone").on(table.phoneNumber), // 휴대폰 조회 최적화
     providerIdIdx: index("idx_users_provider_id").on(
       table.provider,
-      table.providerUserId
+      table.providerUserId,
     ), // SSO 조회 최적화
     createdIdx: index("idx_users_created").on(table.createdAt), // 생성일 기반 조회
-  })
+  }),
 );
 
 /**
@@ -245,10 +249,10 @@ export const emailVerificationCodes = pgTable(
     // ⚡ 성능 인덱스
     emailTypeIdx: index("idx_email_verification_email_type").on(
       table.email,
-      table.type
+      table.type,
     ), // 이메일 + 타입별 조회
     expiresAtIdx: index("idx_email_verification_expires").on(table.expiresAt), // 만료된 토큰 정리
-  })
+  }),
 );
 
 /**
@@ -272,7 +276,7 @@ export const disposableEmailBlacklist = pgTable(
   (table) => ({
     // ⚡ 성능 인덱스
     domainIdx: index("idx_disposable_email_domain").on(table.domain), // 도메인 검사 (가입 시)
-  })
+  }),
 );
 
 /**

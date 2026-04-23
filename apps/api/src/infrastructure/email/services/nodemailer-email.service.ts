@@ -44,8 +44,7 @@ export class NodemailerEmailService implements IEmailService {
 
     // 발신자/답장 주소 설정 (환경 변수 기반)
     this.fromAddress = process.env.EMAIL_FROM || 'hello@bluecollar.cv';
-    this.replyToAddress =
-      process.env.EMAIL_REPLY_TO || 'support@bluecollar.cv';
+    this.replyToAddress = process.env.EMAIL_REPLY_TO || 'support@bluecollar.cv';
 
     // 📧 Nodemailer 트랜스포터 초기화
     this.initializeTransporter();
@@ -116,16 +115,22 @@ export class NodemailerEmailService implements IEmailService {
         '❌ 이메일 템플릿 로드 실패 — 앱을 시작할 수 없습니다',
       );
       // 템플릿 없이 발송하면 런타임 에러가 발생하므로 앱 시작 시 즉시 실패
-      throw new Error(
-        `이메일 템플릿 로드 실패: ${(error as Error).message}`,
-      );
+      throw new Error(`이메일 템플릿 로드 실패: ${(error as Error).message}`);
     }
   }
 
   /**
    * 템플릿 렌더링 헬퍼
+   *
+   * @param templateName HBS 파일명
+   * @param data 템플릿 데이터
+   * @param recipientEmail 수신자 이메일 (수신 거부 링크에 사용)
    */
-  private renderTemplate(templateName: string, data: any): string {
+  private renderTemplate(
+    templateName: string,
+    data: any,
+    recipientEmail?: string,
+  ): string {
     const template = this.templates.get(templateName);
     if (!template) {
       throw new Error(`Template ${templateName} not found`);
@@ -134,8 +139,11 @@ export class NodemailerEmailService implements IEmailService {
     // 개별 템플릿 렌더링
     const body = template(data);
 
-    // layout.hbs에 body 주입
-    const html = this.layoutTemplate({ body });
+    // layout.hbs에 body 및 수신 거부 링크용 이메일 주입
+    const encodedEmail = recipientEmail
+      ? encodeURIComponent(recipientEmail)
+      : '';
+    const html = this.layoutTemplate({ body, recipientEmail: encodedEmail });
 
     return html;
   }
@@ -159,8 +167,8 @@ export class NodemailerEmailService implements IEmailService {
         authCode: code,
       };
 
-      // 🎨 HTML 렌더링
-      const html = this.renderTemplate('auth-code.hbs', templateData);
+      // 🎨 HTML 렌더링 (수신 거부 링크에 이메일 파라미터 포함)
+      const html = this.renderTemplate('auth-code.hbs', templateData, email);
 
       // 📧 이메일 발송
       await this.transporter.sendMail({
@@ -194,8 +202,12 @@ export class NodemailerEmailService implements IEmailService {
         resetLink,
       };
 
-      // 🎨 HTML 렌더링
-      const html = this.renderTemplate('password-reset.hbs', templateData);
+      // 🎨 HTML 렌더링 (수신 거부 링크에 이메일 파라미터 포함)
+      const html = this.renderTemplate(
+        'password-reset.hbs',
+        templateData,
+        email,
+      );
 
       // 📧 이메일 발송
       await this.transporter.sendMail({

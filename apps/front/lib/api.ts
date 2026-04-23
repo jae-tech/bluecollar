@@ -37,7 +37,8 @@ async function apiFetch<T = unknown>(
     ...options,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      // body가 있을 때만 Content-Type 설정 (body 없는 POST에서 Fastify 400 방지)
+      ...(options.body != null ? { "Content-Type": "application/json" } : {}),
       ...options.headers,
     },
   };
@@ -196,10 +197,17 @@ export async function emailSignup(
 export async function verifyEmailCode(
   payload: VerifyEmailPayload,
 ): Promise<VerifyEmailResponse> {
-  return apiFetch("/auth/verify-email-code", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  // skipAutoRedirect=true: 잘못된 코드 시 백엔드가 401을 반환하지만 이 시점엔
+  // 아직 로그인 세션이 없어 refresh가 무조건 실패 → /login 강제 이동 방지.
+  // 에러는 호출 측(verify-email 페이지)에서 직접 처리.
+  return apiFetch(
+    "/auth/verify-email-code",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    true,
+  );
 }
 
 /** 인증 이메일 재발송 */
