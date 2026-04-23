@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './controllers/auth.controller';
+import { EmailController } from './controllers/email.controller';
 import { AuthService } from './services/auth.service';
 import { TokenService } from './services/token.service';
 import { EmailVerificationService } from './services/email-verification.service';
@@ -40,10 +41,11 @@ import { EmailNormalizationService } from '@/common/services/email-normalization
         signOptions: {
           // @nestjs/jwt v11은 expiresIn에 StringValue 타입을 요구
           // string 캐스팅으로 타입 호환
-          expiresIn: (config.get<string>(
-            'JWT_ACCESS_EXPIRY',
-            '15m',
-          ) as unknown as number) || '15m',
+          expiresIn:
+            (config.get<string>(
+              'JWT_ACCESS_EXPIRY',
+              '15m',
+            ) as unknown as number) || '15m',
         },
       }),
     }),
@@ -54,7 +56,7 @@ import { EmailNormalizationService } from '@/common/services/email-normalization
     LoggerModule,
   ],
 
-  controllers: [AuthController],
+  controllers: [AuthController, EmailController],
 
   providers: [
     AuthService,

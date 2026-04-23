@@ -3,126 +3,144 @@
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <meta http-equiv='X-UA-Compatible' content='IE=edge' />
+    <link
+      rel='preconnect'
+      href='https://cdn.jsdelivr.net'
+      crossorigin='anonymous'
+    />
+    <link
+      rel='stylesheet'
+      href='https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css'
+    />
     <style type='text/css'>
-      /* 이메일 클라이언트 호환성 */
       body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-          'Helvetica Neue', Arial, sans-serif;
-        line-height: 1.6;
-        color: #333;
         margin: 0;
         padding: 0;
-        background-color: #f5f5f5;
+        background-color: #f6f4f2;
+        font-family:
+          'Pretendard',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        color: #1c1917;
       }
       table {
         border-collapse: collapse;
         border-spacing: 0;
-        width: 100%;
       }
       td {
         border-collapse: collapse;
         vertical-align: top;
         padding: 0;
       }
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        background-color: #ffffff;
+      img {
+        border: 0;
+        display: block;
+        max-width: 100%;
       }
-      .header {
-        padding: 30px 20px;
-        text-align: center;
-        border-bottom: 1px solid #e0e0e0;
-        background-color: #f9f9f9;
-      }
-      .logo {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1a73e8;
-        letter-spacing: -0.5px;
-      }
-      .logo-subtitle {
-        font-size: 12px;
-        color: #666;
-        margin-top: 5px;
-        font-weight: normal;
-      }
-      .content {
-        padding: 40px 30px;
-      }
-      .footer {
-        background-color: #f5f5f5;
-        padding: 30px 20px;
-        border-top: 1px solid #e0e0e0;
-        font-size: 12px;
-        color: #666;
-        text-align: center;
-      }
-      .footer-link {
-        color: #1a73e8;
-        text-decoration: none;
-        margin: 0 8px;
-      }
-      .footer-link:hover {
+      a {
+        color: #292524;
         text-decoration: underline;
-      }
-      .divider {
-        margin: 20px 0;
-        border-bottom: 1px solid #e0e0e0;
-      }
-      @media (max-width: 600px) {
-        .container {
-          width: 100% !important;
-          max-width: 100% !important;
-        }
-        .content {
-          padding: 30px 15px;
-        }
-        .header {
-          padding: 20px 15px;
-        }
-        .footer {
-          padding: 20px 15px;
-        }
       }
     </style>
   </head>
   <body
-    style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"
+    style="margin: 0; padding: 0; background-color: #F6F4F2; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
   >
+    <!-- Outer wrapper -->
     <table
       border='0'
       cellpadding='0'
       cellspacing='0'
-      style='width: 100%; background-color: #f5f5f5;'
+      width='100%'
+      style='background-color: #F6F4F2; min-height: 100vh;'
     >
       <tr>
-        <td align='center' style='padding: 0;'>
-          <!-- 📧 Main Container -->
+        <td align='center' style='padding: 48px 16px;'>
+
+          <!-- Container card -->
           <table
             border='0'
             cellpadding='0'
             cellspacing='0'
-            style='max-width: 600px; width: 100%; background-color: #ffffff; margin: 20px auto;'
+            style='max-width: 560px; width: 100%; background-color: #ffffff; border: 1px solid #E5E0DB; border-radius: 12px; overflow: hidden;'
           >
+
             <!-- Header -->
             <tr>
               <td
-                style='padding: 30px 20px; text-align: center; border-bottom: 1px solid #e0e0e0; background-color: #f9f9f9;'
+                style='padding: 28px 40px 24px; border-bottom: 1px solid #E5E0DB;'
               >
-                <div
-                  style='font-size: 24px; font-weight: 700; color: #1a73e8; letter-spacing: -0.5px;'
-                >bluecollar.cv</div>
-                <div
-                  style='font-size: 12px; color: #666; margin-top: 5px; font-weight: normal;'
-                >전문가와 만나는 가장 쉬운 방법</div>
+                <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+                  <tr>
+                    <td valign='middle'>
+                      <!-- SVG 로고 + 워드마크 -->
+                      <table border='0' cellpadding='0' cellspacing='0'>
+                        <tr>
+                          <!-- B 심볼 아이콘 -->
+                          <td valign='middle' style='padding-right: 8px;'>
+                            <svg
+                              width='28'
+                              height='28'
+                              viewBox='0 0 180 180'
+                              fill='none'
+                              xmlns='http://www.w3.org/2000/svg'
+                            >
+                              <rect
+                                width='180'
+                                height='180'
+                                rx='38'
+                                fill='#292524'
+                              />
+                              <line
+                                x1='58'
+                                y1='42'
+                                x2='62'
+                                y2='138'
+                                stroke='#FAFAF9'
+                                stroke-width='14'
+                                stroke-linecap='round'
+                              />
+                              <path
+                                d='M 60,42 C 60,42 118,38 120,68 C 122,88 65,90 63,90'
+                                fill='none'
+                                stroke='#FAFAF9'
+                                stroke-width='13'
+                                stroke-linecap='round'
+                                stroke-linejoin='round'
+                              />
+                              <path
+                                d='M 60,90 C 60,90 126,86 128,118 C 130,142 62,140 59,138'
+                                fill='none'
+                                stroke='#FAFAF9'
+                                stroke-width='13'
+                                stroke-linecap='round'
+                                stroke-linejoin='round'
+                              />
+                            </svg>
+                          </td>
+                          <!-- 워드마크 -->
+                          <td valign='middle'>
+                            <div
+                              style='font-size: 15px; font-weight: 600; color: #292524; letter-spacing: -0.3px; line-height: 1;'
+                            >
+                              Bluecollar
+                              <span style='font-weight: 700;'>CV</span>
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 
-            <!-- Content -->
+            <!-- Body -->
             <tr>
-              <td style='padding: 40px 30px;'>
+              <td style='padding: 40px 40px;'>
                 {{{body}}}
               </td>
             </tr>
@@ -130,43 +148,52 @@
             <!-- Footer -->
             <tr>
               <td
-                style='background-color: #f5f5f5; padding: 30px 20px; border-top: 1px solid #e0e0e0; font-size: 12px; color: #666;'
+                style='background-color: #F6F4F2; padding: 24px 40px; border-top: 1px solid #E5E0DB;'
               >
-                <div style='text-align: center; margin-bottom: 15px;'>
-                  <a
-                    href='https://bluecollar.cv'
-                    style='color: #1a73e8; text-decoration: none; margin: 0 8px;'
-                  >서비스 주소</a>
-                  <span style='color: #d0d0d0;'>|</span>
-                  <a
-                    href='https://bluecollar.cv/privacy'
-                    style='color: #1a73e8; text-decoration: none; margin: 0 8px;'
-                  >개인정보 처리방침</a>
-                  <span style='color: #d0d0d0;'>|</span>
-                  <a
-                    href='https://bluecollar.cv/terms'
-                    style='color: #1a73e8; text-decoration: none; margin: 0 8px;'
-                  >이용약관</a>
-                </div>
-                <div
-                  style='text-align: center; color: #999; margin-top: 15px; border-top: 1px solid #e0e0e0; padding-top: 15px;'
-                >
-                  <p style='margin: 5px 0; font-size: 11px; color: #666;'>이
-                    메일에 답장하시면 support@bluecollar.cv로 전달되며, 빠르게
-                    답변드리겠습니다.</p>
-                  <p style='margin: 8px 0;'>이메일 수신을 원하지 않으시면
-                    <a
-                      href='https://bluecollar.cv/unsubscribe'
-                      style='color: #1a73e8; text-decoration: none;'
-                    >여기</a>를 클릭해주세요.</p>
-                  <p style='margin: 5px 0; color: #999;'>© 2026 BlueCollar. All
-                    rights reserved.</p>
-                </div>
+                <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+                  <tr>
+                    <td style='text-align: center;'>
+                      <div style='margin-bottom: 12px;'>
+                        <a
+                          href='https://bluecollar.cv'
+                          style='font-size: 12px; color: #6B5E57; text-decoration: none; margin: 0 10px;'
+                        >서비스</a>
+                        <span style='color: #E5E0DB;'>·</span>
+                        <a
+                          href='https://bluecollar.cv/privacy'
+                          style='font-size: 12px; color: #6B5E57; text-decoration: none; margin: 0 10px;'
+                        >개인정보처리방침</a>
+                        <span style='color: #E5E0DB;'>·</span>
+                        <a
+                          href='https://bluecollar.cv/terms'
+                          style='font-size: 12px; color: #6B5E57; text-decoration: none; margin: 0 10px;'
+                        >이용약관</a>
+                      </div>
+                      <p
+                        style='margin: 0 0 6px; font-size: 11px; color: #6B5E57; line-height: 1.5;'
+                      >이메일에 답장하시면 support@bluecollar.cv로 전달됩니다.</p>
+                      <p
+                        style='margin: 0 0 6px; font-size: 11px; color: #6B5E57;'
+                      >수신을 원하지 않으시면
+                        <a
+                          href='https://bluecollar.cv/unsubscribe?email={{recipientEmail}}'
+                          style='color: #292524; text-decoration: underline;'
+                        >여기</a>를 클릭하세요.</p>
+                      <p
+                        style='margin: 16px 0 0; font-size: 11px; color: #B8AFA9;'
+                      >© 2026 BlueCollar. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
+
           </table>
+          <!-- /Container card -->
+
         </td>
       </tr>
     </table>
+    <!-- /Outer wrapper -->
   </body>
 </html>

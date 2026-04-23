@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { X, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { emailSignup, ApiError } from "@/lib/api";
 
@@ -318,10 +319,25 @@ export function SignupModal({ open, onClose }: SignupModalProps) {
                 htmlFor="modal-agree"
                 className="text-sm text-muted-foreground cursor-pointer leading-relaxed"
               >
-                <span className="text-primary font-semibold">이용약관</span>과{" "}
-                <span className="text-primary font-semibold">
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-semibold hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  이용약관
+                </Link>
+                과{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-semibold hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   개인정보 처리방침
-                </span>
+                </Link>
                 에 동의합니다
               </label>
             </div>

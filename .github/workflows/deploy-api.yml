@@ -144,6 +144,15 @@ jobs:
             # 업로드 디렉터리 준비
             mkdir -p /app/uploads
 
+            # DB 마이그레이션 (idempotent — IF NOT EXISTS로 안전하게 재실행 가능)
+            echo "Running DB migrations..."
+            which psql || apt-get install -y -q postgresql-client
+            psql "${DATABASE_URL}" -v ON_ERROR_STOP=1 << 'MIGRATION'
+            ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "terms_agreed_at" timestamp;
+            ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "terms_version" varchar(20);
+            MIGRATION
+            echo "✅ DB migrations complete"
+
             # 최신 이미지 pull 후 재시작
             cd /app
             export GITHUB_REPOSITORY="$GITHUB_REPOSITORY"

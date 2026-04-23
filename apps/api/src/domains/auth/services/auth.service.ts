@@ -17,10 +17,11 @@ import {
 import { CreateWorkerDto } from '../dtos/create-worker.dto';
 import { EmailSignupDto } from '../dtos/email-signup.dto';
 import { EmailVerificationDto } from '../dtos/email-verification.dto';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, lt } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
 import type { ISmsService } from '@/infrastructure/sms/interfaces/sms-service.interface';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { TokenService } from './token.service';
 import { EmailVerificationService } from './email-verification.service';
 import * as bcrypt from 'bcrypt';
@@ -467,18 +468,19 @@ export class AuthService {
   async emailSignup(
     dto: EmailSignupDto,
   ): Promise<{ message: string; email: string; code?: string }> {
-    const { email, password, realName } = dto;
+    const { email, password, realName, agreeTerms } = dto;
 
     this.logger.info({ email }, '이메일 회원가입 시작');
 
-    // 이메일 중복 확인
+    // 이메일 중복 확인: ACTIVE 계정은 가입 불가, INACTIVE 계정은 덮어쓰기 허용
+    // INACTIVE 계정이 남아있는 경우: 이전 가입 시도에서 코드 미인증 상태
     const existingUser = await this.db
-      .select({ id: users.id })
+      .select({ id: users.id, status: users.status })
       .from(users)
       .where(eq(users.email, email.toLowerCase()))
       .limit(1);
 
-    if (existingUser.length > 0) {
+    if (existingUser.length > 0 && existingUser[0].status !== 'INACTIVE') {
       this.logger.warn({ email }, '이미 가입된 이메일');
       throw new ConflictException('이미 사용 중인 이메일 주소입니다');
     }
@@ -486,26 +488,52 @@ export class AuthService {
     // bcrypt로 비밀번호 해시 (saltRounds: 10)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // users 테이블에 INACTIVE 상태로 저장
-    await this.db.insert(users).values({
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      realName: realName || undefined,
-      role: 'WORKER',
-      status: 'INACTIVE',
-      emailVerified: false,
-      phoneVerified: false,
-      provider: 'local',
-      isVerified: false,
-    });
-
-    this.logger.info({ email }, '이메일 회원가입 계정 생성 완료');
-
-    // 이메일 인증 코드 발송
+    // 이메일 인증 코드 발송 먼저 시도
+    // 발송 실패 시 DB INSERT/UPDATE 자체를 건너뛰어 고아 레코드 생성을 방지
     const { code } = await this.emailVerificationService.sendVerificationCode(
       email,
       'SIGNUP',
     );
+
+    // 발송 성공 후 users 테이블에 INACTIVE 상태로 저장
+    // INACTIVE 계정이 이미 있으면 새 정보로 업데이트(재시도), 없으면 신규 INSERT
+    const now = new Date();
+    if (existingUser.length > 0) {
+      // 이전 미인증 시도 덮어쓰기: 비밀번호/이름/약관 동의 갱신
+      await this.db
+        .update(users)
+        .set({
+          password: hashedPassword,
+          realName: realName || undefined,
+          emailVerified: false,
+          termsAgreedAt: agreeTerms ? now : undefined,
+          termsVersion: agreeTerms ? '2026-04' : undefined,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(users.email, email.toLowerCase()),
+            eq(users.status, 'INACTIVE'),
+          ),
+        );
+      this.logger.info({ email }, '기존 미인증 계정 갱신 완료');
+    } else {
+      await this.db.insert(users).values({
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        realName: realName || undefined,
+        role: 'WORKER',
+        status: 'INACTIVE',
+        emailVerified: false,
+        phoneVerified: false,
+        provider: 'local',
+        isVerified: false,
+        termsAgreedAt: agreeTerms ? now : undefined,
+        termsVersion: agreeTerms ? '2026-04' : undefined,
+      });
+    }
+
+    this.logger.info({ email }, '이메일 회원가입 계정 생성 완료');
 
     // EXPOSE_EMAIL_CODE=true 환경에서는 code를 응답에 포함 (개발/로컬 테스트용)
     if (process.env.EXPOSE_EMAIL_CODE === 'true' && code) {
@@ -522,6 +550,38 @@ export class AuthService {
         '인증 이메일을 발송했습니다. 이메일을 확인하고 인증 코드를 입력하세요.',
       email,
     };
+  }
+
+  /**
+   * 미인증 INACTIVE 계정 정리 (Cron Job)
+   *
+   * 이메일 인증을 완료하지 않은 임시 계정(INACTIVE 상태)을 주기적으로 삭제합니다.
+   * 가입 폼을 제출했지만 코드 인증을 하지 않은 경우 생성되는 고아 레코드를 정리합니다.
+   * createdAt 기준 24시간 초과 INACTIVE 계정만 삭제합니다.
+   *
+   * 실행 주기: 매일 오전 3시
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async cleanupUnverifiedAccounts(): Promise<void> {
+    try {
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const result = await this.db
+        .delete(users)
+        .where(and(eq(users.status, 'INACTIVE'), lt(users.createdAt, cutoff)))
+        .returning({ id: users.id });
+
+      if (result.length > 0) {
+        this.logger.info(
+          { count: result.length },
+          '미인증 INACTIVE 계정 정리 완료',
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        { error: (error as Error).message },
+        '미인증 INACTIVE 계정 정리 실패',
+      );
+    }
   }
 
   /**
