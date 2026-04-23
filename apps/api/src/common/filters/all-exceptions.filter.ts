@@ -74,6 +74,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
         });
     }
 
+    // CORS 헤더 수동 추가 (Fastify reply 직접 전송 시 NestJS CORS 미들웨어 우회됨)
+    const origin = (request.headers['origin'] as string) || '';
+    const allowedOrigin =
+      /(?:^|\.)bluecollar\.cv$/.test(origin) || /localhost:\d+$/.test(origin)
+        ? origin
+        : '';
+    if (allowedOrigin) {
+      response.header('Access-Control-Allow-Origin', allowedOrigin);
+      response.header('Access-Control-Allow-Credentials', 'true');
+    }
+
     // 클라이언트에 응답
     response.status(errorResponse.statusCode).send(errorResponse);
   }
