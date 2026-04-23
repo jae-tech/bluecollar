@@ -61,9 +61,10 @@ If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to bu
 
 ## Deploy Configuration (configured by /setup-deploy)
 
-- Platform: Cloudflare Workers (frontend) / 미배포 (backend)
+- Platform: Cloudflare Workers (frontend) / OCI (backend)
 - Production URL: https://bluecollar.cv
-- Deploy workflow: .github/workflows/deploy-front.yml (auto-deploy on push to main, paths: apps/front/\*\*)
+- Deploy workflow (frontend): .github/workflows/deploy-front.yml (auto-deploy on push to main, paths: apps/front/\*\*)
+- Deploy workflow (backend): .github/workflows/deploy-api.yml (auto-deploy on push to main, paths: apps/api/\*\* 등)
 - Deploy status command: GitHub Actions workflow status
 - Merge method: merge
 - Project type: web app (Next.js 14 via OpenNext on Cloudflare Workers)
@@ -72,13 +73,14 @@ If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to bu
 ### Custom deploy hooks
 
 - Pre-merge: pnpm build
-- Deploy trigger: automatic on push to main (frontend only, via wrangler-action)
+- Deploy trigger: automatic on push to main (frontend via wrangler-action, backend via SSH to OCI)
 - Deploy status: poll https://bluecollar.cv
 - Health check: https://bluecollar.cv
 
 ### Notes
 
-- Backend (NestJS/Fastify) not yet deployed — runs locally on port 4000
+- Backend (NestJS/Fastify) deployed on OCI (Oracle Cloud) via Docker — port 8080 on server
+- GitHub Secrets (DATABASE_URL 등)은 배포 시점에 서버 /app/.env로 기록됨 — 시크릿 변경 시 재배포 필요
 - wrangler.toml: apps/front/wrangler.toml, worker name: bluecollar-front
 - NEXT_PUBLIC_API_URL injected at build time via GitHub Actions secret
 
@@ -99,6 +101,7 @@ tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
 The skill has specialized workflows that produce better results than ad-hoc answers.
 
 Key routing rules:
+
 - Product ideas, "is this worth building", brainstorming → invoke office-hours
 - Bugs, errors, "why is this broken", 500 errors → invoke investigate
 - Ship, deploy, push, create PR → invoke ship
