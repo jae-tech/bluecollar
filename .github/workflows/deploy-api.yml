@@ -84,14 +84,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # docker-compose.prod.yml을 서버로 전송
-      - name: Copy compose file to server
+      # 설정 파일들을 서버로 전송
+      - name: Copy config files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.OCI_PROD_HOST }}
           username: ubuntu
           key: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
-          source: "apps/api/docker-compose.prod.yml"
+          source: "apps/api/docker-compose.prod.yml,apps/api/promtail-config.yml,apps/api/grafana-datasources.yml"
           target: /app/
           strip_components: 2
 
@@ -117,12 +117,13 @@ jobs:
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
         with:
           host: ${{ secrets.OCI_PROD_HOST }}
           username: ubuntu
           key: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
           timeout: 180s
-          envs: GITHUB_REPOSITORY,GITHUB_ACTOR,GITHUB_TOKEN,DATABASE_URL,JWT_SECRET,EMAIL_SERVICE,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS,SMTP_FROM,MEDIA_BASE_URL,API_URL,APP_URL,IMAP_HOST,IMAP_PORT,IMAP_USER,IMAP_PASS
+          envs: GITHUB_REPOSITORY,GITHUB_ACTOR,GITHUB_TOKEN,DATABASE_URL,JWT_SECRET,EMAIL_SERVICE,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS,SMTP_FROM,MEDIA_BASE_URL,API_URL,APP_URL,IMAP_HOST,IMAP_PORT,IMAP_USER,IMAP_PASS,GRAFANA_ADMIN_PASSWORD
           script: |
             set -e
 
@@ -150,6 +151,7 @@ jobs:
             IMAP_PORT=${IMAP_PORT:-993}
             IMAP_USER=${IMAP_USER}
             IMAP_PASS=${IMAP_PASS}
+            GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
             EOF
 
             # 업로드 디렉터리 준비

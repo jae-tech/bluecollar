@@ -38,6 +38,56 @@ services:
       retries: 3
       start_period: 20s
 
+  # ── 로그 수집 스택 ────────────────────────────────────────
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: bluecollar-loki
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+    networks:
+      - bluecollar
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: bluecollar-promtail
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - bluecollar
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: bluecollar-grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-changeme}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/loki.yml
+    depends_on:
+      - loki
+    networks:
+      - bluecollar
+
+volumes:
+  loki-data:
+  grafana-data:
+
 networks:
   bluecollar:
     driver: bridge
