@@ -182,32 +182,21 @@ jobs:
         if: success()
         uses: slackapi/slack-github-action@v1.27.0
         with:
-          payload: |
+          payload-templated: true
+          payload: >-
             {
               "attachments": [
                 {
                   "fallback": "BlueCollar API Deploy Success",
                   "color": "#2EB67D",
-                  "pretext": "🔨 *BlueCollar API:* 배포 성공",
+                  "pretext": ":hammer: *BlueCollar API:* 배포 성공",
                   "title": "Deployment Complete: bluecollar-cv API",
                   "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                   "text": "Successfully deployed to production server.",
                   "fields": [
-                    {
-                      "title": "Branch",
-                      "value": "${{ github.ref_name }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Triggered by",
-                      "value": "${{ github.actor }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Commit",
-                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
-                      "short": true
-                    }
+                    { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
+                    { "title": "Triggered by", "value": "${{ github.actor }}", "short": true },
+                    { "title": "Commit", "value": "${{ github.sha }}", "short": true }
                   ]
                 }
               ]
@@ -220,33 +209,24 @@ jobs:
         if: failure()
         uses: slackapi/slack-github-action@v1.27.0
         with:
-          payload: |
+          payload-templated: true
+          payload: >-
             {
               "attachments": [
                 {
                   "fallback": "BlueCollar API Deploy Failed",
                   "color": "#E01E5A",
-                  "pretext": "🚨 *BlueCollar API:* 배포 실패",
+                  "pretext": ":rotating_light: *BlueCollar API:* 배포 실패",
                   "title": "Deployment Failed: bluecollar-cv API",
                   "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                   "text": "배포 중 오류가 발생했습니다. 로그를 확인해주세요.",
                   "fields": [
-                    {
-                      "title": "Branch",
-                      "value": "${{ github.ref_name }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Triggered by",
-                      "value": "${{ github.actor }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Commit",
-                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
-                      "short": true
-                    }
+                    { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
+                    { "title": "Triggered by", "value": "${{ github.actor }}", "short": true },
+                    { "title": "Commit", "value": "${{ github.sha }}", "short": true }
                   ]
+                }
+              ]
                 }
               ]
             }
