@@ -153,6 +153,19 @@ jobs:
             psql "${DATABASE_URL}" -v ON_ERROR_STOP=1 << 'MIGRATION'
             ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "terms_agreed_at" timestamp;
             ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "terms_version" varchar(20);
+            CREATE TABLE IF NOT EXISTS "admin_audit_logs" (
+              "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+              "admin_id" uuid NOT NULL REFERENCES "users"("id"),
+              "action" varchar(50) NOT NULL,
+              "target_type" varchar(50) NOT NULL,
+              "target_id" varchar(100) NOT NULL,
+              "before" text,
+              "after" text,
+              "created_at" timestamp DEFAULT now() NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS "idx_audit_logs_admin" ON "admin_audit_logs" ("admin_id");
+            CREATE INDEX IF NOT EXISTS "idx_audit_logs_target" ON "admin_audit_logs" ("target_type", "target_id");
+            CREATE INDEX IF NOT EXISTS "idx_audit_logs_created_at" ON "admin_audit_logs" ("created_at");
             MIGRATION
             echo "✅ DB migrations complete"
 

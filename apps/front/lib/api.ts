@@ -667,3 +667,133 @@ export async function checkSlugAvailability(slug: string): Promise<boolean> {
   );
   return result.available;
 }
+
+// ─────────────────────────────────────────────────────────────
+// Admin API
+// ─────────────────────────────────────────────────────────────
+
+export interface AdminDashboardSummary {
+  users: {
+    total: number;
+    active: number;
+    suspended: number;
+    newThisWeek: number;
+  };
+  workers: { total: number };
+  recentSignups: {
+    id: string;
+    email: string;
+    realName: string | null;
+    role: string;
+    status: string;
+    createdAt: string;
+  }[];
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  realName: string | null;
+  role: "ADMIN" | "WORKER" | "CLIENT";
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "DELETED";
+  provider: string;
+  emailVerified: boolean;
+  termsAgreedAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserListResult {
+  data: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface AdminCode {
+  code: string;
+  group: string;
+  name: string;
+  sortOrder: number | null;
+}
+
+export async function getAdminDashboard(): Promise<AdminDashboardSummary> {
+  return apiFetch<AdminDashboardSummary>("/admin/dashboard");
+}
+
+export async function getAdminUsers(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  role?: string;
+}): Promise<AdminUserListResult> {
+  const sp = new URLSearchParams();
+  if (params?.page) sp.set("page", String(params.page));
+  if (params?.limit) sp.set("limit", String(params.limit));
+  if (params?.search) sp.set("search", params.search);
+  if (params?.status) sp.set("status", params.status);
+  if (params?.role) sp.set("role", params.role);
+  const qs = sp.toString();
+  return apiFetch<AdminUserListResult>(`/admin/users${qs ? `?${qs}` : ""}`);
+}
+
+export async function updateAdminUserStatus(
+  userId: string,
+  status: "ACTIVE" | "SUSPENDED" | "DELETED",
+): Promise<{ id: string; status: string }> {
+  return apiFetch(`/admin/users/${userId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function updateAdminUserRole(
+  userId: string,
+  role: "ADMIN" | "WORKER" | "CLIENT",
+): Promise<{ id: string; role: string }> {
+  return apiFetch(`/admin/users/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
+}
+
+export async function getAdminCodes(group?: string): Promise<AdminCode[]> {
+  const qs = group ? `?group=${encodeURIComponent(group)}` : "";
+  return apiFetch<AdminCode[]>(`/admin/codes${qs}`);
+}
+
+export async function createAdminCode(data: {
+  code: string;
+  group: string;
+  name: string;
+  sortOrder?: number;
+}): Promise<AdminCode> {
+  return apiFetch<AdminCode>("/admin/codes", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateAdminCode(
+  code: string,
+  data: { name?: string; sortOrder?: number },
+): Promise<AdminCode> {
+  return apiFetch<AdminCode>(`/admin/codes/${code}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAdminCode(code: string): Promise<{ code: string }> {
+  return apiFetch(`/admin/codes/${code}`, { method: "DELETE" });
+}
+
+export async function reorderAdminCodes(
+  items: { code: string; sortOrder: number }[],
+): Promise<{ updated: number }> {
+  return apiFetch("/admin/codes/reorder", {
+    method: "PATCH",
+    body: JSON.stringify({ items }),
+  });
+}

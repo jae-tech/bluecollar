@@ -747,3 +747,49 @@ export const portfolioTags = pgTable("portfolio_tags", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// ─────────────────────────────────────────────────────
+// 6️⃣ ADMIN (관리자 감사 로그)
+// ─────────────────────────────────────────────────────
+
+/**
+ * adminAuditLogs 테이블
+ *
+ * 관리자가 수행한 코드값 변경, 유저 상태 변경 등의 작업 이력을 기록합니다.
+ * - action: 수행한 작업 유형 (CODE_CREATE, CODE_UPDATE, CODE_DELETE, USER_STATUS_CHANGE, USER_ROLE_CHANGE)
+ * - targetType: 대상 리소스 유형 (master_code, user)
+ * - targetId: 대상 리소스의 식별자
+ * - before/after: 변경 전후 데이터 (JSONB)
+ */
+export const adminAuditLogs = pgTable(
+  "admin_audit_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+
+    // 작업을 수행한 관리자
+    adminId: uuid("admin_id")
+      .references(() => users.id)
+      .notNull(),
+
+    // 작업 유형
+    action: varchar("action", { length: 50 }).notNull(),
+
+    // 대상 리소스
+    targetType: varchar("target_type", { length: 50 }).notNull(),
+    targetId: varchar("target_id", { length: 100 }).notNull(),
+
+    // 변경 전후 데이터 (JSONB 직렬화)
+    before: text("before"), // JSON string
+    after: text("after"), // JSON string
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    adminIdx: index("idx_audit_logs_admin").on(table.adminId),
+    targetIdx: index("idx_audit_logs_target").on(
+      table.targetType,
+      table.targetId,
+    ),
+    createdAtIdx: index("idx_audit_logs_created_at").on(table.createdAt),
+  }),
+);
