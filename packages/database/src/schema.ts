@@ -125,12 +125,12 @@ export const users = pgTable(
     // 📧 이메일 관련 필드 (기본 식별자)
     email: text("email").notNull().unique(), // ✨ 기본 식별자로 변경
     emailVerified: boolean("email_verified").default(false).notNull(), // 이메일 검증 여부
-    emailVerifiedAt: timestamp("email_verified_at"), // 이메일 검증 완료 시각
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }), // 이메일 검증 완료 시각
 
     // 📱 휴대폰 관련 필드 (검증 필수, 중복 방지)
     phoneNumber: varchar("phone_number", { length: 20 }).unique(), // ✨ NOT NULL → nullable로 변경
     phoneVerified: boolean("phone_verified").default(false).notNull(), // 휴대폰 검증 여부
-    phoneVerifiedAt: timestamp("phone_verified_at"), // 휴대폰 검증 완료 시각
+    phoneVerifiedAt: timestamp("phone_verified_at", { withTimezone: true }), // 휴대폰 검증 완료 시각
 
     // 🔐 비밀번호 (로컬 계정만)
     password: varchar("password", { length: 255 }), // 해시된 비밀번호 (소셜 로그인은 null)
@@ -150,13 +150,17 @@ export const users = pgTable(
     role: roleEnum("role").default("CLIENT").notNull(), // 'ADMIN' | 'WORKER' | 'CLIENT'
 
     // 📜 약관 동의 기록
-    termsAgreedAt: timestamp("terms_agreed_at"), // 이용약관 동의 시각
+    termsAgreedAt: timestamp("terms_agreed_at", { withTimezone: true }), // 이용약관 동의 시각
     termsVersion: varchar("terms_version", { length: 20 }), // 동의한 약관 버전 (예: '2026-04')
 
     // ⏰ 타임스탬프
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-    deletedAt: timestamp("deleted_at"), // 소프트 삭제 (soft delete) 지원
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }), // 소프트 삭제 (soft delete) 지원
   },
   (table) => ({
     // ⚡ 성능 인덱스
@@ -183,8 +187,10 @@ export const authCodes = pgTable(
     phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
     code: varchar("code", { length: 6 }).notNull(), // 6자리 인증번호
     isUsed: boolean("is_used").default(false).notNull(), // 사용 여부
-    expiresAt: timestamp("expires_at").notNull(), // 10분 후 만료
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), // 10분 후 만료
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // 인증 코드 조회 성능 인덱스
@@ -209,9 +215,11 @@ export const refreshTokens = pgTable(
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
     token: varchar("token", { length: 500 }).notNull().unique(),
-    expiresAt: timestamp("expires_at").notNull(), // 토큰 만료 시간 (30일)
-    revokedAt: timestamp("revoked_at"), // 로그아웃 시 설정 (만료 전 무효화)
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), // 토큰 만료 시간 (30일)
+    revokedAt: timestamp("revoked_at", { withTimezone: true }), // 로그아웃 시 설정 (만료 전 무효화)
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // Refresh token 검증 인덱스
@@ -241,9 +249,11 @@ export const emailVerificationCodes = pgTable(
     code: varchar("code", { length: 64 }).notNull(), // 토큰 (UUID 또는 6자리 코드)
     type: text("type").notNull(), // 'SIGNUP' | 'PASSWORD_RESET' | 'EMAIL_CHANGE'
     isUsed: boolean("is_used").default(false).notNull(), // 토큰 재사용 방지
-    usedAt: timestamp("used_at"), // 토큰 사용 시각 (감시용)
-    expiresAt: timestamp("expires_at").notNull(), // 24시간 유효
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }), // 토큰 사용 시각 (감시용)
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), // 24시간 유효
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // ⚡ 성능 인덱스
@@ -271,7 +281,9 @@ export const disposableEmailBlacklist = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     domain: text("domain").notNull().unique(), // 'tempmail.com', '10minutemail.com' 등
     category: text("category"), // 'TEMP', 'GUERRILLAMAIL', 'SPAM' 등 (분류용)
-    addedAt: timestamp("added_at").defaultNow().notNull(), // 추가 일시
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(), // 추가 일시
   },
   (table) => ({
     // ⚡ 성능 인덱스
@@ -305,7 +317,9 @@ export const accountLinkingAudit = pgTable("account_linking_audit", {
   action: text("action").notNull(), // 'LINKED' | 'UNLINKED' | 'RELINKED'
   ipAddress: text("ip_address"), // 요청 IP 주소 (의심 활동 탐지용)
   userAgent: text("user_agent"), // 사용자 에이전트 (기기 정보)
-  timestamp: timestamp("timestamp").defaultNow().notNull(), // 작업 시각
+  timestamp: timestamp("timestamp", { withTimezone: true })
+    .defaultNow()
+    .notNull(), // 작업 시각
 });
 
 // ─────────────────────────────────────────────────────
@@ -363,8 +377,12 @@ export const workerProfiles = pgTable("worker_profiles", {
   officeImageUrl: text("office_image_url"), // 사무실 이미지 (S3 URL)
 
   // ▪️ 타임스탬프
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 /**
@@ -429,10 +447,14 @@ export const businessDocuments = pgTable(
     status: businessDocumentStatusEnum("status").default("PENDING").notNull(), // 검증 상태
     validationMessage: text("validation_message"), // 검증 메시지
 
-    submittedAt: timestamp("submitted_at").defaultNow().notNull(), // 제출 시간
-    validatedAt: timestamp("validated_at"), // 검증 완료 시간
+    submittedAt: timestamp("submitted_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(), // 제출 시간
+    validatedAt: timestamp("validated_at", { withTimezone: true }), // 검증 완료 시간
 
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // 관리자 검증 큐 조회 성능 인덱스
@@ -462,7 +484,9 @@ export const manualReviews = pgTable("manual_reviews", {
   decision: varchar("decision", { length: 20 }).notNull(), // APPROVED or REJECTED
   reason: text("reason"), // 거절 사유 또는 검토 의견
 
-  reviewedAt: timestamp("reviewed_at").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // ─────────────────────────────────────────────────────
@@ -493,8 +517,12 @@ export const materials = pgTable(
     isActive: boolean("is_active").default(true).notNull(), // 비활성화 시 검색에서 제외
 
     // ▪️ 타임스탬프
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // 카테고리별 자재 조회 인덱스
@@ -532,8 +560,12 @@ export const buildings = pgTable("buildings", {
   externalId: varchar("external_id").unique(), // 정부 공공 API ID
 
   // ▪️ 타임스탬프
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // ─────────────────────────────────────────────────────
@@ -581,8 +613,12 @@ export const portfolios = pgTable(
     viewCount: integer("view_count").default(0).notNull(), // 포트폴리오 조회수
 
     // ▪️ 타임스탬프
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // 워커별 포트폴리오 조회 성능 인덱스
@@ -616,7 +652,9 @@ export const portfolioRooms = pgTable(
     displayOrder: integer("display_order").notNull().default(0), // 정렬 순서
 
     // ▪️ 타임스탬프
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // 포트폴리오별 방 목록 조회 인덱스
@@ -662,8 +700,12 @@ export const portfolioDetails = pgTable("portfolio_details", {
   materials: text("materials"), // 사용된 자재 (레거시 자유텍스트. 신규는 portfolioTags.materialId 사용)
 
   // ▪️ 타임스탬프
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 /**
@@ -694,7 +736,7 @@ export const portfolioMedia = pgTable(
     }),
 
     // ▪️ 촬영 일시 (EXIF 메타데이터에서 추출, Phase B에서 자동 추출)
-    takenAt: timestamp("taken_at"), // 사진 촬영 시각 (시공 기간 자동 추론에 사용)
+    takenAt: timestamp("taken_at", { withTimezone: true }), // 사진 촬영 시각 (시공 기간 자동 추론에 사용)
 
     // ▪️ 비디오 추가 정보 (비디오인 경우만)
     videoDuration: integer("video_duration"), // 비디오 길이(초)
@@ -705,8 +747,12 @@ export const portfolioMedia = pgTable(
     description: text("description"), // 미디어 설명
 
     // ▪️ 타임스탬프
-    uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    uploadedAt: timestamp("uploaded_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     // 포트폴리오 미디어 조회 성능 인덱스
@@ -745,7 +791,9 @@ export const portfolioTags = pgTable("portfolio_tags", {
     onDelete: "set null",
   }),
 
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // ─────────────────────────────────────────────────────
@@ -782,7 +830,9 @@ export const adminAuditLogs = pgTable(
     before: text("before"), // JSON string
     after: text("after"), // JSON string
 
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     adminIdx: index("idx_audit_logs_admin").on(table.adminId),
