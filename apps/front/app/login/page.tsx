@@ -85,11 +85,13 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* 소셜 로그인 */}
+          {/* 소셜 로그인 (준비 중) */}
           <div className="flex flex-col gap-3 mb-5">
-            <a
-              href={`${API_URL}/auth/login/google`}
-              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-md border border-border bg-background hover:bg-secondary text-sm font-medium text-foreground transition-colors"
+            <button
+              type="button"
+              disabled
+              title="준비 중입니다"
+              className="relative flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-md border border-border bg-background text-sm font-medium text-muted-foreground cursor-not-allowed opacity-50"
             >
               {/* Google 아이콘 */}
               <svg
@@ -116,10 +118,15 @@ export default function LoginPage() {
                 />
               </svg>
               Google로 계속하기
-            </a>
-            <a
-              href={`${API_URL}/auth/login/kakao`}
-              className="flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-md border border-border bg-[#FEE500] hover:bg-[#F0D900] text-sm font-medium text-[#3C1E1E] transition-colors"
+              <span className="absolute right-3 text-xs text-muted-foreground">
+                준비 중
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled
+              title="준비 중입니다"
+              className="relative flex items-center justify-center gap-3 w-full px-4 py-3.5 rounded-md border border-border bg-background text-sm font-medium text-muted-foreground cursor-not-allowed opacity-50"
             >
               {/* 카카오 아이콘 */}
               <svg
@@ -133,11 +140,14 @@ export default function LoginPage() {
                   fillRule="evenodd"
                   clipRule="evenodd"
                   d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98l-.87 3.24c-.09.3.24.54.51.36L8.19 13.5c.27.03.54.03.81.03 4.14 0 7.5-2.64 7.5-5.88C16.5 4.14 13.14 1.5 9 1.5z"
-                  fill="#3C1E1E"
+                  fill="#9CA3AF"
                 />
               </svg>
               카카오로 계속하기
-            </a>
+              <span className="absolute right-3 text-xs text-muted-foreground">
+                준비 중
+              </span>
+            </button>
           </div>
 
           {/* 구분선 */}
