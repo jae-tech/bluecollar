@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -14,6 +14,7 @@ import { UploadModule } from '@/domains/upload/upload.module';
 import { CodesModule } from '@/domains/codes/codes.module';
 import { AdminModule } from '@/domains/admin/admin.module';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 import { envSchema } from '@/common/config/env.schema';
 
 @Module({
@@ -65,6 +66,11 @@ import { envSchema } from '@/common/config/env.schema';
     AdminModule,
   ],
   providers: [
+    // 🌐 전역 예외 필터 — DI로 등록해야 SlackNotificationService가 주입됨
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
     // 🔒 전역 Rate Limiter Guard 등록
     {
       provide: APP_GUARD,

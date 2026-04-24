@@ -75,7 +75,7 @@ export const envSchema = z.object({
   IMAP_PASS: z.string().default(''),
 
   // ── Slack 알림 (선택) ─────────────────────────────────────
-  SLACK_WEBHOOK_URL: z.string().url().optional(),
+  SLACK_WEBHOOK_ERROR: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
