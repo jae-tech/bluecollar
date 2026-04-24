@@ -55,6 +55,12 @@ export const RESERVED_SLUGS = [
   "debug",
   "test",
   "www",
+  "grafana",
+  "loki",
+  "monitoring",
+  "logs",
+  "error",
+  "not-found",
 
   // 메일 관련
   "mail",
@@ -103,6 +109,19 @@ export const RESERVED_SLUGS = [
   "settings",
   "profile",
   "billing",
+  "unsubscribe",
+  "verify",
+  "verify-email",
+  "portfolio",
+  "complete",
+  "new",
+  "edit",
+  "invite",
+  "inbox",
+  "notifications",
+  "reviews",
+  "jobs",
+  "projects",
 
   // JavaScript 예약 키워드 (slug로 사용 시 로그/디버깅 혼란 방지)
   "null",
