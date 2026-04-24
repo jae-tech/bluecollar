@@ -172,7 +172,7 @@ export class NodemailerEmailService implements IEmailService {
 
       // 📧 이메일 발송
       await this.transporter.sendMail({
-        from: `"BlueCollar" <${this.fromAddress}>`,
+        from: `"bluecollar cv" <${this.fromAddress}>`,
         replyTo: this.replyToAddress,
         to: email,
         subject: subject,
@@ -211,7 +211,7 @@ export class NodemailerEmailService implements IEmailService {
 
       // 📧 이메일 발송
       await this.transporter.sendMail({
-        from: `"BlueCollar" <${this.fromAddress}>`,
+        from: `"bluecollar cv" <${this.fromAddress}>`,
         replyTo: this.replyToAddress,
         to: email,
         subject: '🔐 비밀번호 재설정 요청',
@@ -258,13 +258,13 @@ export class NodemailerEmailService implements IEmailService {
   ): string {
     switch (type) {
       case 'SIGNUP':
-        return '✉️ BlueCollar 회원가입 이메일 인증';
+        return 'bluecollar cv 회원가입 이메일 인증';
       case 'PASSWORD_RESET':
-        return '🔐 비밀번호 재설정 인증';
+        return 'bluecollar cv 비밀번호 재설정 인증';
       case 'EMAIL_CHANGE':
-        return '📧 이메일 변경 인증';
+        return 'bluecollar cv 이메일 변경 인증';
       default:
-        return 'BlueCollar 이메일 인증';
+        return 'bluecollar cv 이메일 인증';
     }
   }
 
@@ -276,7 +276,7 @@ export class NodemailerEmailService implements IEmailService {
   ): string {
     switch (type) {
       case 'SIGNUP':
-        return 'BlueCollar에 가입해주셔서 감사합니다. 아래의 인증번호를 입력하여 이메일을 인증하세요.';
+        return '가입해주셔서 감사합니다.<br>아래의 인증번호를 입력하여 이메일을 인증하세요.';
       case 'PASSWORD_RESET':
         return '비밀번호를 재설정하기 위한 인증코드입니다.';
       case 'EMAIL_CHANGE':

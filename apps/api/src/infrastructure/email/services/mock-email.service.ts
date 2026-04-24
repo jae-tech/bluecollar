@@ -108,13 +108,13 @@ BlueCollar Team
   ): string {
     switch (type) {
       case 'SIGNUP':
-        return '✉️ BlueCollar 회원가입 이메일 인증';
+        return 'bluecollar cv 회원가입 이메일 인증';
       case 'PASSWORD_RESET':
-        return '🔐 비밀번호 재설정 인증';
+        return 'bluecollar cv 비밀번호 재설정 인증';
       case 'EMAIL_CHANGE':
-        return '📧 이메일 변경 인증';
+        return 'bluecollar cv 이메일 변경 인증';
       default:
-        return 'BlueCollar 이메일 인증';
+        return 'bluecollar cv 이메일 인증';
     }
   }
 
