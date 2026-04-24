@@ -438,7 +438,7 @@ export class AuthController {
     description: '이메일 또는 비밀번호 불일치',
   })
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 🔒 60초에 5회 제한
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 🔒 60초에 10회 제한
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @UseGuards(ThrottlerGuard, AuthGuard('local'))
