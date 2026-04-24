@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isSlugReserved } from "@repo/constants";
 
 /**
  * 인증이 필요한 경로 목록
@@ -31,7 +32,7 @@ export function middleware(request: NextRequest) {
   if (!isApexOrWww && hostname.endsWith(`.${APEX_DOMAIN}`)) {
     const slug = hostname.replace(`.${APEX_DOMAIN}`, "");
     // 빈 slug 또는 잘못된 slug 방어
-    if (slug && /^[a-z0-9-]+$/.test(slug)) {
+    if (slug && /^[a-z0-9-]+$/.test(slug) && !isSlugReserved(slug)) {
       const url = request.nextUrl.clone();
       url.pathname = `/worker/${slug}`;
       return NextResponse.rewrite(url);
