@@ -18,10 +18,11 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
-      logger: true,
+      // Fastify 자체 로거 비활성화 — nestjs-pino가 HTTP 로깅을 전담합니다.
+      // logger: true로 두면 incoming/completed 로그가 Fastify + Pino 두 군데서
+      // 중복으로 찍힙니다.
+      logger: false,
       // 리버스 프록시(Nginx/CDN) 뒤에서 실제 클라이언트 IP를 인식합니다.
-      // 이 설정 없이는 ThrottlerGuard가 모든 요청을 프록시 IP 하나로 묶어
-      // 전체 사용자가 함께 차단되는 문제가 발생합니다.
       trustProxy: true,
     }),
     { bufferLogs: true },
