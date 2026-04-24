@@ -10,7 +10,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
-import { AllExceptionsFilter } from '@/common';
 import * as path from 'path';
 
 async function bootstrap(): Promise<void> {
@@ -47,9 +46,6 @@ async function bootstrap(): Promise<void> {
   // 2. Pino 로거 연결 (2026 최신 트렌드)
   const logger = app.get(Logger);
   app.useLogger(logger);
-
-  // 2-1. 전역 예외 필터 등록
-  app.useGlobalFilters(new AllExceptionsFilter(logger as any));
 
   // 3. 전역 파이프 설정 (DTO 유효성 검사)
   app.useGlobalPipes(new ZodValidationPipe());

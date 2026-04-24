@@ -12,7 +12,7 @@ import { PinoLogger } from 'nestjs-pino';
  * - 아름다운 포매팅: Slack blocks 사용
  *
  * 환경 변수:
- * - SLACK_WEBHOOK_URL: Slack 웹훅 URL (필수)
+ * - SLACK_WEBHOOK_ERROR: Slack 웹훅 URL (필수)
  */
 @Injectable()
 export class SlackNotificationService {
@@ -36,11 +36,11 @@ export class SlackNotificationService {
       this.logger.setContext(SlackNotificationService.name);
     }
 
-    this.webhookUrl = process.env.SLACK_WEBHOOK_URL || '';
+    this.webhookUrl = process.env.SLACK_WEBHOOK_ERROR || '';
 
     if (!this.webhookUrl) {
       this.logger?.warn(
-        '⚠️  SLACK_WEBHOOK_URL 환경 변수가 설정되지 않았습니다. Slack 알림이 전송되지 않습니다.',
+        '⚠️  SLACK_WEBHOOK_ERROR 환경 변수가 설정되지 않았습니다. Slack 알림이 전송되지 않습니다.',
       );
     }
   }
