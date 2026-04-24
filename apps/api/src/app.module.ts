@@ -42,6 +42,10 @@ import { envSchema } from '@/common/config/env.schema';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         pinoHttp: {
+          // OCI 헬스체크 등 노이즈성 경로 로그 제외
+          autoLogging: {
+            ignore: (req: { url?: string }) => req.url === '/health',
+          },
           transport:
             config.get('NODE_ENV') !== 'production'
               ? { target: 'pino-pretty' }
