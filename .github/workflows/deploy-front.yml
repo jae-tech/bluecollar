@@ -18,39 +18,22 @@ jobs:
       - name: Notify Slack (배포 트리거)
         uses: slackapi/slack-github-action@v1.27.0
         with:
-          payload: |
+          payload-templated: true
+          payload: >-
             {
               "attachments": [
                 {
                   "fallback": "BlueCollar Front Deploy Triggered",
                   "color": "#2EB67D",
-                  "pretext": "🚀 *BlueCollar Front:* 배포 시작",
+                  "pretext": ":rocket: *BlueCollar Front:* 배포 시작",
                   "title": "Deploying to Cloudflare Workers: bluecollar-cv Front",
                   "title_link": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                   "text": "Cloudflare Workers 배포가 시작되었습니다.",
                   "fields": [
-                    {
-                      "title": "Branch",
-                      "value": "${{ github.ref_name }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Triggered by",
-                      "value": "${{ github.actor }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Commit",
-                      "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>",
-                      "short": true
-                    },
-                    {
-                      "title": "Commit Message",
-                      "value": "${{ github.event.head_commit.message }}",
-                      "short": false
-                    }
-                  ],
-                  "ts": ${{ github.run_id }}
+                    { "title": "Branch", "value": "${{ github.ref_name }}", "short": true },
+                    { "title": "Triggered by", "value": "${{ github.actor }}", "short": true },
+                    { "title": "Commit", "value": "${{ github.sha }}", "short": true }
+                  ]
                 }
               ]
             }
