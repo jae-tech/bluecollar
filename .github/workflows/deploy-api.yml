@@ -76,6 +76,9 @@ jobs:
     name: Deploy to OCI
     needs: build-and-push
     environment: production
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Checkout
@@ -156,6 +159,8 @@ jobs:
             # 최신 이미지 pull 후 재시작
             cd /app
             export GITHUB_REPOSITORY="$GITHUB_REPOSITORY"
+            # pull 직전 재로그인 (토큰 세션 갱신)
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
