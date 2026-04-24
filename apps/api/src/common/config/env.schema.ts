@@ -68,6 +68,12 @@ export const envSchema = z.object({
   API_URL: z.string().url().default('http://localhost:4000'),
   APP_URL: z.string().url().default('http://localhost:3000'),
 
+  // ── IMAP 수신함 (선택) ───────────────────────────────────
+  IMAP_HOST: z.string().default('imappro.zoho.com'),
+  IMAP_PORT: z.coerce.number().default(993),
+  IMAP_USER: z.string().default(''),
+  IMAP_PASS: z.string().default(''),
+
   // ── Slack 알림 (선택) ─────────────────────────────────────
   SLACK_WEBHOOK_URL: z.string().url().optional(),
 });

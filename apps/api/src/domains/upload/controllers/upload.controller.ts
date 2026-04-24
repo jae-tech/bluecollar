@@ -89,7 +89,8 @@ export class UploadController {
   ): Promise<UploadFileResponseDto> {
     try {
       // @fastify/multipart 플러그인으로 등록된 parts() 메서드 사용
-      const parts = request.parts();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parts = (request as any).parts();
 
       // 첫 번째 파일 부분을 찾음
       for await (const part of parts) {

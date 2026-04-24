@@ -113,12 +113,16 @@ jobs:
           MEDIA_BASE_URL: ${{ secrets.MEDIA_BASE_URL }}
           API_URL: ${{ secrets.API_URL }}
           APP_URL: ${{ secrets.APP_URL }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
         with:
           host: ${{ secrets.OCI_PROD_HOST }}
           username: ubuntu
           key: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
           timeout: 180s
-          envs: GITHUB_REPOSITORY,GITHUB_ACTOR,GITHUB_TOKEN,DATABASE_URL,JWT_SECRET,EMAIL_SERVICE,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS,SMTP_FROM,MEDIA_BASE_URL,API_URL,APP_URL
+          envs: GITHUB_REPOSITORY,GITHUB_ACTOR,GITHUB_TOKEN,DATABASE_URL,JWT_SECRET,EMAIL_SERVICE,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS,SMTP_FROM,MEDIA_BASE_URL,API_URL,APP_URL,IMAP_HOST,IMAP_PORT,IMAP_USER,IMAP_PASS
           script: |
             set -e
 
@@ -142,6 +146,10 @@ jobs:
             MEDIA_BASE_URL=${MEDIA_BASE_URL}
             API_URL=${API_URL}
             APP_URL=${APP_URL}
+            IMAP_HOST=${IMAP_HOST:-imappro.zoho.com}
+            IMAP_PORT=${IMAP_PORT:-993}
+            IMAP_USER=${IMAP_USER}
+            IMAP_PASS=${IMAP_PASS}
             EOF
 
             # 업로드 디렉터리 준비

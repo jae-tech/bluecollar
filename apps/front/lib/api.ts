@@ -797,3 +797,33 @@ export async function reorderAdminCodes(
     body: JSON.stringify({ items }),
   });
 }
+
+// ─── Admin Inbox ──────────────────────────────────────────────────────────────
+
+export interface AdminInboxMessage {
+  uid: number;
+  subject: string;
+  from: string;
+  date: string;
+  seen: boolean;
+  snippet: string;
+}
+
+export interface AdminInboxMessageDetail extends AdminInboxMessage {
+  html: string | null;
+  text: string | null;
+  to: string;
+}
+
+export async function getAdminInbox(
+  page = 1,
+  limit = 20,
+): Promise<{ data: AdminInboxMessage[]; total: number }> {
+  return apiFetch(`/admin/inbox?page=${page}&limit=${limit}`);
+}
+
+export async function getAdminInboxMessage(
+  uid: number,
+): Promise<AdminInboxMessageDetail> {
+  return apiFetch(`/admin/inbox/${uid}`);
+}

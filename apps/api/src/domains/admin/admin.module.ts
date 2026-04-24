@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { DrizzleModule } from '@/infrastructure/database/drizzle.module';
 import { AdminDashboardController } from './controllers/admin-dashboard.controller';
 import { AdminUsersController } from './controllers/admin-users.controller';
 import { AdminCodesController } from './controllers/admin-codes.controller';
+import { AdminInboxController } from './controllers/admin-inbox.controller';
 import { AdminDashboardService } from './services/admin-dashboard.service';
 import { AdminUsersService } from './services/admin-users.service';
 import { AdminCodesService } from './services/admin-codes.service';
 import { AdminAuditService } from './services/admin-audit.service';
+import { AdminInboxService } from './services/admin-inbox.service';
 
 /**
  * Admin Domain Module
@@ -26,12 +29,14 @@ import { AdminAuditService } from './services/admin-audit.service';
     AdminDashboardController,
     AdminUsersController,
     AdminCodesController,
+    AdminInboxController,
   ],
   providers: [
     AdminDashboardService,
     AdminUsersService,
     AdminCodesService,
     AdminAuditService,
+    AdminInboxService,
   ],
 })
 export class AdminModule {}

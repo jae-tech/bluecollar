@@ -41,6 +41,7 @@ export default function AdminLayout({
     { href: "/admin", label: "대시보드" },
     { href: "/admin/users", label: "유저 관리" },
     { href: "/admin/codes", label: "코드 관리" },
+    { href: "/admin/inbox", label: "수신함" },
   ];
 
   return (
