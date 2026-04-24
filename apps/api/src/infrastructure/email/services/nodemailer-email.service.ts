@@ -19,13 +19,12 @@ import * as Handlebars from 'handlebars';
  *
  * 환경 변수:
  * - EMAIL_SERVICE=nodemailer
- * - EMAIL_HOST=smtp.zoho.com
- * - EMAIL_PORT=587
- * - EMAIL_SECURE=false
- * - EMAIL_USER=hello@bluecollar.cv
- * - EMAIL_PASSWORD=zoho-app-password
- * - EMAIL_FROM=hello@bluecollar.cv
- * - EMAIL_REPLY_TO=support@bluecollar.cv
+ * - SMTP_HOST=smtp.zoho.com
+ * - SMTP_PORT=587
+ * - SMTP_USER=hello@bluecollar.cv
+ * - SMTP_PASS=zoho-app-password
+ * - SMTP_FROM=hello@bluecollar.cv
+ * - SMTP_REPLY_TO=support@bluecollar.cv
  */
 @Injectable()
 export class NodemailerEmailService implements IEmailService {
@@ -43,8 +42,8 @@ export class NodemailerEmailService implements IEmailService {
     }
 
     // 발신자/답장 주소 설정 (환경 변수 기반)
-    this.fromAddress = process.env.EMAIL_FROM || 'hello@bluecollar.cv';
-    this.replyToAddress = process.env.EMAIL_REPLY_TO || 'support@bluecollar.cv';
+    this.fromAddress = process.env.SMTP_FROM || 'hello@bluecollar.cv';
+    this.replyToAddress = process.env.SMTP_REPLY_TO || 'support@bluecollar.cv';
 
     // 📧 Nodemailer 트랜스포터 초기화
     this.initializeTransporter();
@@ -59,19 +58,19 @@ export class NodemailerEmailService implements IEmailService {
    */
   private initializeTransporter() {
     this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.zoho.com',
-      port: parseInt(process.env.EMAIL_PORT || '587'),
-      secure: process.env.EMAIL_SECURE === 'true', // 465포트는 true, 587포트는 false
+      host: process.env.SMTP_HOST || 'smtp.zoho.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_PORT === '465', // 465포트는 true, 587포트는 false
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
 
     this.logger.info(
       {
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
         from: this.fromAddress,
         replyTo: this.replyToAddress,
       },
