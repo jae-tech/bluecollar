@@ -17,7 +17,13 @@ async function bootstrap(): Promise<void> {
   // 1. Fastify 어댑터 적용
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: true }), // Fastify 자체 로거 활용
+    new FastifyAdapter({
+      logger: true,
+      // 리버스 프록시(Nginx/CDN) 뒤에서 실제 클라이언트 IP를 인식합니다.
+      // 이 설정 없이는 ThrottlerGuard가 모든 요청을 프록시 IP 하나로 묶어
+      // 전체 사용자가 함께 차단되는 문제가 발생합니다.
+      trustProxy: true,
+    }),
     { bufferLogs: true },
   );
 
@@ -70,7 +76,10 @@ async function bootstrap(): Promise<void> {
   // 5. CORS (서브도메인 대응)
   // Origin은 "https://bluecollar.cv" 형태로 전달되므로 스킴까지 포함해서 매칭
   app.enableCors({
-    origin: [/^https?:\/\/(?:[\w-]+\.)?bluecollar\.cv$/, /^http:\/\/localhost:\d+$/],
+    origin: [
+      /^https?:\/\/(?:[\w-]+\.)?bluecollar\.cv$/,
+      /^http:\/\/localhost:\d+$/,
+    ],
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   });
