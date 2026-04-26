@@ -82,7 +82,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run DB migrations (테스트 DB 스키마 생성)
-        run: pnpm dlx drizzle-kit migrate
+        # pnpm dlx는 drizzle-orm 버전 불일치 오류를 유발하므로, 설치된 drizzle-kit을 직접 사용
+        run: pnpm exec drizzle-kit migrate
         working-directory: packages/database
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/bluecollar_test
