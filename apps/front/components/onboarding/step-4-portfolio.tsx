@@ -1,37 +1,37 @@
-"use client"
+"use client";
 
-import { useRef } from "react"
-import { Upload, Image as ImageIcon } from "lucide-react"
+import { useRef } from "react";
+import { Upload, Image as ImageIcon } from "lucide-react";
 
 interface Step4Props {
-  images: File[]
-  onImagesSelect: (images: File[]) => void
-  onSkip: () => void
+  images: File[];
+  onImagesSelect: (images: File[]) => void;
+  onSkip: () => void;
 }
 
 export function Step4Portfolio({ images, onImagesSelect, onSkip }: Step4Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    onImagesSelect([...images, ...files])
-  }
+    const files = Array.from(e.target.files || []);
+    onImagesSelect([...images, ...files]);
+  };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    const files = Array.from(e.dataTransfer.files)
-    onImagesSelect([...images, ...files])
-  }
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    onImagesSelect([...images, ...files]);
+  };
 
   return (
     <div className="flex flex-col h-full">
       {/* Title & Subtitle */}
       <div className="px-6 pt-8 pb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          {"\uC2E4\uB825\uC744 \uC99D\uBA85\uD560 \uC791\uC5C5 \uC0AC\uC9C4\uC774 \uC788\uB098\uC694?"}
+          실력을 증명할 작업 사진이 있나요?
         </h1>
         <p className="text-base text-muted-foreground">
-          {"\uC644\uC131\uB41C \uD504\uB85C\uC81D\uD2B8\uC758 \uC0AC\uC9C4\uC744 \uCD94\uAC00\uD574\uC8FC\uC138\uC694."}
+          완성된 프로젝트의 사진을 추가해주세요.
         </p>
       </div>
 
@@ -48,20 +48,27 @@ export function Step4Portfolio({ images, onImagesSelect, onSkip }: Step4Props) {
             <Upload size={24} className="text-primary" />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-foreground">{"\uC0AC\uC9C4 \uCD94\uAC00"}</p>
-            <p className="text-sm text-muted-foreground">잘 찍힌 사진이나 완성도 높은 작업 사진을 추천합니다.</p>
+            <p className="font-semibold text-foreground">사진 추가</p>
+            <p className="text-sm text-muted-foreground">
+              잘 찍힌 사진이나 완성도 높은 작업 사진을 추천합니다.
+            </p>
           </div>
         </div>
 
         {/* Uploaded Images */}
         {images.length > 0 && (
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-foreground">{`\uCD94\uAC00\uB41C \uC0AC\uC9C4 (${images.length})`}</p>
+            <p className="text-sm font-semibold text-foreground">{`추가된 사진 (${images.length})`}</p>
             <div className="grid grid-cols-2 gap-3">
               {images.map((file, idx) => (
-                <div key={idx} className="relative rounded-xl overflow-hidden bg-secondary aspect-square flex items-center justify-center">
+                <div
+                  key={idx}
+                  className="relative rounded-xl overflow-hidden bg-secondary aspect-square flex items-center justify-center"
+                >
                   <ImageIcon size={32} className="text-muted-foreground" />
-                  <p className="text-xs text-gray-500 mt-2 text-center">{file.name}</p>
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    {file.name}
+                  </p>
                 </div>
               ))}
             </div>
@@ -85,9 +92,9 @@ export function Step4Portfolio({ images, onImagesSelect, onSkip }: Step4Props) {
           onClick={onSkip}
           className="w-full py-3 rounded-xl border border-border text-muted-foreground font-semibold hover:bg-secondary transition-colors"
         >
-          {"\uB098\uC911\uC5D0 \uB4F1\uB85D\uD558\uAE30"}
+          나중에 등록하기
         </button>
       </div>
     </div>
-  )
+  );
 }
