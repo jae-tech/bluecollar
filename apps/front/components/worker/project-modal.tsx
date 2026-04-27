@@ -72,13 +72,13 @@ export function ProjectModal({
 
       {/* Panel */}
       <div
-        className="relative z-10 w-full md:max-w-5xl bg-card rounded-t-2xl md:rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[96dvh] md:max-h-[90dvh] flex flex-col"
+        className="relative z-10 w-full md:max-w-5xl bg-card rounded-t-2xl md:rounded-2xl border border-border overflow-hidden max-h-[96dvh] md:max-h-[90dvh] flex flex-col"
         style={{ animation: "slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)" }}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-secondary transition-colors shadow-sm"
+          className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-secondary transition-colors"
           aria-label="\uB2EB\uAE30"
         >
           <X size={15} className="text-foreground" />
@@ -337,13 +337,13 @@ export function ProjectModal({
                 </p>
                 <button
                   onClick={onInquire || (() => {})}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-sm bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
                 >
                   <MessageCircle size={15} />이 프로젝트 문의하기
                 </button>
                 <a
                   href={`tel:${config.phone}`}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-sm font-semibold text-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-sm border border-border text-sm font-semibold text-foreground hover:border-primary/50 hover:text-primary transition-colors"
                 >
                   <Phone size={14} />
                   {config.phone}
@@ -363,7 +363,7 @@ export function ProjectModal({
               </div>
               <button
                 onClick={onInquire}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
               >
                 <MessageCircle size={14} />
                 문의하기

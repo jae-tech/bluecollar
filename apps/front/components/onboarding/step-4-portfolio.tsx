@@ -66,7 +66,7 @@ export function Step4Portfolio({ images, onImagesSelect, onSkip }: Step4Props) {
                   className="relative rounded-xl overflow-hidden bg-secondary aspect-square flex items-center justify-center"
                 >
                   <ImageIcon size={32} className="text-muted-foreground" />
-                  <p className="text-xs text-gray-500 mt-2 text-center">
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
                     {file.name}
                   </p>
                 </div>
@@ -90,7 +90,7 @@ export function Step4Portfolio({ images, onImagesSelect, onSkip }: Step4Props) {
       <div className="px-6 py-4 border-t border-border">
         <button
           onClick={onSkip}
-          className="w-full py-3 rounded-xl border border-border text-muted-foreground font-semibold hover:bg-secondary transition-colors"
+          className="w-full py-3 rounded-sm border border-border text-muted-foreground font-semibold hover:bg-secondary transition-colors"
         >
           나중에 등록하기
         </button>
