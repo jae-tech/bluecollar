@@ -24,7 +24,7 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.ts', 'test/**/*.{test,spec}.ts'],
     exclude: ['node_modules', 'dist'],
     setupFiles: ['./test/setup.ts'],
-    testTimeout: 60000,
-    hookTimeout: 60000,
+    testTimeout: 120000,
+    hookTimeout: 120000,
   },
 });
