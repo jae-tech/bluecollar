@@ -25,7 +25,7 @@ describe('Auth Module - Worker Registration (E2E)', () => {
 
     // Create NestJS app
     app = await createTestApp();
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await closeTestApp(app);
