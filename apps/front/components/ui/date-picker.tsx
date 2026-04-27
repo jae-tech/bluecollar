@@ -10,6 +10,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+const DATE_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+};
+
 interface DatePickerProps {
   value?: string; // "YYYY-MM-DD"
   onChange: (value: string) => void;
@@ -39,30 +45,50 @@ export function DatePicker({
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
 
-  const selected = value ? new Date(value + "T00:00:00") : undefined;
+  // 날짜 파싱 — T00:00:00 suffix로 로컬 기준 midnight 보장 (UTC offset 방지)
+  const selected = React.useMemo(
+    () => (value ? new Date(value + "T00:00:00") : undefined),
+    [value],
+  );
 
-  const formatted = selected
-    ? selected.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : null;
+  const formatted = React.useMemo(
+    () =>
+      selected
+        ? selected.toLocaleDateString("ko-KR", DATE_FORMAT_OPTIONS)
+        : null,
+    [selected],
+  );
 
-  function handleSelect(date: Date | undefined) {
-    if (!date) return;
-    // YYYY-MM-DD 형태로 로컬 기준 변환
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    onChange(`${y}-${m}-${d}`);
-    setOpen(false);
-  }
+  const handleSelect = React.useCallback(
+    (date: Date | undefined) => {
+      if (!date) return;
+      // YYYY-MM-DD 형태로 로컬 기준 변환
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      onChange(`${y}-${m}-${d}`);
+      setOpen(false);
+    },
+    [onChange],
+  );
 
-  function handleClear(e: React.MouseEvent) {
-    e.stopPropagation();
-    onChange("");
-  }
+  const handleClear = React.useCallback(
+    (e: React.SyntheticEvent) => {
+      e.stopPropagation();
+      onChange("");
+    },
+    [onChange],
+  );
+
+  // minDate/maxDate 비활성화 predicate — 매 렌더마다 새 함수 생성 방지
+  const isDisabled = React.useCallback(
+    (date: Date) => {
+      if (minDate && date < minDate) return true;
+      if (maxDate && date > maxDate) return true;
+      return false;
+    },
+    [minDate, maxDate],
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -71,7 +97,7 @@ export function DatePicker({
           type="button"
           disabled={disabled}
           className={cn(
-            "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm transition-colors",
+            "flex h-10 w-full items-center justify-between gap-2 rounded-sm border border-border bg-background px-3 py-2 text-sm transition-colors",
             "hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary",
             "disabled:cursor-not-allowed disabled:opacity-50",
             !formatted && "text-muted-foreground",
@@ -94,9 +120,9 @@ export function DatePicker({
               tabIndex={0}
               onClick={handleClear}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") handleClear(e as never);
+                if (e.key === "Enter" || e.key === " ") handleClear(e);
               }}
-              className="flex-shrink-0 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="flex-shrink-0 p-0.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               aria-label="날짜 지우기"
             >
               <X size={13} />
@@ -114,11 +140,7 @@ export function DatePicker({
           selected={selected}
           onSelect={handleSelect}
           defaultMonth={selected}
-          disabled={(date) => {
-            if (minDate && date < minDate) return true;
-            if (maxDate && date > maxDate) return true;
-            return false;
-          }}
+          disabled={isDisabled}
           captionLayout="label"
           className="p-3"
         />
