@@ -27,6 +27,7 @@ import {
   DIFFICULTY_OPTIONS,
 } from "@/lib/constants";
 import { ROOM_TYPE_VALUES, type RoomType } from "@repo/constants";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // ── 타입 ───────────────────────────────────────────────────────────────────────
 interface UploadedImage {
@@ -964,36 +965,37 @@ export function PortfolioForm({
               시공 기간 (선택)
             </p>
             <div className="flex items-center gap-2">
-              <input
-                type="date"
+              <DatePicker
                 value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  if (endDate && e.target.value && e.target.value > endDate) {
+                onChange={(v) => {
+                  setStartDate(v);
+                  if (endDate && v && v > endDate) {
                     setDateError("종료일이 시작일보다 빠를 수 없습니다");
                   } else {
                     setDateError(null);
                   }
                 }}
-                className="flex-1 px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                placeholder="시작일"
+                className="flex-1"
               />
-              <span className="text-muted-foreground text-sm">~</span>
-              <input
-                type="date"
+              <span className="text-muted-foreground text-sm flex-shrink-0">
+                ~
+              </span>
+              <DatePicker
                 value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  if (
-                    startDate &&
-                    e.target.value &&
-                    e.target.value < startDate
-                  ) {
+                onChange={(v) => {
+                  setEndDate(v);
+                  if (startDate && v && v < startDate) {
                     setDateError("종료일이 시작일보다 빠를 수 없습니다");
                   } else {
                     setDateError(null);
                   }
                 }}
-                className="flex-1 px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                placeholder="종료일"
+                minDate={
+                  startDate ? new Date(startDate + "T00:00:00") : undefined
+                }
+                className="flex-1"
               />
             </div>
             {dateError && (

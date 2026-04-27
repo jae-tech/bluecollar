@@ -40,10 +40,18 @@ export class AdminInboxService {
     if (this.logger && typeof this.logger.setContext === 'function') {
       this.logger.setContext(AdminInboxService.name);
     }
-    this.host = this.config.get<string>('IMAP_HOST', 'imappro.zoho.com');
-    this.port = this.config.get<number>('IMAP_PORT', 993);
-    this.user = this.config.get<string>('IMAP_USER', '');
-    this.pass = this.config.get<string>('IMAP_PASS', '');
+    // config가 정상 주입된 경우에만 읽음 (테스트 환경 DI 안전성)
+    if (this.config) {
+      this.host = this.config.get<string>('IMAP_HOST', 'imappro.zoho.com');
+      this.port = this.config.get<number>('IMAP_PORT', 993);
+      this.user = this.config.get<string>('IMAP_USER', '');
+      this.pass = this.config.get<string>('IMAP_PASS', '');
+    } else {
+      this.host = 'imappro.zoho.com';
+      this.port = 993;
+      this.user = '';
+      this.pass = '';
+    }
   }
 
   /**
