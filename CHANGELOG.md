@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.0.1] - 2026-04-27
+
+### Fixed
+
+- CI E2E 테스트 JWT_SECRET 값이 32자 미만(24자)으로 Zod envSchema 검증 실패하던 문제 수정
+
 ## [0.2.1.0] - 2026-04-27
 
 ### Added
@@ -37,7 +43,7 @@
 - 포트폴리오 모달 공간 갤러리 — RoomTabGallery → RoomScrollGallery (수직 스크롤 + sticky 탭)
 - 포트폴리오 모달 비용 표시 — 단일 cost → 예상(estDisplay) / 실제(actDisplay) 분리
 - overflow lock — CSS attribute selector 방식 → JS inline style 직접 설정 (Turbopack 호환)
-- searchWorkers 포트폴리오 조회 — 무제한 → limit * 3 가드로 DB 부하 제한
+- searchWorkers 포트폴리오 조회 — 무제한 → limit \* 3 가드로 DB 부하 제한
 
 ### Fixed
 
@@ -45,7 +51,7 @@
 - 포트폴리오 태그 렌더링 버그 수정 — API 반환 타입 `string[]` 불일치로 태그 텍스트 미표시
 - 워커 프로필 업종 뱃지 한국어 미표시 수정 — 잘못된 FIELD_LABEL 맵 → field-codes.ts 임포트
 - 온보딩 3단계 다음 버튼 — 스킬 미선택 시 비활성화 로직 수정
-- 업종 코드 배지 한국어 표시 수정 — FLD_* raw enum 대신 FIELD_CODE_LABELS 사용
+- 업종 코드 배지 한국어 표시 수정 — FLD\_\* raw enum 대신 FIELD_CODE_LABELS 사용
 - parseInt NaN 가드 추가 — 검색 limit 파라미터 잘못된 입력 시 빈 결과 반환 버그
 - O(n²) → O(n): profileIds.includes() → Set.has() 로 검색 결과 조립 최적화
 - 검색 페이지 dead state 제거 — inquiryFormOpen / 구 stub InquiryForm import
