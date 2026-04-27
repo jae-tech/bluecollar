@@ -81,6 +81,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U test; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready"
+
       - name: Run DB migrations (테스트 DB 스키마 생성)
         # pnpm dlx는 drizzle-orm 버전 불일치 오류를 유발하므로, 설치된 drizzle-kit을 직접 사용
         run: pnpm exec drizzle-kit migrate
