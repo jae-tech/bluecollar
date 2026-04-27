@@ -43,8 +43,7 @@ ALTER TABLE "users" ALTER COLUMN "updated_at" SET DATA TYPE timestamp with time 
 ALTER TABLE "users" ALTER COLUMN "deleted_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "worker_profiles" ALTER COLUMN "created_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "worker_profiles" ALTER COLUMN "updated_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "terms_agreed_at" timestamp with time zone;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "terms_version" varchar(20);--> statement-breakpoint
+ALTER TABLE "users" ALTER COLUMN "terms_agreed_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "admin_audit_logs" ADD CONSTRAINT "admin_audit_logs_admin_id_users_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
