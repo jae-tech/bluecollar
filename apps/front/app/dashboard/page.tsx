@@ -110,7 +110,7 @@ export default function DashboardPage() {
           </a>
           <div className="flex items-center gap-4">
             <a
-              href={`/worker/${profile?.slug}`}
+              href={profile?.slug ? getProfileUrl(profile.slug) : "#"}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
