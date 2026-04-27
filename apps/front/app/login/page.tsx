@@ -33,6 +33,12 @@ export default function LoginPage() {
         return;
       }
 
+      // admin role → 바로 어드민 대시보드로
+      if (res.user?.role === "ADMIN") {
+        router.push("/admin");
+        return;
+      }
+
       // 로그인 성공 → 워커 프로필 확인
       try {
         const profile = await getMyWorkerProfile();
