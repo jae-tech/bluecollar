@@ -101,6 +101,7 @@ jobs:
           MEDIA_BASE_URL: http://localhost:8080
           API_URL: http://localhost:8080
           APP_URL: http://localhost:3000
+          STORAGE_PATH: /tmp/uploads-test
 
   # ── Job 1: Docker 이미지 빌드 & GHCR Push ───────────────────────────────────
   build-and-push:
