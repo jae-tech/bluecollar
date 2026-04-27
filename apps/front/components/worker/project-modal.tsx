@@ -173,20 +173,20 @@ export function ProjectModal({
                 {[
                   {
                     icon: MapPin,
-                    label: "\uC2DC\uACF5 \uC704\uCE58",
+                    label: "시공 위치",
                     value: project.location,
                   },
                   {
                     icon: Clock,
-                    label: "\uC791\uC5C5 \uAE30\uAC04",
+                    label: "작업 기간",
                     value: project.duration,
                   },
                   {
                     icon: Calendar,
-                    label: "\uC2DC\uACF5 \uC5F0\uB3C4",
+                    label: "시공 연도",
                     value: `${project.year}년`,
                   },
-                  { icon: Layers, label: "\uADDC\uBAA8", value: project.scale },
+                  { icon: Layers, label: "규모", value: project.scale },
                 ].map(({ icon: Icon, label, value }) => (
                   <div
                     key={label}
@@ -210,7 +210,7 @@ export function ProjectModal({
 
               {/* Description */}
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                {"\uC2DC\uACF5 \uACFC\uC815"}
+                시공 과정
               </h3>
               <p className="text-sm text-foreground leading-relaxed mb-6">
                 {project.description}
@@ -221,7 +221,7 @@ export function ProjectModal({
                 <>
                   <div className="h-px bg-border mb-6" />
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                    {"\uC0AC\uC6A9 \uC790\uC7AC"}
+                    사용 자재
                   </h3>
                   <ul className="flex flex-col gap-2 mb-6">
                     {project.materials.map((m) => (
@@ -300,19 +300,17 @@ export function ProjectModal({
                 <div className="p-3 rounded-xl bg-secondary border border-border text-center">
                   <p className="text-lg font-bold text-foreground">
                     {config.yearsOfExperience}
-                    <span className="text-sm font-semibold">{"\uB144"}</span>
+                    <span className="text-sm font-semibold">년</span>
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {"\uACBD\uB825"}
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">경력</p>
                 </div>
                 <div className="p-3 rounded-xl bg-secondary border border-border text-center">
                   <p className="text-lg font-bold text-foreground">
                     {config.totalProjects}
-                    <span className="text-sm font-semibold">{"\uAC74"}</span>
+                    <span className="text-sm font-semibold">건</span>
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {"\uC644\uB8CC \uC2DC\uACF5"}
+                    완료 시공
                   </p>
                 </div>
               </div>
@@ -335,16 +333,13 @@ export function ProjectModal({
               {/* CTA block */}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 <p className="text-xs text-muted-foreground text-center">
-                  {
-                    "\uC774 \uD504\uB85C\uC81D\uD2B8\uAC00 \uB9C8\uC74C\uC5D0 \uB4DC\uC154\uC694?"
-                  }
+                  이 프로젝트가 마음에 드셨나요?
                 </p>
                 <button
                   onClick={onInquire || (() => {})}
                   className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
                 >
-                  <MessageCircle size={15} />
-                  {"\uC774 \uD504\uB85C\uC81D\uD2B8 \uBB38\uC758\uD558\uAE30"}
+                  <MessageCircle size={15} />이 프로젝트 문의하기
                 </button>
                 <a
                   href={`tel:${config.phone}`}
@@ -360,7 +355,7 @@ export function ProjectModal({
             <div className="md:hidden flex items-center gap-2 px-5 py-4 border-t border-border bg-card">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground">
-                  {"\uC774 \uD504\uB85C\uC81D\uD2B8 \uBB38\uC758"}
+                  이 프로젝트 문의
                 </p>
                 <p className="text-sm font-bold text-foreground">
                   {config.name}
@@ -371,7 +366,7 @@ export function ProjectModal({
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex-shrink-0"
               >
                 <MessageCircle size={14} />
-                {"\uBB38\uC758\uD558\uAE30"}
+                문의하기
               </button>
             </div>
           </div>
