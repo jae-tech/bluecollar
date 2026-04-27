@@ -13,24 +13,24 @@ interface InquiryFormProps {
 }
 
 const WORK_TYPES = [
-  "\uBAA9\uACF5 / \uBE4C\uD2B8\uC778",
-  "\uD0C0\uC77C \uC2DC\uACF5",
-  "\uC804\uAE30 \uACF5\uC0AC",
-  "\uB3C4\uBC30 / \uBC7D\uC9C0",
-  "\uC124\uBE44 \uACF5\uC0AC",
-  "\uBBF8\uC7A5 / \uD398\uC778\uD2B8",
-  "\uC778\uD14C\uB9AC\uC5B4 \uC804\uCCB4",
-  "\uAE30\uD0C0",
+  "목공 / 빌트인",
+  "타일 시공",
+  "전기 공사",
+  "도배 / 벽지",
+  "설비 공사",
+  "미장 / 페인트",
+  "인테리어 전체",
+  "기타",
 ];
 
 const BUDGET_RANGES = [
-  "100\uB9CC\uC6D0 \uC774\uD558",
-  "100 ~ 300\uB9CC\uC6D0",
-  "300 ~ 500\uB9CC\uC6D0",
-  "500\uB9CC ~ 1\uCC9C\uB9CC\uC6D0",
-  "1\uCC9C\uB9CC ~ 3\uCC9C\uB9CC\uC6D0",
-  "3\uCC9C\uB9CC\uC6D0 \uC774\uC0C1",
-  "\uCEA8\uCEE8\uC744 \uBC1B\uACE0 \uC2F6\uC74C",
+  "100만원 이하",
+  "100 ~ 300만원",
+  "300 ~ 500만원",
+  "500만 ~ 1천만원",
+  "1천만 ~ 3천만원",
+  "3천만원 이상",
+  "컨설팅을 받고 싶음",
 ];
 
 export function InquiryForm({
@@ -64,17 +64,10 @@ export function InquiryForm({
 
   const validate = () => {
     const next: Partial<typeof form> = {};
-    if (!form.name.trim())
-      next.name = "\uC774\uB984\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694.";
-    if (!form.phone.trim())
-      next.phone =
-        "\uC5F0\uB77D\uCC98\uB97C \uC785\uB825\uD574 \uC8FC\uC138\uC694.";
-    if (!form.location.trim())
-      next.location =
-        "\uC2DC\uACF5 \uC704\uCE58\uB97C \uC785\uB825\uD574 \uC8FC\uC138\uC694.";
-    if (!form.workType)
-      next.workType =
-        "\uACF5\uC885\uC744 \uC120\uD0DD\uD574 \uC8FC\uC138\uC694.";
+    if (!form.name.trim()) next.name = "이름을 입력해 주세요.";
+    if (!form.phone.trim()) next.phone = "연락처를 입력해 주세요.";
+    if (!form.location.trim()) next.location = "시공 위치를 입력해 주세요.";
+    if (!form.workType) next.workType = "공종을 선택해 주세요.";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -97,7 +90,7 @@ export function InquiryForm({
       setSubmitted(true);
     } catch {
       setApiError(
-        "\uC758\uB80C \uC811\uC218 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4. \uC7A0\uC2DC \uD6C4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.",
+        "의뢰 접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
       );
     } finally {
       setLoading(false);
@@ -127,7 +120,7 @@ export function InquiryForm({
       className="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-6"
       role="dialog"
       aria-modal="true"
-      aria-label="\uC758\uB80C \uC591\uC2DD"
+      aria-label="의뢰 양식"
       style={{ animation: "fadeIn 0.15s ease" }}
     >
       {/* Backdrop */}
@@ -145,22 +138,20 @@ export function InquiryForm({
         <div className="flex items-center justify-between px-6 py-5 border-b border-border flex-shrink-0">
           <div>
             <h2 className="text-base font-bold text-foreground">
-              {submitted
-                ? "\uC758\uB80C\uC774 \uC811\uC218\uB418\uC5C8\uC2B5\uB2C8\uB2E4"
-                : "\uC2DC\uACF5 \uC758\uB80C\uD558\uAE30"}
+              {submitted ? "의뢰가 접수되었습니다" : "시공 의뢰하기"}
             </h2>
             {!submitted && (
               <p className="text-xs text-muted-foreground mt-0.5">
                 {projectTitle
-                  ? `"${projectTitle}" \uAE30\uBC18 \uC758\uB80C`
-                  : `${workerName} \uC5D0\uAC8C \uBB3C\uC5B4\uBCF4\uC138\uC694`}
+                  ? `"${projectTitle}" 기반 의뢰`
+                  : `${workerName} 에게 물어보세요`}
               </p>
             )}
           </div>
           <button
             onClick={handleClose}
             className="w-10 h-10 rounded-sm border border-border flex items-center justify-center hover:bg-secondary transition-colors flex-shrink-0"
-            aria-label="\uB2EB\uAE30"
+            aria-label="닫기"
           >
             <X size={14} className="text-foreground" />
           </button>
@@ -176,40 +167,30 @@ export function InquiryForm({
               </div>
               <div>
                 <p className="text-lg font-bold text-foreground mb-2">
-                  {workerName}
-                  {
-                    "\uB2D8\uAED8 \uC758\uB80C\uC774 \uC804\uB2EC\uB418\uC5C8\uC2B5\uB2C8\uB2E4"
-                  }
+                  {workerName}님께 의뢰가 전달되었습니다
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
-                  {
-                    "\uC5F0\uB77D\uCC98\uB85C \uBE60\uB978 \uC2DC\uAC04 \uC548\uC5D0 \uC548\uB0B4\uB4DC\uB9AC\uACA0\uC2B5\uB2C8\uB2E4.\n\uC870\uAE08\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694."
-                  }
+                  연락처로 빠른 시간 안에 안내드리겠습니다.{"\n"}조금만 기다려
+                  주세요.
                 </p>
               </div>
               <div className="w-full h-px bg-border" />
               <div className="w-full flex flex-col gap-2 text-sm text-left bg-secondary border border-border rounded-sm p-4">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {"\uC2DC\uACF5 \uC704\uCE58"}
-                  </span>
+                  <span className="text-muted-foreground">시공 위치</span>
                   <span className="font-medium text-foreground">
                     {form.location}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {"\uACF5\uC885"}
-                  </span>
+                  <span className="text-muted-foreground">공종</span>
                   <span className="font-medium text-foreground">
                     {form.workType}
                   </span>
                 </div>
                 {form.budget && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {"\uC608\uC0B0"}
-                    </span>
+                    <span className="text-muted-foreground">예산</span>
                     <span className="font-medium text-foreground">
                       {form.budget}
                     </span>
@@ -220,7 +201,7 @@ export function InquiryForm({
                 onClick={handleClose}
                 className="w-full py-3.5 rounded-sm bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors"
               >
-                {"\uD655\uC778"}
+                확인
               </button>
             </div>
           ) : (
@@ -233,13 +214,13 @@ export function InquiryForm({
               {/* Name */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  {"\uC774\uB984"} <span className="text-primary">*</span>
+                  이름 <span className="text-primary">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={set("name")}
-                  placeholder="\uD64D\uAE38\uB3D9"
+                  placeholder="홍길동"
                   className={`w-full px-4 py-3.5 rounded-sm border text-sm text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${errors.name ? "border-red-400" : "border-border focus:border-primary"}`}
                 />
                 {errors.name && (
@@ -250,8 +231,7 @@ export function InquiryForm({
               {/* Phone */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  {"\uC5F0\uB77D\uCC98 (\uD734\uB300\uD3F0)"}{" "}
-                  <span className="text-primary">*</span>
+                  연락처 (휴대폰) <span className="text-primary">*</span>
                 </label>
                 <input
                   type="tel"
@@ -268,14 +248,13 @@ export function InquiryForm({
               {/* Location */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  {"\uC2DC\uACF5 \uC704\uCE58"}{" "}
-                  <span className="text-primary">*</span>
+                  시공 위치 <span className="text-primary">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.location}
                   onChange={set("location")}
-                  placeholder="\uC11C\uC6B8\uC2DC \uAC15\uB0A8\uAD6C \uC544\uD30C\uD2B8 \uB3C4\uBA85\uC218 \uAE38 123"
+                  placeholder="서울시 강남구 아파트 도명수 길 123"
                   className={`w-full px-4 py-3.5 rounded-sm border text-sm text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${errors.location ? "border-red-400" : "border-border focus:border-primary"}`}
                 />
                 {errors.location && (
@@ -286,7 +265,7 @@ export function InquiryForm({
               {/* Work type */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  {"\uACF5\uC885"} <span className="text-primary">*</span>
+                  공종 <span className="text-primary">*</span>
                 </label>
                 <div className="relative">
                   <select
@@ -295,9 +274,7 @@ export function InquiryForm({
                     className={`w-full appearance-none px-4 py-3.5 pr-10 rounded-sm border text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${form.workType ? "text-foreground" : "text-muted-foreground"} ${errors.workType ? "border-red-400" : "border-border focus:border-primary"}`}
                   >
                     <option value="" disabled>
-                      {
-                        "\uACF5\uC885\uC744 \uC120\uD0DD\uD574 \uC8FC\uC138\uC694"
-                      }
+                      공종을 선택해 주세요
                     </option>
                     {WORK_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -318,7 +295,7 @@ export function InquiryForm({
               {/* Budget */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  {"\uC608\uC0B0 \uBC94\uC704 (\uC120\uD0DD)"}
+                  예산 범위 (선택)
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {BUDGET_RANGES.map((b) => (
@@ -342,13 +319,13 @@ export function InquiryForm({
               {/* Message */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  {"\uCD94\uAC00 \uBB38\uC758 \uB0B4\uC6A9 (\uC120\uD0DD)"}
+                  추가 문의 내용 (선택)
                 </label>
                 <textarea
                   value={form.message}
                   onChange={set("message")}
                   rows={3}
-                  placeholder="\uC6D0\uD558\uC2DC\uB294 \uB514\uC790\uC778, \uCC38\uACE0 \uC0AC\uC9C4, \uC2DC\uACF5 \uC2DC\uC791 \uD76C\uB9DD \uC77C\uC815 \uB4F1\uC744 \uC790\uC720\uB86D\uAC8C \uC801\uC5B4\uC8FC\uC138\uC694."
+                  placeholder="원하시는 디자인, 참고 사진, 시공 시작 희망 일정 등을 자유롭게 적어주세요."
                   className="w-full px-4 py-3.5 rounded-sm border border-border text-sm text-foreground placeholder:text-muted-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
                 />
               </div>
@@ -369,17 +346,15 @@ export function InquiryForm({
                 {loading ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    {"\uC811\uC218 \uC911..."}
+                    접수 중...
                   </>
                 ) : (
-                  "\uC758\uB80C \uC694\uCCAD\uD558\uAE30"
+                  "의뢰 요청하기"
                 )}
               </button>
 
               <p className="text-xs text-muted-foreground text-center -mt-2">
-                {
-                  "\uC81C\uCD9C\uD558\uC2E4 \uACBD\uC6B0 \uAC1C\uC778\uC815\uBCF4 \uCC98\uB9AC\uBC29\uCE68\uC5D0 \uB3D9\uC758\uD558\uB294 \uAC83\uC73C\uB85C \uAC04\uC8FC\uD569\uB2C8\uB2E4."
-                }
+                제출하실 경우 개인정보 처리방침에 동의하는 것으로 간주합니다.
               </p>
             </form>
           )}
