@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.1.0] - 2026-04-27
+
+### Added
+
+- 커스텀 DatePicker 컴포넌트 — react-day-picker 기반, DESIGN.md 토큰 적용, minDate/maxDate 지원
+- 포트폴리오 등록 폼에 DatePicker 연동 — 날짜 필드 UX 개선
+
+### Changed
+
+- admin 로그인 성공 시 /admin으로 직행 (기존 홈 → /admin 리다이렉트 제거)
+- 대시보드 프로필 링크 — 서브도메인 URL (worker.bluecollar.cv/{slug}) 적용
+
+### Fixed
+
+- 유니코드 이스케이프(\uXXXX) → 실제 한글 문자열로 변환 (가독성 개선)
+- AdminInboxService ConfigService 주입 방어 — 테스트 환경 DI 안전성 확보
+- test/setup.ts .env.test 우선 로드 — ConfigModule 테스트 환경 변수 인식
+- DESIGN.md 계층 위반 수정 — shadow 제거, 버튼·입력 radius rounded-sm 통일, text-gray-500 → text-muted-foreground
+- DatePicker useMemo/useCallback 추가 — 불필요한 리렌더링 방지
+
 ## [0.2.0.0] - 2026-04-21
 
 ### Added
