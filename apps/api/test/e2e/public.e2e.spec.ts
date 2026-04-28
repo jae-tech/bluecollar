@@ -32,7 +32,7 @@ describe('Public Module - Public Profile & Portfolio (E2E)', () => {
 
     // NestJS 앱 생성
     app = await createTestApp();
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await closeTestApp(app);

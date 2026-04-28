@@ -78,15 +78,19 @@ export class LocalStorageService implements StorageService {
     if (!fs.existsSync(this.storagePath)) {
       try {
         fs.mkdirSync(this.storagePath, { recursive: true });
-        this.logger.info({ path: this.storagePath }, '저장 경로 생성 완료');
+        if (this.logger) {
+          this.logger.info({ path: this.storagePath }, '저장 경로 생성 완료');
+        }
       } catch (error) {
-        this.logger.error(
-          {
-            path: this.storagePath,
-            error: (error as Error).message,
-          },
-          '저장 경로 생성 실패',
-        );
+        if (this.logger) {
+          this.logger.error(
+            {
+              path: this.storagePath,
+              error: (error as Error).message,
+            },
+            '저장 경로 생성 실패',
+          );
+        }
         throw new BadRequestException('저장 경로 생성에 실패했습니다');
       }
     }

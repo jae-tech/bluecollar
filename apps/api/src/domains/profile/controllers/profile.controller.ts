@@ -9,11 +9,13 @@ import {
   HttpStatus,
   UseGuards,
   NotFoundException,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { PinoLogger } from 'nestjs-pino';
 import { ProfileService } from '../services/profile.service';
+import { TokenService } from '@/domains/auth/services/token.service';
 import { Public } from '@/common/decorators/public.decorator';
 import { OwnershipGuard } from '@/common/guards/ownership.guard';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -45,6 +47,7 @@ import {
 export class ProfileController {
   constructor(
     private readonly profileService: ProfileService,
+    private readonly tokenService: TokenService,
     private readonly logger: PinoLogger,
   ) {
     if (this.logger && typeof this.logger.setContext === 'function') {
@@ -171,8 +174,12 @@ export class ProfileController {
    * 워커 프로필을 생성 또는 업데이트합니다.
    * slug, businessName, fieldCodes는 필수이며, areaCodes와 경력 정보는 선택사항입니다.
    *
+   * 온보딩 완료 후 workerProfileId가 포함된 새 JWT를 발급하여 쿠키를 갱신합니다.
+   * 이전 토큰에 workerProfileId가 없어 포트폴리오 생성 등이 실패하는 문제를 해결합니다.
+   *
    * @param user JWT에서 추출된 사용자 정보
    * @param dto 온보딩 완료 데이터
+   * @param res Fastify 응답 객체 (쿠키 갱신용)
    * @returns 업데이트된 워커 프로필 정보
    */
   @Post('onboarding')
@@ -195,12 +202,58 @@ export class ProfileController {
     @CurrentUser() user: UserPayload,
     @Body(new ZodValidationPipe(CompleteOnboardingSchema))
     dto: CompleteOnboardingDto,
+    @Res({ passthrough: true }) res: any,
   ) {
     this.logger.info(
       { userId: user.id, slug: dto.slug },
       '온보딩 완료 요청 수신',
     );
-    return await this.profileService.completeOnboarding(user.id, dto);
+    const profile = await this.profileService.completeOnboarding(user.id, dto);
+
+    // 온보딩 완료 후 workerProfileId가 포함된 새 JWT 발급 — 쿠키 갱신
+    // 이전 토큰에는 workerProfileId가 없어서 포트폴리오 생성 등이 403으로 실패함
+    const newTokens = await this.tokenService.generateTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.provider,
+      profile.id,
+    );
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieDomain = isProduction ? '.bluecollar.cv' : undefined;
+
+    res.setCookie('accessToken', newTokens.accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 900, // 15분
+      path: '/',
+      domain: cookieDomain,
+    });
+    res.setCookie('refreshToken', newTokens.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30일
+      path: '/',
+      domain: cookieDomain,
+    });
+    res.setCookie('authState', '1', {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+      domain: cookieDomain,
+    });
+
+    this.logger.info(
+      { userId: user.id, workerProfileId: profile.id },
+      '온보딩 완료 — 새 JWT 발급',
+    );
+
+    return profile;
   }
 
   /**

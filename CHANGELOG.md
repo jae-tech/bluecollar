@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.2.0.2] - 2026-04-28
+
+### Fixed
+
+- 온보딩 완료 후 포트폴리오 추가 시 "워커 프로필이 없습니다" 403 오류 수정 — 이메일 가입 플로우에서 온보딩 완료(`POST /workers/onboarding`) 후 JWT에 `workerProfileId`가 없어 발생하던 문제로, 온보딩 완료 시 새 JWT 쿠키를 즉시 발급하도록 처리
+
+## [0.2.0.1] - 2026-04-27
+
+### Fixed
+
+- CI E2E 테스트 JWT_SECRET 값이 32자 미만(24자)으로 Zod envSchema 검증 실패하던 문제 수정
+
+## [0.2.1.0] - 2026-04-27
+
+### Added
+
+- 커스텀 DatePicker 컴포넌트 — react-day-picker 기반, DESIGN.md 토큰 적용, minDate/maxDate 지원
+- 포트폴리오 등록 폼에 DatePicker 연동 — 날짜 필드 UX 개선
+
+### Changed
+
+- admin 로그인 성공 시 /admin으로 직행 (기존 홈 → /admin 리다이렉트 제거)
+- 대시보드 프로필 링크 — 서브도메인 URL (worker.bluecollar.cv/{slug}) 적용
+
+### Fixed
+
+- 유니코드 이스케이프(\uXXXX) → 실제 한글 문자열로 변환 (가독성 개선)
+- AdminInboxService ConfigService 주입 방어 — 테스트 환경 DI 안전성 확보
+- test/setup.ts .env.test 우선 로드 — ConfigModule 테스트 환경 변수 인식
+- DESIGN.md 계층 위반 수정 — shadow 제거, 버튼·입력 radius rounded-sm 통일, text-gray-500 → text-muted-foreground
+- DatePicker useMemo/useCallback 추가 — 불필요한 리렌더링 방지
+
 ## [0.2.0.0] - 2026-04-21
 
 ### Added
@@ -17,7 +49,7 @@
 - 포트폴리오 모달 공간 갤러리 — RoomTabGallery → RoomScrollGallery (수직 스크롤 + sticky 탭)
 - 포트폴리오 모달 비용 표시 — 단일 cost → 예상(estDisplay) / 실제(actDisplay) 분리
 - overflow lock — CSS attribute selector 방식 → JS inline style 직접 설정 (Turbopack 호환)
-- searchWorkers 포트폴리오 조회 — 무제한 → limit * 3 가드로 DB 부하 제한
+- searchWorkers 포트폴리오 조회 — 무제한 → limit \* 3 가드로 DB 부하 제한
 
 ### Fixed
 
@@ -25,7 +57,7 @@
 - 포트폴리오 태그 렌더링 버그 수정 — API 반환 타입 `string[]` 불일치로 태그 텍스트 미표시
 - 워커 프로필 업종 뱃지 한국어 미표시 수정 — 잘못된 FIELD_LABEL 맵 → field-codes.ts 임포트
 - 온보딩 3단계 다음 버튼 — 스킬 미선택 시 비활성화 로직 수정
-- 업종 코드 배지 한국어 표시 수정 — FLD_* raw enum 대신 FIELD_CODE_LABELS 사용
+- 업종 코드 배지 한국어 표시 수정 — FLD\_\* raw enum 대신 FIELD_CODE_LABELS 사용
 - parseInt NaN 가드 추가 — 검색 limit 파라미터 잘못된 입력 시 빈 결과 반환 버그
 - O(n²) → O(n): profileIds.includes() → Set.has() 로 검색 결과 조립 최적화
 - 검색 페이지 dead state 제거 — inquiryFormOpen / 구 stub InquiryForm import

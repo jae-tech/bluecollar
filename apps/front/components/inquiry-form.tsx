@@ -77,7 +77,7 @@ export function InquiryForm({
 
       {/* Modal */}
       <div
-        className="relative z-10 w-full max-w-md bg-card rounded-2xl border border-border shadow-2xl overflow-hidden"
+        className="relative z-10 w-full max-w-md bg-card rounded-xl border border-border overflow-hidden"
         style={{ animation: "slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1)" }}
       >
         {/* Close button */}
@@ -134,7 +134,7 @@ export function InquiryForm({
                 onChange={handleChange}
                 required
                 placeholder="예: 이뿍고용"
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+                className="w-full px-4 py-3 rounded-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
               />
             </div>
 
@@ -154,7 +154,7 @@ export function InquiryForm({
                 onChange={handleChange}
                 required
                 placeholder="예: 010-1234-5678"
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+                className="w-full px-4 py-3 rounded-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
               />
             </div>
 
@@ -174,7 +174,7 @@ export function InquiryForm({
                 onChange={handleChange}
                 required
                 placeholder="예: 서울 강남구"
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+                className="w-full px-4 py-3 rounded-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
               />
             </div>
 
@@ -192,7 +192,7 @@ export function InquiryForm({
                 value={formData.workType}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors appearance-none"
+                className="w-full px-4 py-3 rounded-sm border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors appearance-none"
               >
                 <option value="">선택해주세요</option>
                 {WORK_TYPES.map((type) => (
@@ -217,7 +217,7 @@ export function InquiryForm({
                 value={formData.budget}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors appearance-none"
+                className="w-full px-4 py-3 rounded-sm border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors appearance-none"
               >
                 <option value="">예산 범위를 선택해주세요</option>
                 {BUDGET_RANGES.map((range) => (
@@ -243,7 +243,7 @@ export function InquiryForm({
                 onChange={handleChange}
                 rows={3}
                 placeholder="구체적인 시공 내용을 말씀 주세요."
-                className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-sm border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors resize-none"
               />
             </div>
 

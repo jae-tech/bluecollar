@@ -2,6 +2,14 @@ import dotenv from 'dotenv';
 import { beforeAll } from 'vitest';
 import path from 'path';
 
+// 테스트 환경변수 로드 — NODE_ENV 기반으로 .env.test 우선 로드
+const nodeEnv = process.env.NODE_ENV ?? 'test';
+const envSpecificPath = path.resolve(process.cwd(), `.env.${nodeEnv}`);
+const envSpecificResult = dotenv.config({ path: envSpecificPath });
+if (envSpecificResult.parsed) {
+  console.log(`Loaded environment from: ${envSpecificPath}`);
+}
+
 // Load environment variables from possible .env locations
 const envPaths = [
   path.resolve(process.cwd(), '.env'),
@@ -11,7 +19,7 @@ const envPaths = [
 ];
 
 for (const envPath of envPaths) {
-  const result = dotenv.config({ path: envPath });
+  const result = dotenv.config({ path: envPath, override: false });
   if (result.parsed) {
     console.log(`Loaded environment from: ${envPath}`);
     break;
