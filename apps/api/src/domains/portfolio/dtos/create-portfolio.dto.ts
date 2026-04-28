@@ -5,7 +5,7 @@ import { z } from 'zod';
  * 포트폴리오 생성 요청 DTO
  *
  * 워커가 시공 사례를 등록할 때 사용합니다.
- * - 프로젝트 제목, 상세 설명, 시공 기간 필수
+ * 필수 필드: title, media(min 1), spaceType, location, startDate, endDate, constructionScope
  * - 이미지 배열은 순서(displayOrder)가 자동으로 부여됩니다.
  * - 미디어 정보: URL, 타입(BEFORE/AFTER/DETAIL)이 필수
  */
@@ -33,20 +33,19 @@ export const CreatePortfolioSchema = z.object({
   location: z
     .string()
     .trim()
+    .min(1, '시공 위치를 입력해주세요')
     .max(200)
-    .optional()
     .describe('시공 위치 (자유텍스트)'),
 
   spaceType: z
     .enum(['RESIDENTIAL', 'COMMERCIAL', 'OTHER'])
-    .optional()
     .describe('공간 유형: 주거/상업/기타'),
 
   constructionScope: z
     .string()
     .trim()
+    .min(1, '시공 범위를 입력해주세요')
     .max(1000)
-    .optional()
     .describe('시공 범위 상세 설명'),
 
   // 상세 정보 (선택사항)
@@ -151,10 +150,16 @@ export const CreatePortfolioSchema = z.object({
     .optional()
     .describe('자재/기술 태그 배열'),
 
-  // 시공 기간 (선택사항)
-  startDate: z.string().date().optional().describe('시공 시작일 (YYYY-MM-DD)'),
+  // 시공 기간 (필수)
+  startDate: z
+    .string()
+    .date('시공 시작일을 입력해주세요 (YYYY-MM-DD)')
+    .describe('시공 시작일 (YYYY-MM-DD)'),
 
-  endDate: z.string().date().optional().describe('시공 완료일 (YYYY-MM-DD)'),
+  endDate: z
+    .string()
+    .date('시공 완료일을 입력해주세요 (YYYY-MM-DD)')
+    .describe('시공 완료일 (YYYY-MM-DD)'),
 
   // 난이도 및 비용 (선택사항)
   difficulty: z
