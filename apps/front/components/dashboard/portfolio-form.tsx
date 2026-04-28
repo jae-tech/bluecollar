@@ -442,6 +442,10 @@ export function PortfolioForm({
       0,
     );
     if (!title.trim()) return;
+    if (!location.trim()) return;
+    if (!spaceType) return;
+    if (!startDate || !endDate) return;
+    if (!constructionScope.trim()) return;
     if (totalRoomImagesForSubmit === 0 && images.length === 0) return;
 
     setSubmitting(true);
@@ -485,13 +489,9 @@ export function PortfolioForm({
 
       const payload = {
         title: title.trim(),
-        location: location.trim() || undefined,
-        spaceType: (spaceType || undefined) as
-          | "RESIDENTIAL"
-          | "COMMERCIAL"
-          | "OTHER"
-          | undefined,
-        constructionScope: constructionScope.trim() || undefined,
+        location: location.trim(),
+        spaceType: spaceType as "RESIDENTIAL" | "COMMERCIAL" | "OTHER",
+        constructionScope: constructionScope.trim(),
         details:
           areaNum ||
           warrantyNum ||
@@ -507,8 +507,8 @@ export function PortfolioForm({
             : undefined,
         tags:
           tags.length > 0 ? tags.map((tagName) => ({ tagName })) : undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate,
+        endDate,
         difficulty: (difficulty || undefined) as
           | "EASY"
           | "MEDIUM"
@@ -595,15 +595,15 @@ export function PortfolioForm({
 
   // ── Create 모드: 6-step 온보딩 ─────────────────────────────────────────────
   const canProceed: Record<CreateStep, boolean> = {
-    1: true,
+    1: location.trim().length > 0,
     2: spaceType !== "",
     3: true,
-    4: dateError === null,
+    4: startDate !== "" && endDate !== "" && dateError === null,
     5:
       rooms.length > 0 &&
       rooms.every((r) => r.images.length > 0) &&
       rooms.every((r) => r.images.every((i) => !i.uploading)),
-    6: title.trim().length >= 5,
+    6: title.trim().length >= 5 && constructionScope.trim().length > 0,
   };
 
   const goNext = () => {
@@ -1374,8 +1374,8 @@ export function PortfolioForm({
           )}
         </div>
 
-        {/* 건너뛰기 — 주 버튼 아래 별도 행으로 분리해 시인성 확보 */}
-        {(createStep === 1 || createStep === 3 || createStep === 4) && (
+        {/* 건너뛰기 — Step 3(상세정보)만 선택적, Step 1(위치)/Step 4(날짜)는 필수 */}
+        {createStep === 3 && (
           <button
             onClick={goNext}
             className="w-full text-center text-sm text-muted-foreground hover:text-foreground py-1 transition-colors"
@@ -2003,7 +2003,12 @@ function EditForm({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={submitting || !title.trim() || dateError !== null}
+          disabled={
+            submitting ||
+            !title.trim() ||
+            !constructionScope.trim() ||
+            dateError !== null
+          }
           className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground text-sm font-bold py-2.5 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {submitting ? (

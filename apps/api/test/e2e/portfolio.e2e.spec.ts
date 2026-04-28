@@ -150,14 +150,97 @@ describe('Portfolio Module - Portfolio Management (E2E)', () => {
       expect(statusCode).toBe(400);
     });
 
+    it('spaceType 누락 시 400 에러를 반환해야 한다', async () => {
+      const { statusCode } = await sendRequest('POST', '/portfolios', {
+        workerProfileId: testWorkerProfileId,
+        title: '강남 아파트 타일 공사',
+        location: '서울 강남구',
+        // spaceType 누락
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        constructionScope: '욕실 및 주방 타일 전면 교체',
+        media: [
+          { mediaUrl: 'https://example.com/image.jpg', mediaType: 'IMAGE' },
+        ],
+      });
+      expect(statusCode).toBe(400);
+    });
+
+    it('location 누락 시 400 에러를 반환해야 한다', async () => {
+      const { statusCode } = await sendRequest('POST', '/portfolios', {
+        workerProfileId: testWorkerProfileId,
+        title: '강남 아파트 타일 공사',
+        // location 누락
+        spaceType: 'RESIDENTIAL',
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        constructionScope: '욕실 및 주방 타일 전면 교체',
+        media: [
+          { mediaUrl: 'https://example.com/image.jpg', mediaType: 'IMAGE' },
+        ],
+      });
+      expect(statusCode).toBe(400);
+    });
+
+    it('startDate 누락 시 400 에러를 반환해야 한다', async () => {
+      const { statusCode } = await sendRequest('POST', '/portfolios', {
+        workerProfileId: testWorkerProfileId,
+        title: '강남 아파트 타일 공사',
+        location: '서울 강남구',
+        spaceType: 'RESIDENTIAL',
+        // startDate 누락
+        endDate: '2024-01-31',
+        constructionScope: '욕실 및 주방 타일 전면 교체',
+        media: [
+          { mediaUrl: 'https://example.com/image.jpg', mediaType: 'IMAGE' },
+        ],
+      });
+      expect(statusCode).toBe(400);
+    });
+
+    it('endDate 누락 시 400 에러를 반환해야 한다', async () => {
+      const { statusCode } = await sendRequest('POST', '/portfolios', {
+        workerProfileId: testWorkerProfileId,
+        title: '강남 아파트 타일 공사',
+        location: '서울 강남구',
+        spaceType: 'RESIDENTIAL',
+        startDate: '2024-01-01',
+        // endDate 누락
+        constructionScope: '욕실 및 주방 타일 전면 교체',
+        media: [
+          { mediaUrl: 'https://example.com/image.jpg', mediaType: 'IMAGE' },
+        ],
+      });
+      expect(statusCode).toBe(400);
+    });
+
+    it('constructionScope 누락 시 400 에러를 반환해야 한다', async () => {
+      const { statusCode } = await sendRequest('POST', '/portfolios', {
+        workerProfileId: testWorkerProfileId,
+        title: '강남 아파트 타일 공사',
+        location: '서울 강남구',
+        spaceType: 'RESIDENTIAL',
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        // constructionScope 누락
+        media: [
+          { mediaUrl: 'https://example.com/image.jpg', mediaType: 'IMAGE' },
+        ],
+      });
+      expect(statusCode).toBe(400);
+    });
+
     it('성공적으로 포트폴리오를 생성하고 201 상태를 반환해야 한다', async () => {
       const testPayload = {
         workerProfileId: testWorkerProfileId,
         title: '강남 아파트 타일 공사',
         content:
           '강남 래미안 아파트의 욕실 및 주방 타일 공사를 진행했습니다. 고급 도자기 타일을 사용하여 고급스러운 분위기를 연출했습니다.',
+        location: '서울 강남구 대치동',
+        spaceType: 'RESIDENTIAL',
         startDate: '2024-01-01',
         endDate: '2024-01-31',
+        constructionScope: '욕실 및 주방 타일 전면 교체, 바닥재 설치',
         difficulty: 'MEDIUM',
         estimatedCost: 5000000,
         actualCost: 4800000,
