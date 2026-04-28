@@ -37,5 +37,6 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-kakao": "^1.0.1",
     "wrangler": "^4.80.0"
-  }
+  },
+  "version": "0.2.0.3"
 }
