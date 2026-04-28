@@ -24,7 +24,7 @@ import { AdminInboxService } from './services/admin-inbox.service';
  * 모든 엔드포인트는 ADMIN 역할 필요 (JwtAuthGuard + RolesGuard)
  */
 @Module({
-  imports: [DrizzleModule, LoggerModule],
+  imports: [DrizzleModule, LoggerModule, ConfigModule],
   controllers: [
     AdminDashboardController,
     AdminUsersController,

@@ -174,9 +174,10 @@ POST  /auth/refresh            # 토큰 갱신
 POST  /auth/logout
 
 # Profile
-POST  /profile                 # 온보딩 완료 (프로필 생성)
-GET   /profile/me
-PATCH /profile
+POST  /workers/onboarding      # 온보딩 완료 (프로필 생성)
+GET   /workers/me
+PATCH /workers/profile/:id
+PATCH /workers/profile/:id/info
 
 # Portfolio
 POST   /portfolios
