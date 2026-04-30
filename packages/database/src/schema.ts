@@ -797,7 +797,68 @@ export const portfolioTags = pgTable("portfolio_tags", {
 });
 
 // ─────────────────────────────────────────────────────
-// 6️⃣ ADMIN (관리자 감사 로그)
+// 6️⃣ WORK SCHEDULES (작업 일정 - 워커 전용)
+// ─────────────────────────────────────────────────────
+
+/**
+ * workSchedules 테이블
+ *
+ * 워커(기술자)의 현장 작업 일정을 관리합니다.
+ * 날짜 충돌 감지, 포트폴리오 연결(V2) 지원.
+ *
+ * 충돌 감지 쿼리:
+ *   WHERE worker_profile_id = :id
+ *     AND start_date <= :newEndDate
+ *     AND end_date >= :newStartDate
+ *     AND id != :excludeId  -- 수정 시 자기 자신 제외
+ */
+export const workSchedules = pgTable(
+  "work_schedules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+
+    // ▪️ 소유자
+    workerProfileId: uuid("worker_profile_id")
+      .references(() => workerProfiles.id, { onDelete: "cascade" })
+      .notNull(),
+
+    // ▪️ 일정 기본 정보
+    title: varchar("title", { length: 100 }), // 작업명 (선택)
+    siteAddress: varchar("site_address", { length: 200 }).notNull(), // 현장 주소 (필수, V1 자유텍스트)
+    fieldCode: varchar("field_code", { length: 50 }).notNull(), // 공정 종류 (FLD_TILE 등, 필수)
+
+    // ▪️ 작업 기간
+    startDate: date("start_date").notNull(), // 시작일
+    endDate: date("end_date").notNull(), // 종료일 (end_date >= start_date: Zod DTO에서 검증)
+
+    // ▪️ 메모 (선택)
+    memo: text("memo"),
+
+    // ▪️ 포트폴리오 연결 (V2 — nullable FK, V1에서는 미사용)
+    portfolioId: uuid("portfolio_id").references(() => portfolios.id, {
+      onDelete: "set null",
+    }),
+
+    // ▪️ 타임스탬프
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    // ⚡ 복합 인덱스: 월별 조회 쿼리 (worker_profile_id 필터 + 날짜 범위) 최적화
+    workerDatesIdx: index("idx_work_schedules_worker_dates").on(
+      table.workerProfileId,
+      table.startDate,
+      table.endDate,
+    ),
+  }),
+);
+
+// ─────────────────────────────────────────────────────
+// 7️⃣ ADMIN (관리자 감사 로그)
 // ─────────────────────────────────────────────────────
 
 /**
@@ -841,5 +902,10 @@ export const adminAuditLogs = pgTable(
       table.targetId,
     ),
     createdAtIdx: index("idx_audit_logs_created_at").on(table.createdAt),
+    // 관리자별 감사 로그 최신순 조회 복합 인덱스 (adminId 필터 + createdAt 정렬 최적화)
+    adminCreatedAtIdx: index("idx_audit_logs_admin_created_at").on(
+      table.adminId,
+      table.createdAt,
+    ),
   }),
 );

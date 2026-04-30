@@ -846,3 +846,22 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 ### ~~ISSUE-006: Overflow lock CSS attribute selector 미적용~~
 
 **Fixed on main, 2026-04-20** (commit 736f0fa) — `body[data-overflow-lock]` CSS가 Turbopack 번들에서 누락. `lockBodyScroll()`/`unlockBodyScroll()`에서 `document.body.style.overflow`를 직접 설정하도록 변경.
+
+---
+
+## 📅 스케줄 탭 — 후속 개선 (plan-eng-review 2026-04-30)
+
+### ~~TODO-SCHED-001: dashboard/page.tsx FIELD_LABEL DRY 완전 해소~~
+
+**Completed:** v0.3.0.0 (2026-04-30) — `FIELD_LABEL` 로컬 상수 제거, `FIELD_CODE_LABELS`(lib/field-codes.ts)로 통합
+
+---
+
+### TODO-SCHED-002: work_schedules.field_code FK 검증 강화
+
+**What:** `work_schedules.field_code varchar(50)`에 `master_codes(code)` FK 제약 또는 Zod enum 검증 추가.
+**Why:** V1에서는 프론트 드롭다운으로만 검증하므로 API 직접 호출 시 가비지 값(`FLD_INVALID`) 저장 가능. 데이터 정합성 위협.
+**Pros:** DB 레벨 무결성 보장, 존재하지 않는 공정 코드 저장 방지
+**Cons:** master_codes 테이블 변경 시 FK 마이그레이션 필요
+**Context:** FIELD_CODE_LABELS 키 목록이 현재 21개. Drizzle FK보다 Zod z.enum([...FIELD_CODE_LABELS keys]) 방식이 더 유연할 수 있음.
+**Depends on:** 스케줄 탭 PR 완료 후 고려
