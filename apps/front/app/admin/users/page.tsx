@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   getAdminUsers,
   updateAdminUserStatus,
@@ -200,7 +201,12 @@ export default function AdminUsersPage() {
                 >
                   <td className="px-4 py-3 text-foreground">{user.email}</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {user.realName ?? "—"}
+                    <Link
+                      href={`/admin/users/${user.id}`}
+                      className="hover:text-primary hover:underline transition-colors"
+                    >
+                      {user.realName ?? "—"}
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
                     <select
