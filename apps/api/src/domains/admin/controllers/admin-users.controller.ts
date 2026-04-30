@@ -8,6 +8,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -45,6 +46,18 @@ export class AdminUsersController {
   @ApiOperation({ summary: '유저 목록 조회 (검색/필터/페이지네이션)' })
   async findAll(@Query() query: UserListQueryDto) {
     return this.usersService.findAll(query);
+  }
+
+  /**
+   * 유저 상세 조회
+   *
+   * 유저 기본 정보, 워커 프로필, 사업자 서류 상태, 포트폴리오 목록을 반환합니다.
+   */
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '유저 상세 조회 (워커 프로필 포함)' })
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.findOne(id);
   }
 
   /**

@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
-import { users, workerProfiles } from '@repo/database';
+import {
+  users,
+  workerProfiles,
+  businessDocuments,
+  portfolios,
+} from '@repo/database';
 import { eq, ilike, or, and, count, desc } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
@@ -189,5 +194,103 @@ export class AdminUsersService {
     );
 
     return { id: targetUserId, role: newRole };
+  }
+
+  /**
+   * 유저 상세 조회
+   *
+   * 유저 기본 정보 + 워커 프로필 + 사업자 서류 + 포트폴리오 목록을 반환합니다.
+   * 포트폴리오는 JOIN 대신 별도 쿼리로 조회해 행 중복을 방지합니다.
+   *
+   * @param id 조회할 유저 ID
+   */
+  async findOne(id: string) {
+    // 유저 + 워커 프로필 LEFT JOIN
+    const [row] = await this.db
+      .select({
+        id: users.id,
+        email: users.email,
+        realName: users.realName,
+        role: users.role,
+        status: users.status,
+        provider: users.provider,
+        emailVerified: users.emailVerified,
+        createdAt: users.createdAt,
+        workerProfileId: workerProfiles.id,
+        slug: workerProfiles.slug,
+        businessName: workerProfiles.businessName,
+        businessVerified: workerProfiles.businessVerified,
+        yearsOfExperience: workerProfiles.yearsOfExperience,
+        careerSummary: workerProfiles.careerSummary,
+        officeAddress: workerProfiles.officeAddress,
+        officeCity: workerProfiles.officeCity,
+        officeDistrict: workerProfiles.officeDistrict,
+      })
+      .from(users)
+      .leftJoin(workerProfiles, eq(workerProfiles.userId, users.id))
+      .where(eq(users.id, id))
+      .limit(1);
+
+    if (!row) {
+      throw new NotFoundException('해당 유저를 찾을 수 없습니다');
+    }
+
+    // 사업자 서류 (별도 쿼리)
+    const docRows = row.workerProfileId
+      ? await this.db
+          .select({
+            id: businessDocuments.id,
+            status: businessDocuments.status,
+            businessNumber: businessDocuments.businessNumber,
+            documentUrl: businessDocuments.documentUrl,
+            submittedAt: businessDocuments.submittedAt,
+            validatedAt: businessDocuments.validatedAt,
+          })
+          .from(businessDocuments)
+          .where(eq(businessDocuments.workerProfileId, row.workerProfileId))
+          .orderBy(desc(businessDocuments.submittedAt))
+          .limit(5)
+      : [];
+
+    // 포트폴리오 목록 (별도 쿼리 — JOIN 시 행 중복 발생)
+    const portfolioRows = row.workerProfileId
+      ? await this.db
+          .select({
+            id: portfolios.id,
+            title: portfolios.title,
+            createdAt: portfolios.createdAt,
+          })
+          .from(portfolios)
+          .where(eq(portfolios.workerProfileId, row.workerProfileId))
+          .orderBy(desc(portfolios.createdAt))
+      : [];
+
+    const workerProfile = row.workerProfileId
+      ? {
+          id: row.workerProfileId,
+          slug: row.slug,
+          businessName: row.businessName,
+          businessVerified: row.businessVerified,
+          yearsOfExperience: row.yearsOfExperience,
+          careerSummary: row.careerSummary,
+          officeAddress: row.officeAddress,
+          officeCity: row.officeCity,
+          officeDistrict: row.officeDistrict,
+          documents: docRows,
+          portfolios: portfolioRows,
+        }
+      : null;
+
+    return {
+      id: row.id,
+      email: row.email,
+      realName: row.realName,
+      role: row.role,
+      status: row.status,
+      provider: row.provider,
+      emailVerified: row.emailVerified,
+      createdAt: row.createdAt,
+      workerProfile,
+    };
   }
 }
