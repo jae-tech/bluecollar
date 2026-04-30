@@ -827,3 +827,229 @@ export async function getAdminInboxMessage(
 ): Promise<AdminInboxMessageDetail> {
   return apiFetch(`/admin/inbox/${uid}`);
 }
+
+// ─── Admin: 사업자 서류 심사 ───────────────────────────────────────────────────
+
+export type DocumentStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface AdminDocument {
+  id: string;
+  businessNumber: string | null;
+  documentUrl: string;
+  status: DocumentStatus;
+  validationMessage: string | null;
+  submittedAt: string;
+  validatedAt: string | null;
+  workerProfileId: string;
+  workerSlug: string | null;
+  workerBusinessName: string | null;
+  workerUserId: string | null;
+  workerUserEmail: string | null;
+  workerUserRealName: string | null;
+}
+
+export interface AdminDocumentListResponse {
+  data: AdminDocument[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export async function getAdminDocuments(params?: {
+  page?: number;
+  limit?: number;
+  status?: DocumentStatus;
+}): Promise<AdminDocumentListResponse> {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.status) q.set("status", params.status);
+  return apiFetch(`/admin/documents?${q.toString()}`);
+}
+
+export async function getAdminDocumentPendingCount(): Promise<{
+  count: number;
+}> {
+  return apiFetch("/admin/documents/pending-count");
+}
+
+export async function approveAdminDocument(id: string): Promise<unknown> {
+  return apiFetch(`/admin/documents/${id}/approve`, { method: "PATCH" });
+}
+
+export async function rejectAdminDocument(
+  id: string,
+  reason: string,
+): Promise<unknown> {
+  return apiFetch(`/admin/documents/${id}/reject`, {
+    method: "PATCH",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+// ─── Admin: 워커 상세 조회 ────────────────────────────────────────────────────
+
+export interface AdminUserDetail {
+  id: string;
+  email: string;
+  realName: string | null;
+  role: string;
+  status: string;
+  provider: string;
+  emailVerified: boolean;
+  createdAt: string;
+  workerProfile: {
+    id: string;
+    slug: string;
+    businessName: string;
+    businessVerified: boolean;
+    yearsOfExperience: number | null;
+    careerSummary: string | null;
+    officeAddress: string | null;
+    officeCity: string | null;
+    officeDistrict: string | null;
+    documents: Array<{
+      id: string;
+      status: DocumentStatus;
+      businessNumber: string | null;
+      documentUrl: string;
+      submittedAt: string;
+      validatedAt: string | null;
+    }>;
+    portfolios: Array<{
+      id: string;
+      title: string;
+      createdAt: string;
+    }>;
+  } | null;
+}
+
+export async function getAdminUserDetail(id: string): Promise<AdminUserDetail> {
+  return apiFetch(`/admin/users/${id}`);
+}
+
+// ─── Work Schedule ───────────────────────────────────────────────────────────
+
+export interface WorkSchedule {
+  id: string;
+  workerProfileId: string;
+  title: string | null;
+  siteAddress: string;
+  fieldCode: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  memo: string | null;
+  portfolioId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConflictSummary {
+  id: string;
+  title: string | null;
+  startDate: string;
+  endDate: string;
+}
+
+export interface ScheduleWithConflicts {
+  schedule: WorkSchedule;
+  conflicts: ConflictSummary[];
+}
+
+export interface CreateSchedulePayload {
+  siteAddress: string;
+  fieldCode: string;
+  startDate: string;
+  endDate: string;
+  title?: string;
+  memo?: string;
+}
+
+export interface UpdateSchedulePayload {
+  siteAddress?: string;
+  fieldCode?: string;
+  startDate?: string;
+  endDate?: string;
+  title?: string;
+  memo?: string;
+}
+
+/** 월별 작업 일정 조회 */
+export async function getSchedules(
+  year: number,
+  month: number,
+): Promise<WorkSchedule[]> {
+  return apiFetch<WorkSchedule[]>(`/schedule?year=${year}&month=${month}`);
+}
+
+/** 작업 일정 등록 */
+export async function createSchedule(
+  payload: CreateSchedulePayload,
+): Promise<ScheduleWithConflicts> {
+  return apiFetch<ScheduleWithConflicts>("/schedule", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** 작업 일정 수정 */
+export async function updateSchedule(
+  id: string,
+  payload: UpdateSchedulePayload,
+): Promise<ScheduleWithConflicts> {
+  return apiFetch<ScheduleWithConflicts>(`/schedule/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** 작업 일정 삭제 */
+export async function deleteSchedule(id: string): Promise<void> {
+  return apiFetch<void>(`/schedule/${id}`, { method: "DELETE" });
+}
+
+// ─── Admin: 감사 로그 조회 ────────────────────────────────────────────────────
+
+export type AuditAction =
+  | "CODE_CREATE"
+  | "CODE_UPDATE"
+  | "CODE_DELETE"
+  | "USER_STATUS_CHANGE"
+  | "USER_ROLE_CHANGE"
+  | "DOCUMENT_APPROVE"
+  | "DOCUMENT_REJECT";
+
+export interface AdminAuditLog {
+  id: string;
+  adminId: string;
+  adminEmail: string | null;
+  action: string;
+  targetType: string;
+  targetId: string;
+  before: string | null;
+  after: string | null;
+  createdAt: string;
+}
+
+export interface AdminAuditLogListResponse {
+  data: AdminAuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export async function getAdminAuditLogs(params?: {
+  page?: number;
+  limit?: number;
+  action?: AuditAction;
+  adminId?: string;
+}): Promise<AdminAuditLogListResponse> {
+  const q = new URLSearchParams();
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.action) q.set("action", params.action);
+  if (params?.adminId) q.set("adminId", params.adminId);
+  return apiFetch(`/admin/audit?${q.toString()}`);
+}

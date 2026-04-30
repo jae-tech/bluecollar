@@ -12,13 +12,24 @@ import {
   updateWorkerProfileInfo,
   updateWorkerProfileFields,
   getCodes,
+  getSchedules,
+  createSchedule,
+  updateSchedule,
+  deleteSchedule,
 } from "@/lib/api";
 import type {
   WorkerProfile,
   PublicProfilePortfolio,
   MasterCode,
+  WorkSchedule,
+  CreateSchedulePayload,
+  UpdateSchedulePayload,
+  ConflictSummary,
 } from "@/lib/api";
 import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
+import { ScheduleCalendar } from "@/components/worker/schedule-calendar";
+import { ScheduleModal } from "@/components/worker/schedule-modal";
+import { FIELD_CODE_LABELS } from "@/lib/field-codes";
 import { Logo } from "@/components/logo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -32,30 +43,11 @@ async function logout() {
   window.location.href = "/login";
 }
 
-// ── 업종 코드 → 한글 표시명 ────────────────────────────────────────────────────
-const FIELD_LABEL: Record<string, string> = {
-  FLD_TILE: "타일",
-  FLD_WALLPAPER: "도배",
-  FLD_PAINTING: "도장/페인팅",
-  FLD_FLOORING: "장판/마루",
-  FLD_PLUMBING: "설비/배관",
-  FLD_ELECTRIC: "전기",
-  FLD_CARPENTRY: "목공",
-  FLD_WATERPROOF: "방수",
-  FLD_GLAZING: "유리",
-  FLD_DEMOLITION: "철거",
-  FLD_WINDOW: "샷시/창호",
-  FLD_FILM: "필름",
-  FLD_KITCHEN: "주방/싱크대",
-  FLD_ELASTIC_COAT: "탄성코트",
-  FLD_BATHROOM: "욕실",
-  FLD_CLEANING: "입주청소",
-  FLD_WELDING: "용접",
-  FLD_MACHINING: "기계가공",
-};
+// FIELD_LABEL은 FIELD_CODE_LABELS(lib/field-codes.ts)로 통합됨 — 별도 로컬 맵 제거
+const FIELD_LABEL = FIELD_CODE_LABELS;
 
 // ── 탭 타입 ───────────────────────────────────────────────────────────────────
-type Tab = "portfolio" | "profile" | "settings";
+type Tab = "portfolio" | "profile" | "schedule" | "settings";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -67,10 +59,35 @@ export default function DashboardPage() {
   const [selectedPortfolio, setSelectedPortfolio] =
     useState<PublicProfilePortfolio | null>(null);
 
+  // 스케줄 탭 상태
+  const today = new Date();
+  const [scheduleYear, setScheduleYear] = useState(today.getFullYear());
+  const [scheduleMonth, setScheduleMonth] = useState(today.getMonth() + 1);
+  const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
+  const [schedulesLoading, setSchedulesLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<WorkSchedule | null>(
+    null,
+  );
+
   // 포트폴리오 목록 새로고침
   const refreshPortfolios = async (slug: string) => {
     const pub = await getPublicProfile(slug).catch(() => null);
     if (pub) setPortfolios(pub.portfolios ?? []);
+  };
+
+  // 작업 일정 로드
+  const loadSchedules = async (year: number, month: number) => {
+    setSchedulesLoading(true);
+    try {
+      const data = await getSchedules(year, month);
+      setSchedules(data);
+    } catch {
+      // 에러는 무시 (빈 배열 유지)
+    } finally {
+      setSchedulesLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -180,18 +197,24 @@ export default function DashboardPage() {
         </div>
 
         {/* ── 탭 ───────────────────────────────────────────────────────────── */}
-        <div className="flex mb-6">
+        <div className="flex mb-6 overflow-x-auto">
           {(
             [
               { id: "portfolio", label: "포트폴리오" },
               { id: "profile", label: "프로필 편집" },
+              { id: "schedule", label: "스케줄" },
               { id: "settings", label: "설정" },
             ] as { id: Tab; label: string }[]
           ).map(({ id, label }) => (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 ${
+              onClick={() => {
+                setActiveTab(id);
+                if (id === "schedule") {
+                  loadSchedules(scheduleYear, scheduleMonth);
+                }
+              }}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
                 activeTab === id
                   ? "text-foreground border-foreground"
                   : "text-muted-foreground border-transparent hover:text-foreground"
@@ -237,7 +260,80 @@ export default function DashboardPage() {
         {activeTab === "profile" && (
           <ProfileTab profile={profile} setProfile={setProfile} />
         )}
+        {activeTab === "schedule" && (
+          <ScheduleTab
+            year={scheduleYear}
+            month={scheduleMonth}
+            schedules={schedules}
+            loading={schedulesLoading}
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            onPrevMonth={() => {
+              const d = new Date(scheduleYear, scheduleMonth - 2, 1);
+              const y = d.getFullYear();
+              const m = d.getMonth() + 1;
+              setScheduleYear(y);
+              setScheduleMonth(m);
+              setSelectedDate(null);
+              loadSchedules(y, m);
+            }}
+            onNextMonth={() => {
+              const d = new Date(scheduleYear, scheduleMonth, 1);
+              const y = d.getFullYear();
+              const m = d.getMonth() + 1;
+              setScheduleYear(y);
+              setScheduleMonth(m);
+              setSelectedDate(null);
+              loadSchedules(y, m);
+            }}
+            onAddSchedule={() => {
+              setEditingSchedule(null);
+              setScheduleModalOpen(true);
+            }}
+            onEditSchedule={(s) => {
+              setEditingSchedule(s);
+              setScheduleModalOpen(true);
+            }}
+            onDeleteSchedule={async (id) => {
+              if (!confirm("이 일정을 삭제할까요?")) return;
+              try {
+                await deleteSchedule(id);
+                loadSchedules(scheduleYear, scheduleMonth);
+              } catch {
+                alert("일정 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
+              }
+            }}
+          />
+        )}
         {activeTab === "settings" && <SettingsTab />}
+
+        {/* 스케줄 등록/수정 모달 */}
+        {scheduleModalOpen && (
+          <ScheduleModal
+            schedule={editingSchedule}
+            initialDate={selectedDate}
+            onClose={() => {
+              setScheduleModalOpen(false);
+              setEditingSchedule(null);
+            }}
+            onSave={async (payload) => {
+              if (editingSchedule) {
+                const res = await updateSchedule(
+                  editingSchedule.id,
+                  payload as UpdateSchedulePayload,
+                );
+                loadSchedules(scheduleYear, scheduleMonth);
+                return res.conflicts;
+              } else {
+                const res = await createSchedule(
+                  payload as CreateSchedulePayload,
+                );
+                loadSchedules(scheduleYear, scheduleMonth);
+                return res.conflicts;
+              }
+            }}
+          />
+        )}
       </div>
 
       {/* ── 포트폴리오 상세 모달 ───────────────────────────────────────────── */}
@@ -411,6 +507,175 @@ function AddPortfolioCard({ onAdd }: { onAdd: () => void }) {
       <Plus size={20} />
       <span className="text-xs font-medium">추가</span>
     </button>
+  );
+}
+
+// ── 스케줄 탭 ────────────────────────────────────────────────────────────────
+
+function ScheduleTab({
+  year,
+  month,
+  schedules,
+  loading,
+  selectedDate,
+  onDateSelect,
+  onPrevMonth,
+  onNextMonth,
+  onAddSchedule,
+  onEditSchedule,
+  onDeleteSchedule,
+}: {
+  year: number;
+  month: number;
+  schedules: WorkSchedule[];
+  loading: boolean;
+  selectedDate: string | null;
+  onDateSelect: (date: string) => void;
+  onPrevMonth: () => void;
+  onNextMonth: () => void;
+  onAddSchedule: () => void;
+  onEditSchedule: (s: WorkSchedule) => void;
+  onDeleteSchedule: (id: string) => Promise<void>;
+}) {
+  // 선택된 날짜의 일정 목록
+  const dateSchedules = selectedDate
+    ? schedules.filter(
+        (s) => s.startDate <= selectedDate && s.endDate >= selectedDate,
+      )
+    : [];
+
+  return (
+    <div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      ) : (
+        <>
+          <ScheduleCalendar
+            year={year}
+            month={month}
+            schedules={schedules}
+            selectedDate={selectedDate}
+            onDateSelect={onDateSelect}
+            onPrevMonth={onPrevMonth}
+            onNextMonth={onNextMonth}
+          />
+
+          {/* 선택된 날짜 일정 목록 */}
+          <div className="mt-4">
+            {selectedDate ? (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-foreground">
+                    {selectedDate.slice(5, 7)}월{" "}
+                    {String(parseInt(selectedDate.slice(8, 10)))}일
+                    {dateSchedules.length > 0
+                      ? ` — ${dateSchedules.length}개`
+                      : " — 일정 없음"}
+                  </p>
+                  <button
+                    onClick={onAddSchedule}
+                    className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    + 일정 추가
+                  </button>
+                </div>
+
+                {dateSchedules.length === 0 ? (
+                  <div className="py-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      이 날짜에 일정이 없습니다
+                    </p>
+                    <button
+                      onClick={onAddSchedule}
+                      className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      + 일정 추가
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {dateSchedules.map((s) => (
+                      <ScheduleListItem
+                        key={s.id}
+                        schedule={s}
+                        onEdit={() => onEditSchedule(s)}
+                        onDelete={() => onDeleteSchedule(s.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="py-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  날짜를 선택하면 일정이 표시됩니다
+                </p>
+                <button
+                  onClick={onAddSchedule}
+                  className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  + 일정 추가
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ScheduleListItem({
+  schedule,
+  onEdit,
+  onDelete,
+}: {
+  schedule: WorkSchedule;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const fieldLabel =
+    FIELD_CODE_LABELS[schedule.fieldCode] ?? schedule.fieldCode;
+
+  return (
+    <div className="flex items-start gap-3 bg-card border border-border rounded-md px-4 py-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+            {fieldLabel}
+          </span>
+          {schedule.title && (
+            <span className="text-xs text-muted-foreground truncate">
+              {schedule.title}
+            </span>
+          )}
+        </div>
+        <p className="text-sm font-medium text-foreground mt-1 truncate">
+          {schedule.siteAddress}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {schedule.startDate === schedule.endDate
+            ? schedule.startDate
+            : `${schedule.startDate} ~ ${schedule.endDate}`}
+        </p>
+      </div>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <button
+          onClick={onEdit}
+          className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-md px-2.5 py-1 transition-colors"
+        >
+          수정
+        </button>
+        <button
+          onClick={onDelete}
+          className="text-xs text-muted-foreground hover:text-destructive border border-border rounded-md px-2.5 py-1 transition-colors"
+        >
+          삭제
+        </button>
+      </div>
+    </div>
   );
 }
 
