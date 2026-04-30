@@ -22,6 +22,42 @@ export const UserListQuerySchema = z.object({
 });
 export class UserListQueryDto extends createZodDto(UserListQuerySchema) {}
 
+// ─── 사업자 서류 심사 DTOs ────────────────────────────────
+
+export const DocumentListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+});
+export class DocumentListQueryDto extends createZodDto(
+  DocumentListQuerySchema,
+) {}
+
+export const RejectDocumentSchema = z.object({
+  reason: z.string().min(1, '거절 사유를 입력해주세요'),
+});
+export class RejectDocumentDto extends createZodDto(RejectDocumentSchema) {}
+
+// ─── 감사 로그 조회 DTOs ──────────────────────────────────
+
+export const AuditLogQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+  action: z
+    .enum([
+      'CODE_CREATE',
+      'CODE_UPDATE',
+      'CODE_DELETE',
+      'USER_STATUS_CHANGE',
+      'USER_ROLE_CHANGE',
+      'DOCUMENT_APPROVE',
+      'DOCUMENT_REJECT',
+    ])
+    .optional(),
+  adminId: z.string().uuid().optional(),
+});
+export class AuditLogQueryDto extends createZodDto(AuditLogQuerySchema) {}
+
 // ─── 코드 관리 DTOs ──────────────────────────────────────
 
 export const CreateCodeSchema = z.object({
