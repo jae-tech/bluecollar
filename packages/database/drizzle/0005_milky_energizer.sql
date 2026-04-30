@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "idx_audit_logs_admin_created_at" ON "admin_audit_logs" USING btree ("admin_id","created_at");
