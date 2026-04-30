@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0.0] - 2026-04-30
+
+### Added
+
+- 워커 대시보드에 **스케줄 탭** 추가 — 달력 UI로 현장 일정 등록·수정·삭제 가능
+- `GET /schedule?year=&month=` — 멀티월 일정 포함 월별 조회 API
+- `POST /schedule` — 충돌 감지 포함 일정 등록 (충돌이 있어도 등록 허용, `conflicts` 배열 반환)
+- `PATCH /schedule/:id` — 일정 수정 (DB 레벨 소유권 검증)
+- `DELETE /schedule/:id` — 일정 삭제 (DB 레벨 소유권 검증)
+- `work_schedules` 테이블 — Drizzle 마이그레이션(`0006_jittery_vermin.sql`) 및 복합 인덱스(`idx_work_schedules_worker_dates`) 추가
+- 충돌 경고 UI — 일정 등록·수정 시 겹치는 일정을 모달 내 오렌지 박스로 표시
+
 ## [0.2.0.3] - 2026-04-28
 
 ### Changed
