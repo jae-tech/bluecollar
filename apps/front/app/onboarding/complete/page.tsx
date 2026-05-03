@@ -94,7 +94,7 @@ export default function OnboardingCompletePage() {
           <button
             type="button"
             onClick={handleCopy}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
           >
             {copied ? (
               <>
@@ -114,7 +114,7 @@ export default function OnboardingCompletePage() {
         <button
           type="button"
           onClick={() => router.push("/dashboard")}
-          className="w-full py-3.5 rounded-md bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 active:scale-95 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-sm bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 active:scale-95 transition-colors flex items-center justify-center gap-2"
         >
           대시보드로 이동
           <ArrowRight size={18} />

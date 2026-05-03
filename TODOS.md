@@ -314,13 +314,9 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 
 ---
 
-### TODO-026: "나중에" 재유도 — 워커 대시보드에 slug 설정 미완료 배너
+### ~~TODO-026: "나중에" 재유도 — 워커 대시보드에 slug 설정 미완료 배너~~
 
-**What:** slug가 없는 워커가 대시보드에 진입 시 slug 설정 재유도 배너 표시.
-**Why:** "나중에" 버튼 제거로 slug 설정은 필수가 됐지만, 향후 탈출구가 필요할 경우를 위한 안전망.
-**Effort:** S
-**Priority:** P3
-**Found by:** /autoplan Phase 3 Eng Review, 2026-04-04
+**불필요 — 2026-04-30** `/autoplan` CEO Review에서 확인: `dashboard/page.tsx:96-99`에서 `!p?.slug` 시 즉시 `/onboarding/slug`로 redirect. 배너가 렌더될 경로 자체가 없음. 코드 변경 불필요.
 
 ---
 
