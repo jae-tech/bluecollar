@@ -11,9 +11,7 @@ import type { UserPayload } from '@/common/types/user.types';
  * 컨트롤러의 역할(workerProfileId 검증 → 서비스 위임)만 검증한다.
  */
 
-function makeWorkerUser(
-  overrides: Partial<UserPayload> = {},
-): UserPayload {
+function makeWorkerUser(overrides: Partial<UserPayload> = {}): UserPayload {
   return {
     sub: 'user-uuid',
     email: 'worker@example.com',
@@ -108,7 +106,7 @@ describe('WorkScheduleController', () => {
 
       const dto = {
         siteAddress: '을지로 5가',
-        fieldCode: 'FLD_PAINT',
+        fieldCode: 'FLD_PAINTING' as const,
         startDate: '2026-05-01',
         endDate: '2026-05-03',
       };

@@ -118,7 +118,6 @@ function ImageCarousel({
   isPrimary?: boolean;
 }) {
   const [idx, setIdx] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => setIdx(0), [images]);
@@ -160,14 +159,13 @@ function ImageCarousel({
     <div>
       {/* 메인 이미지 */}
       <div
-        ref={containerRef}
         className="relative bg-secondary focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none"
         style={{ aspectRatio: "4/3" }}
         tabIndex={images.length > 1 ? 0 : -1}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        role={images.length > 1 ? "group" : undefined}
+        role={images.length > 1 ? "region" : undefined}
         aria-label={images.length > 1 ? "이미지 갤러리" : undefined}
       >
         <Image
@@ -469,12 +467,13 @@ export function PortfolioDetailModal({
   }, [portfolio]);
 
   useEffect(() => {
+    if (!portfolio) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [portfolio, onClose]);
 
   // 룸별 사진 그룹핑 — useMemo로 렌더마다 O(n×m) 재계산 방지
   // ※ Rules of Hooks: early return 이전에 선언해야 Hook 순서 불변 보장
