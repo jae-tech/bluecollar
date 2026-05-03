@@ -8,6 +8,7 @@ import { getPublicProfile, getMyWorkerProfile } from "@/lib/api";
 import type { PublicProfile, PublicProfilePortfolio } from "@/lib/api";
 import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
 import { InquiryForm } from "@/components/worker/inquiry-form";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SPACE_TYPE_LABEL } from "@/lib/constants";
 import { FIELD_CODE_LABELS } from "@/lib/field-codes";
 import { Logo } from "@/components/logo";
@@ -96,8 +97,47 @@ export default function WorkerProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="min-h-screen bg-background font-sans">
+        {/* Nav skeleton */}
+        <div className="sticky top-0 z-40 bg-background/95 border-b border-border">
+          <div className="max-w-2xl mx-auto px-5 h-12 flex items-center justify-between">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-12" />
+          </div>
+        </div>
+        <main className="max-w-2xl mx-auto px-5 pb-24">
+          {/* Identity */}
+          <section className="pt-10 pb-8">
+            <div className="flex items-center gap-4 mb-5">
+              <Skeleton className="w-14 h-14 rounded-full flex-shrink-0" />
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+            {/* Career summary */}
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-3/4 mb-5" />
+            {/* Meta row */}
+            <Skeleton className="h-3 w-56 mb-5" />
+            {/* Field tags */}
+            <div className="flex gap-1.5 mb-6">
+              <Skeleton className="h-6 w-16 rounded" />
+              <Skeleton className="h-6 w-14 rounded" />
+              <Skeleton className="h-6 w-20 rounded" />
+            </div>
+          </section>
+          {/* Portfolio grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i}>
+                <Skeleton className="aspect-[4/3] w-full rounded-md mb-2" />
+                <Skeleton className="h-3 w-full mb-1" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
@@ -136,13 +176,13 @@ export default function WorkerProfilePage() {
           <div className="flex flex-col sm:flex-row gap-2.5">
             <a
               href="/"
-              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-sm bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               홈으로 돌아가기
             </a>
             <a
               href="/search?tab=workers"
-              className="inline-flex items-center justify-center px-5 py-2.5 rounded-md border border-border text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-sm border border-border text-sm font-medium text-foreground hover:bg-secondary transition-colors"
             >
               다른 워커 둘러보기
             </a>
@@ -419,8 +459,7 @@ export default function WorkerProfilePage() {
             href="/"
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            Powered by{" "}
-            <Logo className="font-semibold text-foreground" />
+            Powered by <Logo className="font-semibold text-foreground" />
           </a>
         </div>
       </footer>

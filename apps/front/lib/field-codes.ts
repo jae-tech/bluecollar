@@ -31,3 +31,16 @@ export const FIELD_CODE_LABELS: Record<string, string> = {
   FLD_HVAC: "에어컨/냉난방",
   FLD_FURNITURE: "가구/붙박이",
 };
+
+/**
+ * 유효한 공정 코드 배열 — DTO Zod enum 검증용.
+ *
+ * ⚠️ FIELD_CODE_LABELS와 동기화 유지. seed.ts의 FIELD 그룹 변경 시
+ * FIELD_CODE_LABELS도 함께 업데이트하면 이 배열도 자동 반영됨.
+ *
+ * TODO: @repo/schema로 이전하여 프론트/백엔드 단일 진실 원천 보장.
+ */
+export const VALID_FIELD_CODES = Object.keys(FIELD_CODE_LABELS) as [
+  string,
+  ...string[],
+];

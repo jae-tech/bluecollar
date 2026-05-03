@@ -81,6 +81,14 @@ describe('CreateWorkScheduleSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('4-1. fieldCode 유효하지 않은 값 → 오류', () => {
+    const result = CreateWorkScheduleSchema.safeParse({
+      ...validPayload,
+      fieldCode: 'FLD_INVALID',
+    });
+    expect(result.success).toBe(false);
+  });
+
   it('9. title 100자 초과 → 오류', () => {
     const result = CreateWorkScheduleSchema.safeParse({
       ...validPayload,
@@ -122,6 +130,20 @@ describe('UpdateWorkScheduleSchema', () => {
   it('14. endDate만 제공(startDate 미제공) → refine 스킵, 통과', () => {
     const result = UpdateWorkScheduleSchema.safeParse({
       endDate: '2026-04-20',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('14-1. fieldCode 유효하지 않은 값 → 오류', () => {
+    const result = UpdateWorkScheduleSchema.safeParse({
+      fieldCode: 'FLD_INVALID',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('14-2. fieldCode 유효한 값 → 통과', () => {
+    const result = UpdateWorkScheduleSchema.safeParse({
+      fieldCode: 'FLD_WALLPAPER',
     });
     expect(result.success).toBe(true);
   });
