@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.4.0.0] - 2026-05-04
+
+### Added
+
+- **의뢰 시스템 V1** — 고객(CLIENT)이 워커 프로필 페이지에서 시공 의뢰를 보낼 수 있게 됨
+- CLIENT 전용 회원가입 모달 — 비로그인 사용자가 의뢰 폼을 열면 인라인 가입 플로우 제공
+- 이메일 인증 완료 후 역할에 따른 분기 — CLIENT는 원래 페이지로 복귀, WORKER는 온보딩으로 이동
+- `/client/requests` 페이지 — CLIENT가 자신의 의뢰 내역을 상태별 필터링하고 취소할 수 있는 페이지
+- 대시보드 **의뢰 관리 탭** — 워커가 받은 의뢰를 확인·수락·거절할 수 있는 탭
+- `?openInquiry=true` 파라미터 — 외부 링크로 의뢰 폼을 자동으로 여는 딥링크 지원
+
+### Changed
+
+- 의뢰 제출 엔드포인트 변경: `/public/profiles/:slug/inquiry` → `/inquiries/:workerSlug` (인증 필수)
+- AUTH 회원가입 DTO에 `role` 필드 추가 — CLIENT/WORKER 역할 선택 가능
+- 워커 스케줄 DTO fieldCode Zod enum 강화 + Zod v4 오류 API 적용
+- 히어로 섹션 CTA 버튼을 shadcn Button(size=lg)으로 교체
+
+### Fixed
+
+- UX 반경 정비: onboarding/complete 및 worker notFound 페이지 버튼 `rounded-sm` 통일
+- worker/[slug] 로딩 상태를 spinner → Skeleton 레이아웃으로 개선
+
 ## [0.3.0.0] - 2026-04-30
 
 ### Added

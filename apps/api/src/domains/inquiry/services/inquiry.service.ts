@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
 import { inquiries, workerProfiles, users } from '@repo/database';
-import { and, eq, gte, count, desc } from 'drizzle-orm';
+import { and, eq, gte, count, desc, ne, notInArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
 import type {
@@ -243,10 +243,16 @@ export class InquiryService {
       throw new ForbiddenException('본인의 의뢰만 수정할 수 있습니다');
     }
 
+    // workerProfileId를 WHERE에 포함해 소유권 검증을 atomic하게 처리
     const [updated] = await this.db
       .update(inquiries)
       .set({ status: dto.status, updatedAt: new Date() })
-      .where(eq(inquiries.id, inquiryId))
+      .where(
+        and(
+          eq(inquiries.id, inquiryId),
+          eq(inquiries.workerProfileId, workerProfileId),
+        ),
+      )
       .returning();
 
     this.logger.log(
@@ -286,10 +292,17 @@ export class InquiryService {
       throw new ForbiddenException('이미 취소된 의뢰입니다');
     }
 
+    // clientUserId와 취소 가능 상태를 WHERE에 포함해 atomic하게 처리 (TOCTOU 방지)
     const [cancelled] = await this.db
       .update(inquiries)
       .set({ status: 'CANCELLED', updatedAt: new Date() })
-      .where(eq(inquiries.id, inquiryId))
+      .where(
+        and(
+          eq(inquiries.id, inquiryId),
+          eq(inquiries.clientUserId, clientUserId),
+          notInArray(inquiries.status, ['CANCELLED', 'ACCEPTED', 'DECLINED']),
+        ),
+      )
       .returning();
 
     this.logger.log({ inquiryId, clientUserId }, '의뢰 취소 완료');
