@@ -468,7 +468,7 @@ export class AuthService {
   async emailSignup(
     dto: EmailSignupDto,
   ): Promise<{ message: string; email: string; code?: string }> {
-    const { email, password, realName, agreeTerms } = dto;
+    const { email, password, realName, agreeTerms, role } = dto;
 
     this.logger.info({ email }, '이메일 회원가입 시작');
 
@@ -499,12 +499,13 @@ export class AuthService {
     // INACTIVE 계정이 이미 있으면 새 정보로 업데이트(재시도), 없으면 신규 INSERT
     const now = new Date();
     if (existingUser.length > 0) {
-      // 이전 미인증 시도 덮어쓰기: 비밀번호/이름/약관 동의 갱신
+      // 이전 미인증 시도 덮어쓰기: 비밀번호/이름/약관 동의/역할 갱신
       await this.db
         .update(users)
         .set({
           password: hashedPassword,
           realName: realName || undefined,
+          role: role ?? 'WORKER',
           emailVerified: false,
           termsAgreedAt: agreeTerms ? now : undefined,
           termsVersion: agreeTerms ? '2026-04' : undefined,
@@ -522,7 +523,7 @@ export class AuthService {
         email: email.toLowerCase(),
         password: hashedPassword,
         realName: realName || undefined,
-        role: 'WORKER',
+        role: role ?? 'WORKER',
         status: 'INACTIVE',
         emailVerified: false,
         phoneVerified: false,

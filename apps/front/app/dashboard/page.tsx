@@ -16,6 +16,8 @@ import {
   createSchedule,
   updateSchedule,
   deleteSchedule,
+  getWorkerInquiries,
+  updateInquiryStatus,
 } from "@/lib/api";
 import type {
   WorkerProfile,
@@ -25,6 +27,8 @@ import type {
   CreateSchedulePayload,
   UpdateSchedulePayload,
   ConflictSummary,
+  Inquiry,
+  InquiryStatus,
 } from "@/lib/api";
 import { PortfolioDetailModal } from "@/components/worker/portfolio-detail-modal";
 import { ScheduleCalendar } from "@/components/worker/schedule-calendar";
@@ -47,7 +51,7 @@ async function logout() {
 const FIELD_LABEL = FIELD_CODE_LABELS;
 
 // ── 탭 타입 ───────────────────────────────────────────────────────────────────
-type Tab = "portfolio" | "profile" | "schedule" | "settings";
+type Tab = "portfolio" | "profile" | "schedule" | "inquiries" | "settings";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -58,6 +62,22 @@ export default function DashboardPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [selectedPortfolio, setSelectedPortfolio] =
     useState<PublicProfilePortfolio | null>(null);
+
+  // 의뢰 탭 상태
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [inquiriesLoading, setInquiriesLoading] = useState(false);
+
+  const loadInquiries = async () => {
+    setInquiriesLoading(true);
+    try {
+      const data = await getWorkerInquiries({ limit: 50 });
+      setInquiries(data);
+    } catch {
+      // 에러는 무시
+    } finally {
+      setInquiriesLoading(false);
+    }
+  };
 
   // 스케줄 탭 상태
   const today = new Date();
@@ -203,6 +223,13 @@ export default function DashboardPage() {
               { id: "portfolio", label: "포트폴리오" },
               { id: "profile", label: "프로필 편집" },
               { id: "schedule", label: "스케줄" },
+              {
+                id: "inquiries",
+                label:
+                  inquiries.length > 0
+                    ? `의뢰 관리 (${inquiries.length})`
+                    : "의뢰 관리",
+              },
               { id: "settings", label: "설정" },
             ] as { id: Tab; label: string }[]
           ).map(({ id, label }) => (
@@ -212,6 +239,9 @@ export default function DashboardPage() {
                 setActiveTab(id);
                 if (id === "schedule") {
                   loadSchedules(scheduleYear, scheduleMonth);
+                }
+                if (id === "inquiries") {
+                  loadInquiries();
                 }
               }}
               className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
@@ -302,6 +332,16 @@ export default function DashboardPage() {
               } catch {
                 alert("일정 삭제 중 오류가 발생했습니다. 다시 시도해주세요.");
               }
+            }}
+          />
+        )}
+        {activeTab === "inquiries" && (
+          <InquiriesTab
+            inquiries={inquiries}
+            loading={inquiriesLoading}
+            onStatusChange={async (id, status) => {
+              await updateInquiryStatus(id, status);
+              loadInquiries();
             }}
           />
         )}
@@ -1216,6 +1256,157 @@ function InfoRow({
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+// ── 의뢰 관리 탭 ──────────────────────────────────────────────────────────────
+
+const INQUIRY_STATUS_LABEL: Record<string, string> = {
+  PENDING: "대기",
+  READ: "확인",
+  REPLIED: "답변",
+  ACCEPTED: "수락",
+  DECLINED: "거절",
+  CANCELLED: "취소",
+};
+
+/** 상태별 배지 클래스 */
+function inquiryStatusClass(status: string): string {
+  switch (status) {
+    case "PENDING":
+      return "bg-amber-50 text-amber-700 border border-amber-200";
+    case "READ":
+    case "REPLIED":
+      return "bg-secondary text-muted-foreground border border-border";
+    case "ACCEPTED":
+      return "bg-blue-50 text-blue-700 border border-blue-200";
+    case "DECLINED":
+    case "CANCELLED":
+      return "bg-secondary text-muted-foreground border border-border opacity-60";
+    default:
+      return "bg-secondary text-muted-foreground border border-border";
+  }
+}
+
+function InquiriesTab({
+  inquiries,
+  loading,
+  onStatusChange,
+}: {
+  inquiries: Inquiry[];
+  loading: boolean;
+  onStatusChange: (
+    id: string,
+    status: "READ" | "REPLIED" | "ACCEPTED" | "DECLINED",
+  ) => Promise<void>;
+}) {
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (inquiries.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+        <p className="font-semibold text-foreground">아직 의뢰가 없습니다</p>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          프로필에서 고객이 의뢰를 보내면 여기에 표시됩니다.
+        </p>
+      </div>
+    );
+  }
+
+  const handleStatus = async (
+    id: string,
+    status: "READ" | "REPLIED" | "ACCEPTED" | "DECLINED",
+  ) => {
+    setUpdatingId(id);
+    try {
+      await onStatusChange(id, status);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      {inquiries.map((inquiry) => (
+        <div
+          key={inquiry.id}
+          className="bg-card border border-border rounded-sm p-4"
+        >
+          {/* 헤더 */}
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <span className="text-sm font-semibold text-foreground">
+                  {inquiry.name}
+                </span>
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-sm font-medium ${inquiryStatusClass(inquiry.status)}`}
+                >
+                  {INQUIRY_STATUS_LABEL[inquiry.status] ?? inquiry.status}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {inquiry.workType} · {inquiry.location}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground flex-shrink-0">
+              {new Date(inquiry.createdAt).toLocaleDateString("ko-KR", {
+                month: "short",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+
+          {/* 상세 */}
+          <div className="flex flex-col gap-1 text-xs text-muted-foreground mb-3">
+            <span>📞 {inquiry.phone}</span>
+            {inquiry.budget && <span>💰 {inquiry.budget}</span>}
+            {inquiry.message && (
+              <p className="text-xs text-foreground line-clamp-2 mt-1 bg-secondary border border-border rounded-sm px-3 py-2">
+                {inquiry.message}
+              </p>
+            )}
+          </div>
+
+          {/* 상태 변경 버튼 — CANCELLED/DECLINED/ACCEPTED 시 숨김 */}
+          {!["CANCELLED", "DECLINED", "ACCEPTED"].includes(inquiry.status) && (
+            <div className="flex gap-1.5 flex-wrap">
+              {inquiry.status === "PENDING" && (
+                <button
+                  disabled={updatingId === inquiry.id}
+                  onClick={() => handleStatus(inquiry.id, "READ")}
+                  className="text-xs px-3 py-1.5 rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors disabled:opacity-40"
+                >
+                  읽음 처리
+                </button>
+              )}
+              <button
+                disabled={updatingId === inquiry.id}
+                onClick={() => handleStatus(inquiry.id, "ACCEPTED")}
+                className="text-xs px-3 py-1.5 rounded-sm border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-40"
+              >
+                수락
+              </button>
+              <button
+                disabled={updatingId === inquiry.id}
+                onClick={() => handleStatus(inquiry.id, "DECLINED")}
+                className="text-xs px-3 py-1.5 rounded-sm border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors disabled:opacity-40"
+              >
+                거절
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

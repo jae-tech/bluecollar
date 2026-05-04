@@ -72,9 +72,29 @@ function VerifyEmailContent() {
     setVerifyError(null);
     setLoading(true);
     try {
-      await verifyEmailCode({ email, code: value, type: "SIGNUP" });
-      // 인증 성공 → slug 설정 페이지로 이동 (slug 페이지에서 재방문자 가드 처리)
-      router.push("/onboarding/slug");
+      const result = await verifyEmailCode({
+        email,
+        code: value,
+        type: "SIGNUP",
+      });
+
+      // CLIENT 역할로 가입한 경우 returnTo로 복귀, 없으면 홈으로
+      // WORKER 역할이거나 기타는 onboarding/slug로 이동
+      if (result.user.role === "CLIENT") {
+        const returnTo =
+          typeof window !== "undefined"
+            ? sessionStorage.getItem("authReturnTo")
+            : null;
+        if (returnTo) {
+          sessionStorage.removeItem("authReturnTo");
+          router.push(returnTo);
+        } else {
+          router.push("/");
+        }
+      } else {
+        // 인증 성공 → slug 설정 페이지로 이동 (slug 페이지에서 재방문자 가드 처리)
+        router.push("/onboarding/slug");
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 400 || err.status === 401) {
