@@ -5,6 +5,8 @@ Updated from `/plan-eng-review` on 2026-03-31.
 Updated from `/design-review` on 2026-03-31 (10 issues fixed, 8 deferred).
 Updated from `/autoplan` on 2026-04-04 (eng review, 4 items added).
 Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
+Updated from `/plan-ceo-review` + `/plan-eng-review` on 2026-05-04 (클라이언트 가입 + 워커 연결 V1: 6 items added).
+Updated from `/plan-design-review` on 2026-05-04 (디자인 리뷰: 2 items added — UI-001 radius 버그, UI-002 returnTo 플로).
 
 ---
 
@@ -861,3 +863,97 @@ Updated from `/autoplan` on 2026-04-16 (modal UX sprint: 5 fixed, 17 added).
 **Cons:** master_codes 테이블 변경 시 FK 마이그레이션 필요
 **Context:** FIELD_CODE_LABELS 키 목록이 현재 21개. Drizzle FK보다 Zod z.enum([...FIELD_CODE_LABELS keys]) 방식이 더 유연할 수 있음.
 **Depends on:** 스케줄 탭 PR 완료 후 고려
+
+---
+
+## 🔗 클라이언트-워커 연결 시스템 (V2 연기)
+
+### TODO-CLIENT-001: 워커 의뢰 수락/거절 (ACCEPTED/DECLINED) + 클라이언트 알림
+
+**What:** 워커가 의뢰를 수락(ACCEPTED) 또는 거절(DECLINED)할 수 있는 기능 + 클라이언트에게 이메일 알림
+**Why:** V1은 PENDING→READ→CANCELLED만 지원. 워커가 "받아보겠습니다"를 표현할 수단이 없어 클라이언트 신뢰 루프가 절반만 닫힘.
+**Pros:** 클라이언트가 "이 워커가 나를 선택했다" 확신 → 계약 전환율 향상. inquiries 테이블에 ACCEPTED/DECLINED 상태가 이미 스키마에 준비되어 있음.
+**Cons:** 워커 대시보드에 수락/거절 UI 추가 필요. 거절 시 클라이언트가 상처받을 수 있는 UX 처리 필요.
+**Context:** `PATCH /inquiries/worker/:id/accept`, `PATCH /inquiries/worker/:id/decline` 엔드포인트 추가. 수락 시 클라이언트 이메일: "OOO님이 의뢰를 수락했습니다". 거절 시: 정중한 이메일 + 다른 워커 추천 링크. status enum ACCEPTED/DECLINED는 이미 스키마에 포함되어 있어 마이그레이션 불필요.
+**Depends on:** V1 (의뢰 접수 기능) 완료 후 진행. V2 연락망(인앱 메시지/채팅) 기획과 병행 검토.
+
+---
+
+### TODO-CLIENT-002: 워커 의뢰 옵트아웃 설정
+
+**What:** 워커가 의뢰 수신을 off/on하거나 공종·지역별 필터를 설정하는 기능
+**Why:** 바쁜 시즌에 의뢰가 쏟아지면 워커 부담. 옵트아웃 없으면 스팸 취급 → 워커 이탈.
+**Pros:** 워커 자율성 보장. 의뢰 → 응답률 개선 (받기로 한 의뢰만 오므로). 클라이언트 헛수고 감소.
+**Cons:** workerProfiles 테이블에 settings 컬럼 또는 별도 테이블 추가 필요. 프론트 프로필 설정 탭 추가.
+**Context:** `workerProfiles.inquiryEnabled: boolean` (기본 true) + `workerProfiles.inquiryFieldFilter: string[]` 옵션. POST /inquiries/:slug 시 workerProfile.inquiryEnabled 체크 → false면 404 또는 "현재 의뢰를 받지 않습니다" 응답.
+**Depends on:** V1 완료 후 진행.
+
+---
+
+### TODO-CLIENT-003: 프로젝트 공고 마켓플레이스 (V2)
+
+**What:** 클라이언트가 공사 공고를 올리면 워커들이 입찰하는 역방향 마켓플레이스
+**Why:** V1은 클라이언트→특정워커 의뢰(push). V2는 클라이언트가 공고(pull)를 올려 여러 워커의 견적을 비교 → 정보 비대칭 완전 해소.
+**Pros:** 경쟁 입찰로 클라이언트 협상력 향상. 블루칼라 미션(합리적 가격) 직결. 대형 공사도 커버.
+**Cons:** 새 데이터 모델 (projects, bids 테이블) + 복잡한 상태 머신. 워커 입장에서 클라이언트 정보 부족 시 견적 불가 → 클라이언트 프로필 필요.
+**Context:** V1 의뢰 시스템과 별개 인프라. 클라이언트 프로필, 공고 작성 UI, 워커 입찰 UI, 견적 비교 페이지 모두 신규 개발 필요. "프로젝트 공고" 마켓플레이스는 플랫폼 전환점(marketplace 비즈니스 모델)이므로 신중히 타이밍 결정.
+**Depends on:** V1 완료 + 클라이언트 프로필 (NOT in scope V1) + 워커 수락/거절 (CLIENT-001) 완료 후 검토.
+
+---
+
+### TODO-CLIENT-004: 클라이언트 리뷰/평가 시스템
+
+**What:** 의뢰가 완료된 후 클라이언트가 워커를 평가하는 리뷰 시스템 (별점 + 코멘트)
+**Why:** 블루칼라 미션의 핵심 — 실제 거래 후 신뢰 데이터 축적. 포트폴리오에 검증된 리뷰가 붙으면 "바가지 걱정 없는 워커"를 한눈에 식별 가능.
+**Pros:** 워커 신뢰도 공개 → 플랫폼 차별화. 리뷰 있는 워커가 더 많은 의뢰 수신 → 선순환. 어뷰징 방지: 완료된 의뢰(COMPLETED 상태)에만 리뷰 허용.
+**Cons:** inquiries에 COMPLETED 상태 추가 필요 (현재 스키마 없음). 리뷰 어뷰징 (허위 리뷰) 방지 로직 필요. 워커가 부정적 리뷰에 반박할 수단 필요.
+**Context:** `reviews` 테이블: inquiry_id (FK), client_user_id, worker_profile_id, rating (1-5), comment, created_at. 워커 프로필 페이지에 평균 별점 + 리뷰 목록 표시. 의뢰 상태 COMPLETED 추가 → 리뷰 가능 상태.
+**Depends on:** CLIENT-001 (수락 기능) 완료 후 진행. 의뢰가 어떻게 "완료"로 전환되는지 플로 설계 필요.
+
+---
+
+### TODO-INQ-001: 이메일 발송 비동기 큐 이관 (V2)
+
+**What:** Resend SDK 직접 호출(V1, ~200-500ms 지연)을 BullMQ 등 비동기 큐로 이관
+**Why:** V1은 의뢰 접수 응답이 이메일 발송 완료를 기다림. 이메일 서버 느릴 때 API 응답 지연. 재시도 보장 없음.
+**Pros:** 의뢰 접수 응답 즉시화 (DB INSERT만 기다림). 실패 시 자동 재시도 (최대 N회). 이메일 발송 실패율 모니터링 가능.
+**Cons:** BullMQ + Redis 인프라 추가. 워커 프로세스 필요.
+**Context:** V1 fire-and-forget 패턴: `void emailService.send().catch(logger.error)` — Fastify unhandled rejection 방지. V2에서 큐 이관 시 이 패턴을 `queue.add()` 호출로 교체.
+**Depends on:** V1 완료 후 트래픽 증가 시점에 진행.
+
+---
+
+---
+
+## 🎨 디자인 — 클라이언트 의뢰 시스템 (plan-design-review 2026-05-04)
+
+### TODO-UI-001: inquiry-form.tsx 버튼 radius 수정 (DESIGN.md 위반)
+
+**What:** `components/inquiry-form.tsx:253`의 제출 버튼 `rounded-lg` → `rounded-sm` 교체.
+**Why:** DESIGN.md "버튼: `radius-sm`(6px)" 규칙 위반. 모달 컨테이너(radius-lg)와 버튼에 같은 radius를 쓰는 것은 Anti-pattern.
+**Pros:** DESIGN.md 토큰 준수. 2줄 수정.
+**Cons:** 없음.
+**Context:** `components/inquiry-form.tsx` line 253: `rounded-lg` → `rounded-sm`. `components/worker/inquiry-form.tsx`도 동일 패턴 확인 후 수정.
+**Depends on:** 없음 (V1 inquiry PR 포함 권장).
+
+---
+
+### TODO-UI-002: 클라이언트 가입 후 InquiryForm 자동 복귀 (returnTo 플로)
+
+**What:** 클라이언트 가입 → 이메일 인증 → 인증 완료 후 원래 워커 프로필로 돌아가서 InquiryForm 자동 오픈.
+**Why:** 현재는 인증 완료 → /client/requests로 이동(계획). 사용자가 가입한 이유(의뢰)를 잊어버리고 이탈할 위험. "가입 후 바로 의뢰 가능" UX가 핵심 전환 포인트.
+**Pros:** 전환율 향상. 사용자가 가입 동기(특정 워커 의뢰)를 유지한 채 완료 가능.
+**Cons:** sessionStorage 또는 URL 쿼리파라미터(`?returnTo=/[slug]&openInquiry=true`) 구현 필요. 인증 완료 페이지(`/auth/verify-email`)에서 redirect 로직 추가.
+**Context:** ClientSignupModal 오픈 시 `sessionStorage.setItem('inquiryReturnTo', workerSlug)` 저장 → 이메일 인증 완료 콜백에서 꺼내서 리다이렉트 + InquiryForm 자동 오픈. `?openInquiry=true` 파라미터를 워커 프로필 페이지에서 감지.
+**Depends on:** V1 클라이언트 가입 기능 완료 후 즉시 진행 (V1 포함 권장).
+
+---
+
+### TODO-INQ-002: /inquiries/worker 및 /inquiries/client cursor-based 페이지네이션 (V2)
+
+**What:** 의뢰 목록 API에 cursor-based 페이지네이션 추가 (현재 전체 조회)
+**Why:** 의뢰 수가 수백 건을 넘으면 전체 반환은 응답 크기 + DB 부하 문제.
+**Pros:** 응답 크기 일정, 무한 스크롤 UI 지원.
+**Cons:** API 계약 변경 (cursor 파라미터 추가) → 프론트 업데이트 필요.
+**Context:** Drizzle `.limit(20).offset(cursor)` 또는 `created_at < cursor` 방식. 현재 인덱스 `idx_inquiries_worker_created(worker_profile_id, created_at DESC)`가 커서 쿼리에 최적화.
+**Depends on:** V1 완료 + 실제 데이터 증가 확인 후 진행.

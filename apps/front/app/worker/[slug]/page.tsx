@@ -70,6 +70,19 @@ export default function WorkerProfilePage() {
     if (target) setSelectedPortfolio(target);
   }, [publicProfile]);
 
+  // 클라이언트 가입 후 복귀 — ?openInquiry=true 시 의뢰 폼 자동 오픈
+  useEffect(() => {
+    if (!publicProfile) return;
+    const open = new URLSearchParams(window.location.search).get("openInquiry");
+    if (open === "true") {
+      setInquiryOpen(true);
+      // URL에서 쿼리파라미터 제거 (뒤로가기 시 재오픈 방지)
+      const url = new URL(window.location.href);
+      url.searchParams.delete("openInquiry");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [publicProfile]);
+
   // 뒤로 가기(popstate) 시 모달 닫힘
   useEffect(() => {
     const handler = () => setSelectedPortfolio(null);
