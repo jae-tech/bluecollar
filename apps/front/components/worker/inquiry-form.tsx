@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, CheckCircle, ChevronDown, Loader2 } from "lucide-react";
-import { submitInquiry } from "@/lib/api";
+import { submitInquiry, getMe, ApiError } from "@/lib/api";
+import { ClientSignupModal } from "@/components/client-signup-modal";
 
 interface InquiryFormProps {
   open: boolean;
@@ -53,6 +54,21 @@ export function InquiryForm({
   const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Partial<typeof form>>({});
 
+  // 인증 상태
+  const [authChecked, setAuthChecked] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [showClientSignup, setShowClientSignup] = useState(false);
+
+  // 모달이 열릴 때마다 인증 상태 확인
+  useEffect(() => {
+    if (!open) return;
+    setAuthChecked(false);
+    getMe().then((user) => {
+      setUserRole(user?.role ?? null);
+      setAuthChecked(true);
+    });
+  }, [open]);
+
   const set =
     (key: keyof typeof form) =>
     (
@@ -75,6 +91,19 @@ export function InquiryForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
+    // 미인증 상태 → 클라이언트 가입 모달 표시
+    if (!userRole) {
+      setShowClientSignup(true);
+      return;
+    }
+
+    // WORKER 역할 → 의뢰 불가
+    if (userRole === "WORKER") {
+      setApiError("시공 전문가 계정으로는 의뢰할 수 없습니다.");
+      return;
+    }
+
     setLoading(true);
     setApiError(null);
     try {
@@ -88,10 +117,19 @@ export function InquiryForm({
         projectTitle,
       });
       setSubmitted(true);
-    } catch {
-      setApiError(
-        "의뢰 접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-      );
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        // 세션 만료 등으로 인증 실패 → 가입/로그인 유도
+        setShowClientSignup(true);
+      } else if (err instanceof ApiError && err.status === 429) {
+        setApiError(
+          "동일 전문가에게 24시간 내 최대 3건까지 의뢰할 수 있습니다.",
+        );
+      } else {
+        setApiError(
+          "의뢰 접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -114,6 +152,38 @@ export function InquiryForm({
   };
 
   if (!open) return null;
+
+  // WORKER 역할은 의뢰 폼 자체를 차단
+  if (authChecked && userRole === "WORKER") {
+    return (
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        style={{ animation: "fadeIn 0.15s ease" }}
+      >
+        <div
+          className="absolute inset-0 bg-foreground/50 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        <div className="relative z-10 bg-card rounded-sm border border-border px-8 py-10 max-w-sm w-full text-center">
+          <p className="text-base font-bold text-foreground mb-2">
+            시공 전문가 계정입니다
+          </p>
+          <p className="text-sm text-muted-foreground mb-6">
+            의뢰는 클라이언트 계정으로만 가능합니다.
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-sm border border-border text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+          >
+            닫기
+          </button>
+        </div>
+        <style>{`@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -365,6 +435,15 @@ export function InquiryForm({
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
       `}</style>
+
+      {/* 미인증 → 클라이언트 가입 모달 */}
+      <ClientSignupModal
+        open={showClientSignup}
+        onClose={() => setShowClientSignup(false)}
+        returnToSlug={workerSlug}
+        workerName={workerName}
+        workType={form.workType || undefined}
+      />
     </div>
   );
 }

@@ -442,6 +442,62 @@ describe('PortfolioService', () => {
       expect(deleteRoomsMock).toHaveBeenCalled();
     });
 
+    it('roomIndex가 rooms 배열 범위를 벗어나면 BadRequestException을 throw해야 함', async () => {
+      const updateDto = {
+        rooms: [{ roomType: 'BATHROOM' as const }], // rooms 1개 → 유효 index: 0
+        media: [
+          {
+            mediaUrl: 'https://example.com/img.jpg',
+            mediaType: 'IMAGE' as const,
+            roomIndex: 5, // OOB
+          },
+        ],
+      };
+
+      mockDb.transaction.mockImplementation(async (fn: any) => {
+        let insertCallCount = 0;
+        const tx = {
+          select: vi.fn().mockReturnValue(makeSelectChain([mockPortfolio])),
+          update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnValue({
+              where: vi.fn().mockReturnValue({
+                returning: vi.fn().mockResolvedValue([mockPortfolio]),
+              }),
+            }),
+          }),
+          delete: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue(undefined),
+          }),
+          insert: vi.fn().mockImplementation(() => {
+            insertCallCount++;
+            if (insertCallCount === 1) {
+              // portfolioRooms insert — room 1개 반환
+              return {
+                values: vi.fn().mockReturnValue({
+                  returning: vi.fn().mockResolvedValue([{ id: 'room-uuid-1' }]),
+                }),
+              };
+            }
+            return {
+              values: vi.fn().mockReturnValue({
+                returning: vi.fn().mockResolvedValue([]),
+                then: (res: any) => Promise.resolve(undefined).then(res),
+              }),
+            };
+          }),
+        };
+        return fn(tx);
+      });
+
+      await expect(
+        portfolioService.updatePortfolio(
+          portfolioId,
+          workerProfileId,
+          updateDto as any,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('tags 제공 시 객체 배열로 저장해야 함', async () => {
       const updateDto = {
         tags: [{ tagName: '포세린 타일', materialId: 'mat-uuid-123' }],

@@ -113,6 +113,7 @@ export interface EmailSignupPayload {
   email: string;
   password: string;
   agreeTerms: true;
+  role?: "WORKER" | "CLIENT";
 }
 
 export interface EmailSignupResponse {
@@ -587,6 +588,14 @@ export async function updateWorkerProfileFields(
 
 // ─── Inquiry ─────────────────────────────────────────────────────────────────
 
+export type InquiryStatus =
+  | "PENDING"
+  | "READ"
+  | "REPLIED"
+  | "ACCEPTED"
+  | "DECLINED"
+  | "CANCELLED";
+
 export interface InquiryPayload {
   name: string;
   phone: string;
@@ -597,16 +606,82 @@ export interface InquiryPayload {
   projectTitle?: string;
 }
 
-/** 워커 공개 프로필에 의뢰 접수 (토큰 불필요) */
+export interface Inquiry {
+  id: string;
+  workerProfileId: string;
+  clientUserId: string;
+  name: string;
+  phone: string;
+  location: string;
+  workType: string;
+  budget: string | null;
+  message: string | null;
+  projectTitle: string | null;
+  status: InquiryStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 클라이언트가 워커에게 의뢰 접수 (CLIENT role 필요)
+ *
+ * 미인증 시 ApiError(401) — 호출 측에서 로그인/가입 유도
+ */
 export async function submitInquiry(
-  slug: string,
+  workerSlug: string,
   payload: InquiryPayload,
-): Promise<{ ok: true; message: string }> {
+): Promise<Inquiry> {
   return apiFetch(
-    `/public/profiles/${encodeURIComponent(slug)}/inquiry`,
+    `/inquiries/${encodeURIComponent(workerSlug)}`,
     { method: "POST", body: JSON.stringify(payload) },
-    true,
+    true, // skipAutoRedirect: 호출 측에서 미인증 상태 직접 처리
   );
+}
+
+/** 클라이언트 — 내가 보낸 의뢰 목록 조회 */
+export async function getClientInquiries(params?: {
+  status?: InquiryStatus;
+  limit?: number;
+  offset?: number;
+}): Promise<Inquiry[]> {
+  const q = new URLSearchParams();
+  if (params?.status) q.set("status", params.status);
+  if (params?.limit !== undefined) q.set("limit", String(params.limit));
+  if (params?.offset !== undefined) q.set("offset", String(params.offset));
+  const qs = q.toString();
+  return apiFetch<Inquiry[]>(`/inquiries/client${qs ? `?${qs}` : ""}`);
+}
+
+/** 워커 — 나에게 온 의뢰 목록 조회 */
+export async function getWorkerInquiries(params?: {
+  status?: InquiryStatus;
+  limit?: number;
+  offset?: number;
+}): Promise<Inquiry[]> {
+  const q = new URLSearchParams();
+  if (params?.status) q.set("status", params.status);
+  if (params?.limit !== undefined) q.set("limit", String(params.limit));
+  if (params?.offset !== undefined) q.set("offset", String(params.offset));
+  const qs = q.toString();
+  return apiFetch<Inquiry[]>(`/inquiries/worker${qs ? `?${qs}` : ""}`);
+}
+
+/** 워커 — 의뢰 상태 변경 (READ / REPLIED / ACCEPTED / DECLINED) */
+export async function updateInquiryStatus(
+  inquiryId: string,
+  status: "READ" | "REPLIED" | "ACCEPTED" | "DECLINED",
+): Promise<Inquiry> {
+  return apiFetch<Inquiry>(`/inquiries/${inquiryId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+/** 클라이언트 — 의뢰 취소 */
+export async function cancelInquiry(inquiryId: string): Promise<Inquiry> {
+  return apiFetch<Inquiry>(`/inquiries/${inquiryId}/cancel`, {
+    method: "PATCH",
+  });
 }
 
 // ─── Search ───────────────────────────────────────────────────────────────────

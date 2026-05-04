@@ -2,6 +2,36 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 /**
+ * 유효한 공정 코드 목록 — master_codes 테이블 FIELD 그룹과 동기화.
+ *
+ * ⚠️ seed.ts의 FIELD 그룹 변경 시 반드시 여기도 동기화할 것.
+ * TODO: @repo/schema로 이전하여 프론트/백엔드 단일 진실 원천 보장.
+ */
+const VALID_FIELD_CODES = [
+  'FLD_DEMOLITION',
+  'FLD_WINDOW',
+  'FLD_PLUMBING',
+  'FLD_WATERPROOF',
+  'FLD_ELECTRIC',
+  'FLD_CARPENTRY',
+  'FLD_FILM',
+  'FLD_PAINTING',
+  'FLD_TILE',
+  'FLD_WALLPAPER',
+  'FLD_FLOORING',
+  'FLD_KITCHEN',
+  'FLD_ELASTIC_COAT',
+  'FLD_BATHROOM',
+  'FLD_CLEANING',
+  'FLD_GLAZING',
+  'FLD_WELDING',
+  'FLD_MACHINING',
+  'FLD_PLASTER',
+  'FLD_HVAC',
+  'FLD_FURNITURE',
+] as const;
+
+/**
  * 작업 일정 생성 DTO
  *
  * end_date >= start_date 제약을 Zod refine으로 검증한다.
@@ -10,7 +40,9 @@ export const CreateWorkScheduleSchema = z
   .object({
     title: z.string().max(100).optional(),
     siteAddress: z.string().min(1, '현장 주소는 필수입니다').max(200),
-    fieldCode: z.string().min(1, '공정 종류는 필수입니다').max(50),
+    fieldCode: z.enum(VALID_FIELD_CODES, {
+      error: '유효하지 않은 공정 코드입니다',
+    }),
     startDate: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD 형식이어야 합니다'),
@@ -38,7 +70,11 @@ export const UpdateWorkScheduleSchema = z
   .object({
     title: z.string().max(100).optional(),
     siteAddress: z.string().min(1).max(200).optional(),
-    fieldCode: z.string().min(1).max(50).optional(),
+    fieldCode: z
+      .enum(VALID_FIELD_CODES, {
+        error: '유효하지 않은 공정 코드입니다',
+      })
+      .optional(),
     startDate: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD 형식이어야 합니다')

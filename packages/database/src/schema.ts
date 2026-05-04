@@ -858,7 +858,90 @@ export const workSchedules = pgTable(
 );
 
 // ─────────────────────────────────────────────────────
-// 7️⃣ ADMIN (관리자 감사 로그)
+// 7️⃣ INQUIRIES (클라이언트 의뢰 시스템)
+// ─────────────────────────────────────────────────────
+
+/**
+ * 의뢰 상태 열거형
+ * - PENDING: 의뢰 접수됨 (워커가 아직 확인하지 않음)
+ * - READ: 워커가 읽음
+ * - REPLIED: 워커가 답장함
+ * - ACCEPTED: 워커가 수락함
+ * - DECLINED: 워커가 거절함
+ * - CANCELLED: 클라이언트가 취소함
+ */
+export const inquiryStatusEnum = pgEnum("inquiry_status", [
+  "PENDING",
+  "READ",
+  "REPLIED",
+  "ACCEPTED",
+  "DECLINED",
+  "CANCELLED",
+]);
+
+/**
+ * inquiries 테이블
+ *
+ * 클라이언트가 특정 워커에게 보내는 의뢰 메시지를 관리합니다.
+ * V1 제약:
+ * - 동일 클라이언트+워커 조합으로 24시간 내 3건 이하 (rate limit: idx_inquiries_rate_limit)
+ * - 의뢰 접수 시 워커에게 이메일 알림 발송 (Resend SDK)
+ */
+export const inquiries = pgTable(
+  "inquiries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+
+    // ▪️ 관계
+    workerProfileId: uuid("worker_profile_id")
+      .references(() => workerProfiles.id, { onDelete: "cascade" })
+      .notNull(),
+    clientUserId: uuid("client_user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+
+    // ▪️ 의뢰 정보
+    name: varchar("name", { length: 100 }).notNull(), // 클라이언트 이름
+    phone: varchar("phone", { length: 30 }).notNull(), // 연락처
+    location: varchar("location", { length: 200 }).notNull(), // 시공 위치
+    workType: varchar("work_type", { length: 100 }).notNull(), // 시공 종류
+    budget: varchar("budget", { length: 100 }), // 예산 (선택)
+    message: text("message"), // 추가 메시지 (선택)
+    projectTitle: varchar("project_title", { length: 200 }), // 프로젝트명 (선택)
+
+    // ▪️ 상태
+    status: inquiryStatusEnum("status").notNull().default("PENDING"),
+
+    // ▪️ 타임스탬프
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    // 워커 대시보드 — 최신 의뢰 조회 최적화
+    workerCreatedIdx: index("idx_inquiries_worker_created").on(
+      table.workerProfileId,
+      table.createdAt,
+    ),
+    // 클라이언트 의뢰 내역 조회 최적화
+    clientCreatedIdx: index("idx_inquiries_client_created").on(
+      table.clientUserId,
+      table.createdAt,
+    ),
+    // Rate limit 검사: 동일 클라이언트+워커 조합 24시간 3건 제한
+    rateLimitIdx: index("idx_inquiries_rate_limit").on(
+      table.clientUserId,
+      table.workerProfileId,
+      table.createdAt,
+    ),
+  }),
+);
+
+// ─────────────────────────────────────────────────────
+// 8️⃣ ADMIN (관리자 감사 로그)
 // ─────────────────────────────────────────────────────
 
 /**

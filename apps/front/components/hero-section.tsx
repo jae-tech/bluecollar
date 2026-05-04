@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { WORKERS } from "@/lib/data";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -63,9 +64,10 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
 
         {/* CTA — 워커용 */}
         <div className="flex items-center gap-3 mb-4">
-          <button
+          <Button
             onClick={onSignupClick}
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-bold px-6 py-3 rounded-md hover:bg-primary/90 active:scale-95 transition-colors"
+            size="lg"
+            className="rounded-sm font-bold active:scale-95"
           >
             무료로 시작하기
             <svg
@@ -83,7 +85,7 @@ export function HeroSection({ onSignupClick }: HeroSectionProps) {
                 strokeLinejoin="round"
               />
             </svg>
-          </button>
+          </Button>
           <Link
             href="/search?tab=workers"
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-3 rounded-md border border-border hover:bg-secondary"

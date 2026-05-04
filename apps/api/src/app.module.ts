@@ -14,6 +14,7 @@ import { UploadModule } from '@/domains/upload/upload.module';
 import { CodesModule } from '@/domains/codes/codes.module';
 import { AdminModule } from '@/domains/admin/admin.module';
 import { WorkScheduleModule } from '@/domains/work-schedule/work-schedule.module';
+import { InquiryModule } from '@/domains/inquiry/inquiry.module';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 import { envSchema } from '@/common/config/env.schema';
@@ -66,6 +67,7 @@ import { envSchema } from '@/common/config/env.schema';
     CodesModule,
     AdminModule,
     WorkScheduleModule,
+    InquiryModule,
   ],
   providers: [
     // 🌐 전역 예외 필터 — DI로 등록해야 SlackNotificationService가 주입됨

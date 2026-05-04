@@ -48,6 +48,14 @@ export const EmailSignupSchema = z.object({
       error: '이용약관과 개인정보 처리방침에 동의해야 합니다',
     })
     .describe('이용약관 동의'),
+
+  role: z
+    .enum(['WORKER', 'CLIENT'], {
+      error: '역할은 WORKER 또는 CLIENT여야 합니다',
+    })
+    .default('WORKER')
+    .optional()
+    .describe('회원 역할 (기본값: WORKER)'),
 });
 
 export class EmailSignupDto extends createZodDto(EmailSignupSchema) {}
