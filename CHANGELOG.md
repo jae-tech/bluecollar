@@ -22,6 +22,12 @@
 
 - UX 반경 정비: onboarding/complete 및 worker notFound 페이지 버튼 `rounded-sm` 통일
 - worker/[slug] 로딩 상태를 spinner → Skeleton 레이아웃으로 개선
+- 이메일 알림 HTML 인젝션(XSS) 방어 — 의뢰자/워커 입력값을 이메일 템플릿에 삽입 전 `escapeHtml()` 처리
+- open redirect 방어 — 이메일 인증 후 `sessionStorage.authReturnTo` 복귀 경로를 동일 오리진 상대 경로만 허용
+- `client/requests` 페이지 로드 실패 시 에러 상태 표시 및 재시도 UI 추가
+- 로그아웃 함수 인라인 `fetch` → `api.ts` 공통 `logout()` 함수 사용으로 교체
+- `cancelInquiry`에서 ACCEPTED/DECLINED 상태 명시적 사전 검증 추가
+- `InquiryController` 단위 테스트 추가 (7개 케이스), `InquiryService` 테스트 엣지 케이스 보강
 
 ## [0.3.0.0] - 2026-04-30
 

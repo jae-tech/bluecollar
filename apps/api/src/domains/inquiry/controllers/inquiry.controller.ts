@@ -11,6 +11,7 @@ import {
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -102,6 +103,7 @@ export class InquiryController {
    */
   @Post(':workerSlug')
   @Roles('CLIENT')
+  @Throttle({ default: { ttl: 60000, limit: 10 } }) // 분당 10건 — HTTP 레벨 버스트 방지
   async createInquiry(
     @CurrentUser() user: UserPayload,
     @Param('workerSlug') workerSlug: string,

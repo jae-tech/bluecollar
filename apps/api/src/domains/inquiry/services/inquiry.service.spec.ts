@@ -130,6 +130,66 @@ describe('InquiryService', () => {
       );
 
       expect(result).toEqual(mockInquiry);
+      // 이메일 알림이 올바른 파라미터로 호출되었는지 검증
+      expect(emailService.sendInquiryNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          workerEmail: 'worker@example.com',
+          inquiryId: 'inquiry-uuid',
+          clientName: validDto.name,
+        }),
+      );
+    });
+
+    it('3a. 워커 이메일 없음 → 이메일 알림 미호출', async () => {
+      const mockInquiry = { id: 'inquiry-uuid', ...validDto };
+
+      // 1) workerProfiles 조회
+      db.limit.mockResolvedValueOnce([
+        {
+          id: 'worker-profile-uuid',
+          businessName: '홍길동 타일',
+          userId: 'worker-user-uuid',
+        },
+      ]);
+      // 2) workerUser 조회: 이메일 없음
+      db.limit.mockResolvedValueOnce([]);
+      // 3) count 쿼리
+      db.where
+        .mockReturnValueOnce(db)
+        .mockReturnValueOnce(db)
+        .mockResolvedValueOnce([{ cnt: 0 }]);
+      // 4) INSERT
+      db.returning.mockResolvedValueOnce([mockInquiry]);
+
+      await service.createInquiry('client-uuid', 'valid-slug', validDto);
+
+      expect(emailService.sendInquiryNotification).not.toHaveBeenCalled();
+    });
+
+    it('3b. Rate limit 경계값: cnt=2 → 의뢰 허용 (마지막 허용 건)', async () => {
+      const mockInquiry = { id: 'inquiry-uuid', ...validDto };
+
+      db.limit.mockResolvedValueOnce([
+        {
+          id: 'worker-profile-uuid',
+          businessName: '홍길동 타일',
+          userId: 'worker-user-uuid',
+        },
+      ]);
+      db.limit.mockResolvedValueOnce([{ email: 'worker@example.com' }]);
+      db.where
+        .mockReturnValueOnce(db)
+        .mockReturnValueOnce(db)
+        .mockResolvedValueOnce([{ cnt: 2 }]); // cnt=2, limit=3이므로 허용
+      db.returning.mockResolvedValueOnce([mockInquiry]);
+
+      const result = await service.createInquiry(
+        'client-uuid',
+        'valid-slug',
+        validDto,
+      );
+
+      expect(result).toEqual(mockInquiry);
     });
   });
 
@@ -269,6 +329,34 @@ describe('InquiryService', () => {
 
       const result = await service.cancelInquiry('inquiry-uuid', 'client-uuid');
       expect(result).toEqual(mockCancelled);
+    });
+
+    it('14. ACCEPTED 상태의 의뢰 취소 → ForbiddenException', async () => {
+      db.limit.mockResolvedValueOnce([
+        {
+          id: 'inquiry-uuid',
+          clientUserId: 'client-uuid',
+          status: 'ACCEPTED',
+        },
+      ]);
+
+      await expect(
+        service.cancelInquiry('inquiry-uuid', 'client-uuid'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('15. DECLINED 상태의 의뢰 취소 → ForbiddenException', async () => {
+      db.limit.mockResolvedValueOnce([
+        {
+          id: 'inquiry-uuid',
+          clientUserId: 'client-uuid',
+          status: 'DECLINED',
+        },
+      ]);
+
+      await expect(
+        service.cancelInquiry('inquiry-uuid', 'client-uuid'),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

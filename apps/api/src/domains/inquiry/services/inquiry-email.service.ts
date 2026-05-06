@@ -46,6 +46,16 @@ export class InquiryEmailService {
    * @param message 추가 메시지 (선택)
    * @param inquiryId 의뢰 ID (워커 대시보드 링크용)
    */
+  /** 사용자 입력값을 HTML 이메일에 삽입하기 전에 escape 처리 */
+  private escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
   async sendInquiryNotification(params: {
     workerEmail: string;
     workerName: string;
@@ -65,7 +75,17 @@ export class InquiryEmailService {
       inquiryId,
     } = params;
 
-    const dashboardUrl = `${process.env.FRONTEND_URL ?? 'https://bluecollar.cv'}/dashboard?tab=inquiries&id=${inquiryId}`;
+    const frontendUrl = process.env.FRONTEND_URL ?? 'https://bluecollar.cv';
+    const dashboardUrl = `${frontendUrl}/dashboard?tab=inquiries&id=${encodeURIComponent(inquiryId)}`;
+
+    // 사용자 입력값 전체를 HTML escape 처리 (XSS 방지)
+    const safeWorkerName = this.escapeHtml(workerName);
+    const safeClientName = this.escapeHtml(clientName);
+    const safeLocation = this.escapeHtml(location);
+    const safeWorkType = this.escapeHtml(workType);
+    const safeMessage = message
+      ? this.escapeHtml(message).replace(/\n/g, '<br>')
+      : null;
 
     const html = `
 <!DOCTYPE html>
@@ -77,25 +97,25 @@ export class InquiryEmailService {
       <h1 style="color: #fff; margin: 0; font-size: 20px; font-weight: 700;">새 의뢰가 도착했습니다</h1>
     </div>
     <div style="padding: 32px;">
-      <p style="color: #44403c; margin-top: 0;">${workerName}님, 새로운 시공 의뢰가 접수되었습니다.</p>
+      <p style="color: #44403c; margin-top: 0;">${safeWorkerName}님, 새로운 시공 의뢰가 접수되었습니다.</p>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #78716c; width: 100px; font-size: 14px;">의뢰인</td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #292524; font-weight: 600;">${clientName}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #292524; font-weight: 600;">${safeClientName}</td>
         </tr>
         <tr>
           <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #78716c; font-size: 14px;">시공 위치</td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #292524;">${location}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #292524;">${safeLocation}</td>
         </tr>
         <tr>
           <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #78716c; font-size: 14px;">시공 종류</td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #292524;">${workType}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #e7e5e4; color: #292524;">${safeWorkType}</td>
         </tr>
         ${
-          message
+          safeMessage
             ? `<tr>
           <td style="padding: 10px 0; color: #78716c; font-size: 14px; vertical-align: top;">메시지</td>
-          <td style="padding: 10px 0; color: #292524;">${message.replace(/\n/g, '<br>')}</td>
+          <td style="padding: 10px 0; color: #292524;">${safeMessage}</td>
         </tr>`
             : ''
         }
