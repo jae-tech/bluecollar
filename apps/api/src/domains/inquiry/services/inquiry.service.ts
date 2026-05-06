@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { DRIZZLE } from '@/infrastructure/database/drizzle.module';
 import { inquiries, workerProfiles, users } from '@repo/database';
-import { and, eq, gte, count, desc, ne, notInArray } from 'drizzle-orm';
+import { and, eq, gte, count, desc, notInArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@repo/database';
 import type {
@@ -290,6 +290,15 @@ export class InquiryService {
 
     if (existing[0].status === 'CANCELLED') {
       throw new ForbiddenException('이미 취소된 의뢰입니다');
+    }
+
+    if (
+      existing[0].status === 'ACCEPTED' ||
+      existing[0].status === 'DECLINED'
+    ) {
+      throw new ForbiddenException(
+        '수락되거나 거절된 의뢰는 취소할 수 없습니다',
+      );
     }
 
     // clientUserId와 취소 가능 상태를 WHERE에 포함해 atomic하게 처리 (TOCTOU 방지)

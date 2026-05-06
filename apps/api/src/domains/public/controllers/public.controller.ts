@@ -251,19 +251,24 @@ export class PublicController {
   }
 
   /**
-   * 공개 프로필 의뢰 접수
+   * @deprecated V1에서 제거 예정
    *
-   * 고객이 워커 공개 프로필에서 의뢰 폼을 제출할 때 호출됩니다.
-   * 이름, 연락처, 시공 위치, 공종이 필수입니다.
+   * 구 공개 의뢰 접수 엔드포인트 (인증 불필요).
+   * 신규 엔드포인트: POST /inquiries/:workerSlug (CLIENT 인증 필요).
+   *
+   * 이 엔드포인트는 하위 호환성을 위해 잠시 유지되지만,
+   * 프론트엔드는 이미 새 엔드포인트를 사용합니다.
+   * 다음 배포 사이클에 제거 예정: POST /public/profiles/:slug/inquiry 삭제.
    */
   @Post(':slug/inquiry')
   @Public()
   @Throttle({ default: { ttl: 60000, limit: 5 } }) // 분당 5건 — 스팸 방지
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '의뢰 접수',
+    summary: '[DEPRECATED] 의뢰 접수 — POST /inquiries/:workerSlug 사용 권장',
     description:
-      '고객이 워커 프로필에서 의뢰를 보냅니다. 이름, 연락처, 위치, 공종이 필수.',
+      '⚠️ Deprecated: 신규 연동은 POST /inquiries/:workerSlug (CLIENT 인증 필요)를 사용하세요.',
+    deprecated: true,
   })
   @ApiResponse({ status: 200, description: '의뢰 접수 성공' })
   @ApiResponse({ status: 404, description: '프로필을 찾을 수 없음' })
@@ -272,7 +277,7 @@ export class PublicController {
     @Param('slug') slug: string,
     @Body() body: SubmitInquiryDto,
   ) {
-    this.logger.info({ slug }, '의뢰 접수 요청 수신');
+    this.logger.info({ slug }, '[DEPRECATED] 구 공개 의뢰 접수 요청 수신');
     return this.publicService.submitInquiry(slug, body);
   }
 }

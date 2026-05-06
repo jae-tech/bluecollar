@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, getClientInquiries, cancelInquiry } from "@/lib/api";
+import { getMe, getClientInquiries, cancelInquiry, logout } from "@/lib/api";
 import type { Inquiry, InquiryStatus } from "@/lib/api";
 import { Logo } from "@/components/logo";
 
@@ -55,13 +55,16 @@ export default function ClientRequestsPage() {
     });
   }, [router]);
 
+  const [loadError, setLoadError] = useState(false);
+
   const loadInquiries = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const data = await getClientInquiries({ limit: 50 });
       setInquiries(data);
     } catch {
-      // 에러는 무시
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -99,10 +102,7 @@ export default function ClientRequestsPage() {
           </a>
           <button
             onClick={async () => {
-              await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/auth/logout`,
-                { method: "POST", credentials: "include" },
-              ).catch(() => {});
+              await logout().catch(() => {});
               window.location.href = "/login";
             }}
             className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -151,6 +151,18 @@ export default function ClientRequestsPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+            <p className="font-semibold text-foreground">
+              의뢰 내역을 불러올 수 없습니다
+            </p>
+            <button
+              onClick={loadInquiries}
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              다시 시도
+            </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">

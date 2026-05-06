@@ -85,7 +85,10 @@ function VerifyEmailContent() {
           typeof window !== "undefined"
             ? sessionStorage.getItem("authReturnTo")
             : null;
-        if (returnTo) {
+        // open redirect 방어: 반드시 동일 오리진 상대 경로만 허용
+        const isSafeReturnTo =
+          returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//");
+        if (isSafeReturnTo) {
           sessionStorage.removeItem("authReturnTo");
           router.push(returnTo);
         } else {
