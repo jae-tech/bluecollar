@@ -29,6 +29,7 @@
   "dependencies": {
     "@nestjs/throttler": "^6.5.0",
     "@opennextjs/cloudflare": "^1.18.0",
+    "@sentry/nextjs": "^10.51.0",
     "@types/nodemailer": "^7.0.11",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-kakao": "^1.0.3",
@@ -38,5 +39,5 @@
     "passport-kakao": "^1.0.1",
     "wrangler": "^4.80.0"
   },
-  "version": "0.3.0.0"
+  "version": "0.5.0.0"
 }

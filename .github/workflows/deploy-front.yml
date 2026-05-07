@@ -9,6 +9,10 @@ on:
       - "wrangler.toml"
       - ".github/workflows/deploy-front.yml"
 
+env:
+  # Sentry DSN은 NEXT_PUBLIC_ 접두사로 클라이언트 번들에 포함
+  NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+
 jobs:
   notify:
     runs-on: ubuntu-latest

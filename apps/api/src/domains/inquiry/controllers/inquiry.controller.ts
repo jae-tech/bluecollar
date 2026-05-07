@@ -10,13 +10,17 @@ import {
   Logger,
   ParseUUIDPipe,
   UseGuards,
+  Sse,
+  MessageEvent,
 } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import { Throttle } from '@nestjs/throttler';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import type { UserPayload } from '@/common/types/user.types';
 import { InquiryService } from '../services/inquiry.service';
+import { NotificationService } from '../services/notification.service';
 import {
   CreateInquiryDto,
   UpdateInquiryStatusDto,
@@ -44,11 +48,42 @@ import {
 export class InquiryController {
   private readonly logger = new Logger(InquiryController.name);
 
-  constructor(private readonly inquiryService: InquiryService) {}
+  constructor(
+    private readonly inquiryService: InquiryService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   // ─────────────────────────────────────────────────────
   // 리터럴 경로 (파라미터 경로 앞에 선언)
   // ─────────────────────────────────────────────────────
+
+  /**
+   * 워커 — SSE 실시간 알림 스트림
+   * GET /inquiries/notifications/stream
+   *
+   * 대시보드에서 EventSource로 구독하면 새 의뢰 수신 시 즉시 이벤트 전달.
+   * ThrottleGuard 제외: SSE는 long-lived connection이라 rate limit 부적합.
+   *
+   * 응답 형식 (text/event-stream):
+   *   data: {"type":"new_inquiry","inquiryId":"...","clientName":"...","workType":"...","location":"...","timestamp":"..."}
+   */
+  @Sse('notifications/stream')
+  @Roles('WORKER')
+  @Throttle({ default: { ttl: 60000, limit: 1000 } }) // SSE 커넥션은 throttle에서 실질적으로 제외
+  streamNotifications(
+    @CurrentUser() user: UserPayload,
+  ): Observable<MessageEvent> {
+    const workerProfileId = user.workerProfileId;
+    if (!workerProfileId) {
+      throw new ForbiddenException(
+        '워커 프로필이 없습니다. 워커 프로필을 먼저 생성하세요.',
+      );
+    }
+
+    this.logger.log({ workerProfileId }, 'SSE 알림 스트림 구독 시작');
+
+    return this.notificationService.stream(workerProfileId);
+  }
 
   /**
    * 클라이언트 — 자신이 보낸 의뢰 목록 조회

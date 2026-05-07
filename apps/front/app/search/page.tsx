@@ -89,12 +89,18 @@ function SearchPageInner() {
     const verifiedOnly =
       filters.verification === "Bluecollar CV 인증 완료" ? true : undefined;
 
-    const sort: "portfolio" | "latest" | undefined =
+    // 정렬 기준 변환:
+    //   "인기순" → query 있으면 relevant(관련도), 없으면 undefined(서버 기본 = latest)
+    //   "포트폴리오 많은 순" → portfolio
+    //   "최신순" → latest
+    const sort: "portfolio" | "latest" | "relevant" | undefined =
       filters.sort === "포트폴리오 많은 순"
         ? "portfolio"
         : filters.sort === "최신순"
           ? "latest"
-          : undefined;
+          : filters.sort === "인기순" && query
+            ? "relevant"
+            : undefined;
 
     setLoading(true);
     const timer = setTimeout(() => {

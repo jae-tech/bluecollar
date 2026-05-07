@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0.0] - 2026-05-07
+
+### Added
+
+- **PostgreSQL 풀텍스트 검색 (FTS)** — `tsvector` + GIN 인덱스, `plainto_tsquery('simple', ...)` 기반 워커/포트폴리오 통합 검색 (`GET /public/search?q=...`)
+- `pg_trgm` 트리그램 인덱스 — 한국어 부분 문자열 매칭용 ILIKE 폴백 (형태소 사전 없이 부분 검색 지원)
+- `ts_rank_cd()` 기반 연관도 정렬 — FTS 매치 점수 기준 결과 정렬
+- 검색 DB 마이그레이션 `0008_search_vector.sql` — `search_vector` GENERATED ALWAYS AS 컬럼 + GIN·트리그램 인덱스
+- **SSE 실시간 알림** — 워커가 새 의뢰를 받으면 대시보드에 실시간 토스트 알림 (`GET /inquiries/notifications/stream`)
+- `NotificationService` — RxJS `Subject` 기반 인-프로세스 pub/sub, 워커 ID 격리 스트림
+- `useInquiryNotifications` 훅 — `EventSource` + 지수 백오프 재연결 (초기 1s, 최대 30s), 미확인 카운트 관리
+- 대시보드 의뢰 탭 뱃지 — 미확인 의뢰 수 표시 오렌지 뱃지
+- **Sentry 오류 추적** — 백엔드 `@sentry/node` (500 이상 예외 자동 캡처), 프론트엔드 `@sentry/nextjs` (클라이언트 전용)
+- `SentryModule` — 전역 NestJS 모듈, `SENTRY_DSN` 미설정 시 no-op
+- `global-error.tsx` — Next.js App Router 전역 에러 바운더리, Sentry 자동 보고
+- `instrumentation.ts` — Node.js 런타임 가드 (Cloudflare Workers edge 런타임에서 서버사이드 Sentry 초기화 건너뜀)
+- `NotificationService` 단위 테스트 5개 — 워커 간 스트림 격리, 구독자 없는 emit, 멀티 이벤트 순서 검증
+
+### Changed
+
+- `AllExceptionsFilter` — 500+ 예외를 Sentry에 자동 캡처 (`scope.setTag` URL·method 포함)
+- `SENTRY_DSN` 환경변수 — `env.schema.ts`에 optional URL 필드로 추가
+- 배포 워크플로우 — `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` 시크릿 전파 추가 (`deploy-api.yml`, `deploy-front.yml`)
+
 ## [0.4.0.0] - 2026-05-04
 
 ### Added
