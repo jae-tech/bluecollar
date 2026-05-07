@@ -708,7 +708,7 @@ export interface SearchWorkersParams {
   minYears?: number;
   maxYears?: number;
   verifiedOnly?: boolean;
-  sort?: "latest" | "portfolio";
+  sort?: "latest" | "portfolio" | "relevant";
   limit?: number;
 }
 

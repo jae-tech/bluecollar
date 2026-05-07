@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Plus, Trash2, User, ChevronRight, Camera } from "lucide-react";
+import { Plus, Trash2, User, ChevronRight, Camera, Bell } from "lucide-react";
 import { getProfileUrl } from "@/lib/profile-url";
 import {
   getMyWorkerProfile,
@@ -35,6 +35,10 @@ import { ScheduleCalendar } from "@/components/worker/schedule-calendar";
 import { ScheduleModal } from "@/components/worker/schedule-modal";
 import { FIELD_CODE_LABELS } from "@/lib/field-codes";
 import { Logo } from "@/components/logo";
+import {
+  useInquiryNotifications,
+  type InquiryNotificationPayload,
+} from "@/hooks/use-inquiry-notifications";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -66,6 +70,35 @@ export default function DashboardPage() {
   // 의뢰 탭 상태
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
+
+  // SSE 실시간 알림 토스트 상태
+  const [notificationToast, setNotificationToast] =
+    useState<InquiryNotificationPayload | null>(null);
+
+  // 새 의뢰 수신 핸들러 (SSE → 토스트 + 목록 갱신)
+  const handleNewInquiry = useCallback(
+    (payload: InquiryNotificationPayload) => {
+      setNotificationToast(payload);
+      // 5초 후 토스트 자동 닫기
+      setTimeout(() => setNotificationToast(null), 5000);
+      // 의뢰 탭이 열려있으면 목록도 즉시 갱신
+      setActiveTab((tab) => {
+        if (tab === "inquiries") {
+          loadInquiries();
+        }
+        return tab;
+      });
+    },
+    // loadInquiries를 의존성에 포함하면 순환 참조 — 함수 참조 안정성을 위해 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  // SSE 훅: 프로필 로드 완료 후 활성화
+  const { unreadCount, clearUnread } = useInquiryNotifications({
+    enabled: !loading && profile !== null,
+    onNewInquiry: handleNewInquiry,
+  });
 
   const loadInquiries = async () => {
     setInquiriesLoading(true);
@@ -225,14 +258,12 @@ export default function DashboardPage() {
               { id: "schedule", label: "스케줄" },
               {
                 id: "inquiries",
-                label:
-                  inquiries.length > 0
-                    ? `의뢰 관리 (${inquiries.length})`
-                    : "의뢰 관리",
+                label: "의뢰 관리",
+                badge: unreadCount > 0 ? unreadCount : undefined,
               },
               { id: "settings", label: "설정" },
-            ] as { id: Tab; label: string }[]
-          ).map(({ id, label }) => (
+            ] as { id: Tab; label: string; badge?: number }[]
+          ).map(({ id, label, badge }) => (
             <button
               key={id}
               onClick={() => {
@@ -241,16 +272,22 @@ export default function DashboardPage() {
                   loadSchedules(scheduleYear, scheduleMonth);
                 }
                 if (id === "inquiries") {
+                  clearUnread();
                   loadInquiries();
                 }
               }}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
                 activeTab === id
                   ? "text-foreground border-foreground"
                   : "text-muted-foreground border-transparent hover:text-foreground"
               }`}
             >
               {label}
+              {badge !== undefined && (
+                <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none">
+                  {badge > 9 ? "9+" : badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -375,6 +412,33 @@ export default function DashboardPage() {
           />
         )}
       </div>
+
+      {/* ── SSE 실시간 의뢰 알림 토스트 ────────────────────────────────────── */}
+      {notificationToast && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-sm w-full">
+          <div className="bg-card border border-border rounded-md shadow-lg p-4 flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Bell size={15} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                새 의뢰가 도착했습니다
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {notificationToast.clientName} · {notificationToast.workType} ·{" "}
+                {notificationToast.location}
+              </p>
+            </div>
+            <button
+              onClick={() => setNotificationToast(null)}
+              className="flex-shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── 포트폴리오 상세 모달 ───────────────────────────────────────────── */}
       <PortfolioDetailModal

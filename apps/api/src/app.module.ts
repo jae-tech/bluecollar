@@ -6,6 +6,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { DrizzleModule } from '@/infrastructure/database/drizzle.module';
 import { SlackModule } from '@/infrastructure/slack/slack.module';
+import { SentryModule } from '@/infrastructure/sentry/sentry.module';
 import { AuthModule } from '@/domains/auth/auth.module';
 import { PortfolioModule } from '@/domains/portfolio/portfolio.module';
 import { ProfileModule } from '@/domains/profile/profile.module';
@@ -57,6 +58,7 @@ import { envSchema } from '@/common/config/env.schema';
       }),
     }),
 
+    SentryModule.forRoot(),
     DrizzleModule,
     SlackModule,
     AuthModule,

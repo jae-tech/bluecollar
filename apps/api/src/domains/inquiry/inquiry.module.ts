@@ -3,6 +3,7 @@ import { DrizzleModule } from '@/infrastructure/database/drizzle.module';
 import { InquiryController } from './controllers/inquiry.controller';
 import { InquiryService } from './services/inquiry.service';
 import { InquiryEmailService } from './services/inquiry-email.service';
+import { NotificationService } from './services/notification.service';
 
 /**
  * InquiryModule
@@ -11,12 +12,12 @@ import { InquiryEmailService } from './services/inquiry-email.service';
  *
  * Imports: DrizzleModule (데이터베이스 접근)
  * Controllers: InquiryController
- * Providers: InquiryService, InquiryEmailService
+ * Providers: InquiryService, InquiryEmailService, NotificationService
  */
 @Module({
   imports: [DrizzleModule],
   controllers: [InquiryController],
-  providers: [InquiryService, InquiryEmailService],
-  exports: [InquiryService],
+  providers: [InquiryService, InquiryEmailService, NotificationService],
+  exports: [InquiryService, NotificationService],
 })
 export class InquiryModule {}

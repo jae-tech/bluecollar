@@ -12,6 +12,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { ErrorResponse } from '../types/error-response.interface';
 import { ZodError } from 'zod';
 import { SlackNotificationService } from '@/infrastructure/slack/services/slack-notification.service';
+import * as Sentry from '@sentry/node';
 
 /**
  * 전역 예외 필터
@@ -53,6 +54,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 에러 로깅
     this.logError(exception, request, errorResponse);
+
+    // 5xx 에러 → Sentry 캡처 (request context 포함)
+    if (errorResponse.statusCode >= 500 && exception instanceof Error) {
+      Sentry.withScope((scope) => {
+        scope.setTag('url', request.url);
+        scope.setTag('method', request.method);
+        scope.setExtra('statusCode', errorResponse.statusCode);
+        Sentry.captureException(exception);
+      });
+    }
 
     // 치명적 에러인 경우 Slack 알림 (비동기, 응답을 막지 않음)
     if (this.slackNotification && errorResponse.statusCode >= 500) {

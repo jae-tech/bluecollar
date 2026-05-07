@@ -76,6 +76,9 @@ export const envSchema = z.object({
 
   // ── Slack 알림 (선택) ─────────────────────────────────────
   SLACK_WEBHOOK_ERROR: z.string().url().optional(),
+
+  // ── Sentry 에러 트래킹 (선택) ─────────────────────────────
+  SENTRY_DSN: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

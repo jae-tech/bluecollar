@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InquiryService } from './inquiry.service';
 import { InquiryEmailService } from './inquiry-email.service';
+import { NotificationService } from './notification.service';
 
 /**
  * InquiryService 단위 테스트
@@ -45,6 +46,13 @@ function makeEmailService() {
   } as unknown as InquiryEmailService;
 }
 
+function makeNotificationService() {
+  return {
+    emit: vi.fn(),
+    stream: vi.fn(),
+  } as unknown as NotificationService;
+}
+
 // 유효한 의뢰 DTO
 const validDto = {
   name: '홍길동',
@@ -57,11 +65,17 @@ describe('InquiryService', () => {
   let service: InquiryService;
   let db: ReturnType<typeof makeChain>;
   let emailService: InquiryEmailService;
+  let notificationService: NotificationService;
 
   beforeEach(() => {
     db = makeChain();
     emailService = makeEmailService();
-    service = new InquiryService(db as never, emailService);
+    notificationService = makeNotificationService();
+    service = new InquiryService(
+      db as never,
+      emailService,
+      notificationService,
+    );
   });
 
   // ─────────────────────────────────────────────────────
@@ -103,7 +117,11 @@ describe('InquiryService', () => {
     });
 
     it('3. 정상 의뢰 생성 성공', async () => {
-      const mockInquiry = { id: 'inquiry-uuid', ...validDto };
+      const mockInquiry = {
+        id: 'inquiry-uuid',
+        ...validDto,
+        createdAt: new Date(),
+      };
 
       // 1) workerProfiles 조회
       db.limit.mockResolvedValueOnce([
@@ -141,7 +159,11 @@ describe('InquiryService', () => {
     });
 
     it('3a. 워커 이메일 없음 → 이메일 알림 미호출', async () => {
-      const mockInquiry = { id: 'inquiry-uuid', ...validDto };
+      const mockInquiry = {
+        id: 'inquiry-uuid',
+        ...validDto,
+        createdAt: new Date(),
+      };
 
       // 1) workerProfiles 조회
       db.limit.mockResolvedValueOnce([
@@ -167,7 +189,11 @@ describe('InquiryService', () => {
     });
 
     it('3b. Rate limit 경계값: cnt=2 → 의뢰 허용 (마지막 허용 건)', async () => {
-      const mockInquiry = { id: 'inquiry-uuid', ...validDto };
+      const mockInquiry = {
+        id: 'inquiry-uuid',
+        ...validDto,
+        createdAt: new Date(),
+      };
 
       db.limit.mockResolvedValueOnce([
         {

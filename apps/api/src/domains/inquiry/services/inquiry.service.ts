@@ -17,6 +17,7 @@ import type {
   UpdateInquiryStatusDto,
 } from '../dtos/inquiry.dto';
 import { InquiryEmailService } from './inquiry-email.service';
+import { NotificationService } from './notification.service';
 
 /** 24시간 내 동일 클라이언트+워커 조합 최대 의뢰 건수 */
 const RATE_LIMIT_COUNT = 3;
@@ -29,6 +30,7 @@ export class InquiryService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<typeof schema>,
     private readonly inquiryEmailService: InquiryEmailService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   /**
@@ -115,6 +117,16 @@ export class InquiryService {
       { inquiryId: created.id, clientUserId, workerProfileId: worker.id },
       '의뢰 생성 완료',
     );
+
+    // SSE 실시간 알림 발행 (연결된 워커 대시보드에 즉시 푸시)
+    this.notificationService.emit(worker.id, {
+      type: 'new_inquiry',
+      inquiryId: created.id,
+      clientName: dto.name,
+      workType: dto.workType,
+      location: dto.location,
+      timestamp: created.createdAt.toISOString(),
+    });
 
     // 워커 이메일 알림 — fire-and-forget (실패해도 의뢰 저장은 성공으로 처리)
     if (workerEmail) {

@@ -124,7 +124,15 @@ export class PublicController {
     const verifiedOnly = verifiedOnlyStr === 'true';
     const limit =
       limitStr !== undefined ? Math.min(parseInt(limitStr, 10) || 20, 50) : 20;
-    const sortParam = sort === 'portfolio' ? 'portfolio' : 'latest';
+    // query가 있으면 관련도순이 기본, 없으면 최신순
+    const sortParam: 'relevant' | 'latest' | 'portfolio' =
+      sort === 'portfolio'
+        ? 'portfolio'
+        : sort === 'latest'
+          ? 'latest'
+          : query?.trim()
+            ? 'relevant'
+            : 'latest';
 
     this.logger.info(
       { query, fieldCode, areaCode, minYears, maxYears, verifiedOnly, sort },
